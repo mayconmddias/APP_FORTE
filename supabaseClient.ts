@@ -68,4 +68,13 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+console.log("Supabase Client: Initializing checking config...");
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error("🚨 ERRO CRÍTICO SUPABASE: Variáveis de ambiente VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY não encontradas!");
+    console.log("Dica: Verifique o painel da Vercel (Environment Variables).");
+} else {
+    console.log("Supabase Client: Configuration found.");
+}
+
+export const supabase = createClient(SUPABASE_URL || '', SUPABASE_ANON_KEY || '');

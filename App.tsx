@@ -189,22 +189,45 @@ const App: React.FC = () => {
   };
 
   const handleTabChange = (tab: string) => {
-    if (tab === 'preventive' || tab === 'corrective') {
-      setPreselectedAssetId(null);
-      setEditingRecord(null);
-      setActiveTab(tab);
-    } else if (tab === 'assets') {
-      setSelectedClient(null);
-      setActiveTab(tab);
-    } else {
-      setActiveTab(tab);
-    }
+    // Ao navegar pelo menu lateral, limpamos as seleções contextuais para garantir
+    // que o usuário chegue na tela principal da aba escolhida
+    setPreselectedAssetId(null);
+    setEditingRecord(null);
+    setSelectedClient(null);
+    setSelectedAssetIdForAction(null);
+
+    setActiveTab(tab);
     setDynamicTitle(null);
     setHeaderAction(null);
   };
 
   const renderContent = () => {
     const role = currentUser?.role || 'TECNICO';
+
+    // Verificação de Segurança: Variáveis de Ambiente
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      return (
+        <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-white p-8 text-center">
+          <div className="w-20 h-20 bg-red-500/20 text-red-500 rounded-2xl flex items-center justify-center mb-6 border border-red-500/30">
+            <Loader2 size={40} className="animate-pulse" />
+          </div>
+          <h2 className="text-2xl font-black uppercase tracking-tight mb-4">Configuração Incompleta</h2>
+          <p className="text-slate-400 text-sm max-w-md font-medium leading-relaxed mb-8 uppercase text-[10px]">
+            As chaves de conexão com o Banco de Dados (Supabase) não foram encontradas no ambiente de produção.
+          </p>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-left w-full max-w-md space-y-4">
+            <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Como corrigir na Vercel:</p>
+            <ol className="text-[11px] text-slate-300 space-y-2 list-decimal list-inside font-bold">
+              <li>Acesse o painel da <span className="text-white">Vercel</span></li>
+              <li>Vá em <span className="text-white">Settings &gt; Environment Variables</span></li>
+              <li>Adicione <span className="text-emerald-400">VITE_SUPABASE_URL</span></li>
+              <li>Adicione <span className="text-emerald-400">VITE_SUPABASE_ANON_KEY</span></li>
+              <li>Faça um novo <span className="text-white">Redeploy</span></li>
+            </ol>
+          </div>
+        </div>
+      );
+    }
 
     if (loading && isAuthenticated) {
       return (

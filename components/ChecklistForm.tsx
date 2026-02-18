@@ -188,7 +188,11 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
         <div className="flex items-center gap-4">
           <button onClick={onCancel} className="p-3 hover:bg-slate-200 rounded-full text-slate-500 transition-all"><ArrowLeft size={32} /></button>
           <div>
-            <h3 className="text-xl font-black text-slate-900 uppercase">INSPEÇÃO PREVENTIVA</h3>
+            <h3 className="text-xl font-black text-slate-900 uppercase">
+              {editingRecord
+                ? (editingRecord.type === MaintenanceType.CORRETIVA ? 'INSPEÇÃO CORRETIVA' : 'INSPEÇÃO PREVENTIVA')
+                : 'INSPEÇÃO PREVENTIVA'}
+            </h3>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedAsset?.name} | {selectedAsset?.client}</p>
           </div>
         </div>
