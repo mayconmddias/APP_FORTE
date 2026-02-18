@@ -1,0 +1,7 @@
+{
+  "name": "Forte Engenharia - Gestão de Pontes Rolantes",
+  "description": "Sistema avançado de manutenção industrial para pontes rolantes, focado em segurança, conformidade com NR-11/12 e indicadores MTBF/MTTR.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
