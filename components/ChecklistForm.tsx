@@ -50,6 +50,36 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
 
   const [items, setItems] = useState<ChecklistItem[]>(editingRecord?.checklists || []);
 
+  const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7)); // 0.7 quality
+      };
+    });
+  };
+
   useEffect(() => {
     let pageTitle = 'MANUTENÇÃO PREVENTIVA';
     if (editingRecord) {
@@ -166,11 +196,15 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       </header>
 
       <div className="flex-1 overflow-y-auto p-6 md:p-12 space-y-4 pb-40">
-        <input type="file" accept="image/*" capture="environment" className="hidden" ref={fileInputRef} onChange={(e) => {
+        <input type="file" accept="image/*" capture="environment" className="hidden" ref={fileInputRef} onChange={async (e) => {
           const file = e.target.files?.[0];
           if (file && activePhotoItemId) {
             const reader = new FileReader();
-            reader.onloadend = () => { updateItem(activePhotoItemId, { photos: [reader.result as string] }); setActivePhotoItemId(null); };
+            reader.onloadend = async () => {
+              const compressed = await compressImage(reader.result as string);
+              updateItem(activePhotoItemId, { photos: [compressed] });
+              setActivePhotoItemId(null);
+            };
             reader.readAsDataURL(file);
           }
         }} />

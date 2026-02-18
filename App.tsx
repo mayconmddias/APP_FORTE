@@ -138,7 +138,22 @@ const App: React.FC = () => {
     try {
       const { error } = await supabase.from('maintenance_records').upsert(dbRecord);
       if (error) throw error;
-      await fetchData();
+
+      // Update local state instead of full fetchData() for better performance
+      setHistory(prev => {
+        const index = prev.findIndex(h => h.id === record.id);
+        if (index >= 0) {
+          const newHistory = [...prev];
+          newHistory[index] = record;
+          return newHistory;
+        }
+        return [record, ...prev];
+      });
+
+      // Update next OS number if it's a new record
+      if (!editingRecord) {
+        setNextOsNumber(prev => Math.max(prev, (record.inspectionNumber || 0) + 1));
+      }
     } catch (error) {
       console.error("Erro ao salvar inspeção:", error);
       alert("Erro ao salvar Ordem de Serviço.");
@@ -156,7 +171,7 @@ const App: React.FC = () => {
     try {
       const { error } = await supabase.from('maintenance_records').delete().eq('id', recordId);
       if (error) throw error;
-      await fetchData();
+      setHistory(prev => prev.filter(h => h.id !== recordId));
     } catch (error) {
       console.error("Erro ao excluir no Supabase:", error);
     }

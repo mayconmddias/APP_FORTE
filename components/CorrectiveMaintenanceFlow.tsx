@@ -56,6 +56,36 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastOsNumber, setLastOsNumber] = useState<number>(0);
 
+  const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+    });
+  };
+
   useEffect(() => {
     if (initialAssetId && assets.length > 0 && !selectedAsset) {
       const asset = assets.find(a => a.id === initialAssetId);
@@ -136,11 +166,9 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
       signature: `TÉCNICO: ${currentUser.name} | CLIENTE: ${clientName}`
     };
 
-    setTimeout(() => {
-      onSave(newRecord);
-      setIsSubmitting(false);
-      setStep(FlowStep.SUCCESS);
-    }, 1200);
+    onSave(newRecord);
+    setIsSubmitting(false);
+    setStep(FlowStep.SUCCESS);
   };
 
   if (step === FlowStep.SUCCESS) {
@@ -327,7 +355,11 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
           const file = e.target.files?.[0];
           if (file && activePhotoItemId) {
             const reader = new FileReader();
-            reader.onloadend = () => { updateItem(activePhotoItemId, { photos: [reader.result as string] }); setActivePhotoItemId(null); };
+            reader.onloadend = async () => {
+              const compressed = await compressImage(reader.result as string);
+              updateItem(activePhotoItemId, { photos: [compressed] });
+              setActivePhotoItemId(null);
+            };
             reader.readAsDataURL(file);
           }
         }} />
