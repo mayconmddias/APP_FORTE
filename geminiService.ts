@@ -3,8 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 import { MaintenanceRecord, CraneAsset } from './types';
 
 export const analyzeMaintenanceHistory = async (asset: CraneAsset, history: MaintenanceRecord[]) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+
   const prompt = `
     Analise o histórico de manutenção da ponte rolante abaixo e forneça:
     1. Uma breve avaliação da confiabilidade operacional.
@@ -19,12 +19,12 @@ export const analyzeMaintenanceHistory = async (asset: CraneAsset, history: Main
 
     Histórico Recente:
     ${JSON.stringify(history.map(h => ({
-      tipo: h.type,
-      data: h.date,
-      causa: h.cause,
-      acao: h.actionTaken,
-      criticidade: h.criticality
-    })))}
+    tipo: h.type,
+    data: h.date,
+    causa: h.cause,
+    acao: h.actionTaken,
+    criticidade: h.criticality
+  })))}
 
     Responda em Português de forma profissional e técnica.
   `;
