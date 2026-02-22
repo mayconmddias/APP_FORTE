@@ -295,8 +295,8 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
                 )}
                 {selectedItemsTemplate.length > 0 && (
                   <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 flex gap-4">
-                    <button onClick={onCancel} className="flex-1 h-16 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase">Cancelar</button>
-                    <button onClick={() => setStep(FlowStep.FILL_CHECKLIST)} className="flex-1 h-16 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase shadow-xl shadow-emerald-100 flex items-center justify-center gap-3 active:scale-95 transition-all"><CheckCircle2 size={24} /> Iniciar Corretiva</button>
+                    <button onClick={onCancel} className="flex-1 h-14 bg-slate-100 text-slate-500 rounded-[20px] font-black text-xs uppercase">Cancelar</button>
+                    <button onClick={() => setStep(FlowStep.FILL_CHECKLIST)} className="flex-1 h-14 bg-emerald-600 text-white rounded-[20px] font-black text-xs uppercase shadow-xl shadow-emerald-100 flex items-center justify-center gap-3 active:scale-95 transition-all"><CheckCircle2 size={24} /> Iniciar</button>
                   </div>
                 )}
               </div>
@@ -339,7 +339,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
                 })}
               </div>
               <div className="p-6 bg-white border-t border-slate-100">
-                <button onClick={() => setIsSelectorOpen(false)} className="w-full h-16 bg-[#0066CC] text-white rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95 transition-all">Confirmar Seleção ({selectedItemsTemplate.length})</button>
+                <button onClick={() => setIsSelectorOpen(false)} className="w-full h-14 bg-[#0066CC] text-white rounded-[20px] font-black uppercase text-xs shadow-xl active:scale-95 transition-all">Confirmar ({selectedItemsTemplate.length})</button>
               </div>
             </div>
           </div>, document.body
@@ -432,11 +432,11 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
         </div>
 
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-200 z-[100] flex gap-3 shadow-2xl">
-          <button onClick={onCancel} className="h-16 flex-1 rounded-2xl border-2 border-[#0066CC] bg-white font-black text-[11px] uppercase tracking-widest text-[#0066CC] flex items-center justify-center gap-2">
+          <button onClick={onCancel} className="h-14 flex-1 rounded-[20px] border-2 border-slate-900 bg-white font-black text-[11px] uppercase tracking-widest text-slate-900 flex items-center justify-center gap-2">
             CANCELAR
           </button>
-          <button disabled={!clientName || selectedItemsTemplate.some(i => i.isOk === null) || isSubmitting} onClick={handleFinalSave} className={`h-16 flex-1 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${clientName && !selectedItemsTemplate.some(i => i.isOk === null) ? 'bg-[#0066CC] text-white' : 'bg-slate-100 text-slate-400'}`}>
-            {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><FileText size={18} /> FINALIZAR CORRETIVA</>}
+          <button disabled={!clientName || selectedItemsTemplate.some(i => i.isOk === null) || isSubmitting} onClick={handleFinalSave} className={`h-14 flex-1 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${clientName && !selectedItemsTemplate.some(i => i.isOk === null) ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+            {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'GERAR CORRETIVA'}
           </button>
         </div>
 

@@ -92,14 +92,16 @@ const Login: React.FC<LoginProps> = ({ onLogin, users, onRegisterNewUser }) => {
                 <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={inputClasses} />
               </div>
             </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-16 text-white rounded-[24px] font-black uppercase text-xs tracking-widest shadow-2xl shadow-blue-900/30 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-3"
-              style={{ backgroundColor: 'rgb(0, 102, 204)' }}
-            >
-              {isLoading ? <Loader2 size={22} className="animate-spin" /> : 'Entrar no Sistema'}
-            </button>
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-1/2 h-16 text-white rounded-[24px] font-black uppercase text-xs tracking-widest shadow-2xl shadow-blue-900/30 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-3"
+                style={{ backgroundColor: 'rgb(0, 102, 204)' }}
+              >
+                {isLoading ? <Loader2 size={22} className="animate-spin" /> : 'Entrar'}
+              </button>
+            </div>
           </form>
         </div>
 

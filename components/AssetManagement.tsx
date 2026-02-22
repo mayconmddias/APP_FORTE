@@ -13,6 +13,7 @@ import {
   ChevronRight,
   ArrowLeft,
   Settings,
+  Plus,
   Factory,
   CheckCircle,
   Wrench,
@@ -116,16 +117,16 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
           {!selectedClient && (
             <button
               onClick={() => setShowDeleteSelectionModal(true)}
-              className="bg-red-600 text-white h-10 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-red-900/10 flex items-center justify-center gap-2"
+              className="bg-white border border-slate-200 text-slate-400 w-10 h-10 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm"
             >
-              <Trash2 size={14} /> DEL
+              <Trash2 size={20} />
             </button>
           )}
           <button
             onClick={handleOpenAdd}
-            className="bg-[#0066CC] text-white h-10 px-5 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center"
+            className="bg-white border border-slate-200 text-black w-10 h-10 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm"
           >
-            NOVO
+            <Plus size={24} />
           </button>
         </div>
       );
@@ -267,8 +268,8 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
             </div>
             <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 z-10">
               <div className="max-w-3xl mx-auto flex gap-4">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 h-16 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest">Cancelar</button>
-                <button type="submit" disabled={isSaving} className="flex-1 h-16 bg-[#0066CC] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 h-14 bg-slate-100 text-slate-500 rounded-[20px] font-black text-xs uppercase tracking-widest">Cancelar</button>
+                <button type="submit" disabled={isSaving} className="flex-1 h-14 bg-emerald-600 text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
                   {isSaving ? <Loader2 size={24} className="animate-spin" /> : 'SALVAR'}
                 </button>
               </div>
@@ -409,8 +410,8 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
             ))}
             <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-xl border-t border-slate-200 z-[100] animate-in slide-in-from-bottom-5">
               <div className="max-w-4xl mx-auto flex gap-4">
-                <button disabled={!selectedAssetIdForAction} onClick={() => selectedAssetIdForAction && onCorrective(selectedAssetIdForAction)} className={`flex-1 h-14 rounded-[20px] font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3 border-2 ${selectedAssetIdForAction ? 'bg-white border-slate-900 text-slate-900 hover:bg-slate-50 shadow-lg' : 'bg-slate-100 text-slate-400 border-transparent opacity-60'}`}><Wrench size={20} /> CORRETIVA</button>
-                <button disabled={!selectedAssetIdForAction} onClick={() => selectedAssetIdForAction && onInspect(selectedAssetIdForAction)} className={`flex-1 h-14 rounded-[20px] font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3 ${selectedAssetIdForAction ? 'bg-[#0066CC] text-white shadow-2xl hover:bg-[#0055AA]' : 'bg-slate-100 text-slate-400 opacity-60'}`}><Settings size={20} className={selectedAssetIdForAction ? "text-white" : ""} /> PREVENTIVA</button>
+                <button disabled={!selectedAssetIdForAction} onClick={() => selectedAssetIdForAction && onCorrective(selectedAssetIdForAction)} className={`flex-1 h-14 rounded-[20px] font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3 border ${selectedAssetIdForAction ? 'bg-white border-slate-900 text-slate-900 shadow-lg' : 'bg-slate-100 text-slate-400 border-transparent opacity-60'}`}><Wrench size={20} /> CORRETIVA</button>
+                <button disabled={!selectedAssetIdForAction} onClick={() => selectedAssetIdForAction && onInspect(selectedAssetIdForAction)} className={`flex-1 h-14 rounded-[20px] font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3 border ${selectedAssetIdForAction ? 'bg-white border-slate-900 text-slate-900 shadow-lg' : 'bg-slate-100 text-slate-400 border-transparent opacity-60'}`}><Settings size={20} className={selectedAssetIdForAction ? "text-slate-900" : "text-slate-400"} /> PREVENTIVA</button>
               </div>
             </div>
           </div>

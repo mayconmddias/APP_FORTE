@@ -12,6 +12,7 @@ import {
   Trash2,
   AlertTriangle,
   Loader2,
+  Plus,
   Settings
 } from 'lucide-react';
 import { UserProfile } from '../types';
@@ -59,7 +60,9 @@ const UserManagement: React.FC<UserManagementProps> = ({
     onTitleChange?.('USUÁRIOS');
     if (isAdmin) {
       onHeaderActionChange?.(
-        <button onClick={handleOpenAdd} className="bg-[#0066CC] text-white h-10 px-5 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 shadow-xl shadow-slate-900/10">NOVO</button>
+        <button onClick={handleOpenAdd} className="bg-white border border-slate-200 text-black w-10 h-10 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm">
+          <Plus size={24} />
+        </button>
       );
     } else {
       onHeaderActionChange?.(null);
@@ -142,9 +145,9 @@ const UserManagement: React.FC<UserManagementProps> = ({
             <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 z-10">
               <div className="max-w-3xl mx-auto flex gap-4">
                 {!isNewUser && isAdmin && (
-                  <button type="button" onClick={() => setShowConfirmDelete(true)} className="flex-1 h-16 bg-red-50 text-red-600 rounded-2xl font-black text-xs uppercase flex items-center justify-center gap-2"><Trash2 size={24} /> Excluir</button>
+                  <button type="button" onClick={() => setShowConfirmDelete(true)} className="flex-1 h-14 bg-red-50 text-red-600 rounded-[20px] font-black text-xs uppercase flex items-center justify-center gap-2">Excluir</button>
                 )}
-                <button type="submit" className="flex-1 h-16 bg-[#0066CC] text-white rounded-2xl font-black text-xs uppercase shadow-xl flex items-center justify-center gap-2"><Save size={24} className="text-white" /> Salvar</button>
+                <button type="submit" className="flex-1 h-14 bg-emerald-600 text-white rounded-[20px] font-black text-xs uppercase shadow-xl flex items-center justify-center gap-2">Salvar</button>
               </div>
             </div>
           </form>

@@ -213,11 +213,13 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
           }
         }} />
 
-        <div className="bg-slate-100/50 p-1 rounded-2xl flex items-center gap-1">
-          {Object.values(Frequency).map((freq) => (
-            <button key={freq} onClick={() => setFrequency(freq)} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase ${frequency === freq ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-200'}`}>{freq}</button>
-          ))}
-        </div>
+        {editingRecord?.type !== MaintenanceType.CORRETIVA && (
+          <div className="bg-slate-100/50 p-1 rounded-2xl flex items-center gap-1">
+            {Object.values(Frequency).map((freq) => (
+              <button key={freq} onClick={() => setFrequency(freq)} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase ${frequency === freq ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-200'}`}>{freq}</button>
+            ))}
+          </div>
+        )}
 
         {visibleItems.map((item, index) => (
           <div key={item.id} className="bg-white p-5 rounded-[24px] border border-slate-200 shadow-sm">
@@ -241,10 +243,10 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-200 z-[100] flex gap-3 shadow-2xl">
-        <button onClick={handleSaveProgress} disabled={isSavingProgress} className="h-16 flex-1 rounded-2xl border-2 border-slate-900 bg-white font-black text-[11px] uppercase tracking-widest text-slate-900 flex items-center justify-center gap-2">
-          {isSavingProgress ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} /> SALVAR</>}
+        <button onClick={handleSaveProgress} disabled={isSavingProgress} className="h-14 flex-1 rounded-[20px] border-2 border-slate-900 bg-white font-black text-[11px] uppercase tracking-widest text-slate-900 flex items-center justify-center gap-2">
+          {isSavingProgress ? <Loader2 size={18} className="animate-spin" /> : 'SALVAR'}
         </button>
-        <button onClick={() => setIsPreview(true)} disabled={!isFormComplete} className={`h-16 flex-1 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${isFormComplete ? 'bg-[#0066CC] text-white' : 'bg-slate-100 text-slate-400'}`}><FileText size={18} /> Revisar</button>
+        <button onClick={() => setIsPreview(true)} disabled={!isFormComplete} className={`h-14 flex-1 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${isFormComplete ? 'bg-[#0066CC] text-white' : 'bg-slate-100 text-slate-400'}`}>REVISAR</button>
       </div>
 
       {isPreview && (
