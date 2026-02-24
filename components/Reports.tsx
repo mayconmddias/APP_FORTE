@@ -96,9 +96,9 @@ const Reports: React.FC = () => {
           <button
             onClick={handleExportMtbf}
             disabled={loadingMtbf || loadingChecklist}
-            className="w-full bg-[#0066CC] text-white px-6 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 shadow-lg shadow-slate-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+            className="w-full h-14 bg-[#0066CC] text-white px-6 rounded-[20px] font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3 shadow-lg shadow-slate-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
           >
-            {loadingMtbf ? <><Loader2 size={20} className="animate-spin" /> Processando...</> : <><FileDown size={20} /> Exportar MTBF/MTTR</>}
+            {loadingMtbf ? <><Loader2 size={18} className="animate-spin" /> PROCESSANDO...</> : <><FileDown size={20} /> EXPORTAR MTBF/MTTR</>}
           </button>
         </div>
 
@@ -113,9 +113,9 @@ const Reports: React.FC = () => {
           <button
             onClick={handleExportChecklist}
             disabled={loadingMtbf || loadingChecklist}
-            className="w-full bg-white border-2 border-slate-200 text-slate-700 px-6 py-4 rounded-xl font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98]"
+            className="w-full h-14 bg-white border-2 border-slate-200 text-slate-700 px-6 rounded-[20px] font-black uppercase text-xs tracking-widest hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98]"
           >
-            {loadingChecklist ? <><Loader2 size={20} className="animate-spin text-slate-400" /> Gerando PDF...</> : <><FileText size={20} /> Checklist Mensal</>}
+            {loadingChecklist ? <><Loader2 size={18} className="animate-spin text-slate-400" /> GERANDO PDF...</> : <><FileText size={20} /> CHECKLIST MENSAL</>}
           </button>
         </div>
       </div>

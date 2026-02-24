@@ -11,7 +11,8 @@ import {
   Signature,
   HelpCircle,
   X,
-  Check
+  Check,
+  Search
 } from 'lucide-react';
 import { CHECKLIST_PONTE, CHECKLIST_TALHA } from '../constants';
 import { ChecklistItem, CraneAsset, MaintenanceRecord, MaintenanceType, UserProfile, Frequency, ChecklistType } from '../types';
@@ -34,6 +35,8 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [infoModalText, setInfoModalText] = useState<string | null>(null);
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const [selectorSearch, setSelectorSearch] = useState('');
   const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
   const [frequency, setFrequency] = useState<Frequency>(editingRecord?.frequency || Frequency.MENSAL);
 
@@ -95,6 +98,26 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
 
   const updateItem = (id: string, updates: Partial<ChecklistItem>) => {
     setItems(items.map(item => item.id === id ? { ...item, ...updates } : item));
+  };
+
+  const availableItems = useMemo(() => {
+    if (!selectedAsset) return [];
+    const base = (selectedAsset.equipmentType === 'Talha' || selectedAsset.equipmentType === 'Monovia') ? CHECKLIST_TALHA : CHECKLIST_PONTE;
+    return base.map((item, idx) => ({
+      ...item,
+      id: `template-${idx}-${Date.now()}`,
+      isOk: null,
+      observation: '',
+      photos: []
+    } as ChecklistItem));
+  }, [selectedAsset]);
+
+  const toggleItemSelection = (item: ChecklistItem) => {
+    if (items.find(i => i.label === item.label)) {
+      setItems(items.filter(i => i.label !== item.label));
+    } else {
+      setItems([...items, { ...item, id: `add-${Date.now()}-${items.length}` }]);
+    }
   };
 
   const visibleItems = useMemo(() => {
@@ -213,6 +236,13 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
           }
         }} />
 
+        {editingRecord?.type === MaintenanceType.CORRETIVA && (
+          <div className="flex items-center justify-between px-2 mb-2">
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">{items.length} Itens Selecionados</h3>
+            <button onClick={() => setIsSelectorOpen(true)} className="text-blue-600 font-black text-[10px] uppercase tracking-widest hover:underline">+ Adicionar mais</button>
+          </div>
+        )}
+
         {editingRecord?.type !== MaintenanceType.CORRETIVA && (
           <div className="bg-slate-100/50 p-1 rounded-2xl flex items-center gap-1">
             {Object.values(Frequency).map((freq) => (
@@ -256,8 +286,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
             <h3 className="font-black text-sm uppercase tracking-widest text-slate-900">REVISÃO</h3>
             <div className="w-10" />
           </header>
-          <div className="flex-1 p-8 space-y-8 max-w-2xl mx-auto w-full">
-
+          <div className="flex-1 p-8 space-y-8 max-w-3xl mx-auto w-full">
             {/* Lista de Itens do Checklist para Revisão */}
             <div className="space-y-4">
               <h4 className="font-black text-slate-900 uppercase text-xs tracking-widest mb-4">Itens Inspecionados</h4>
@@ -281,34 +310,77 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
               ))}
             </div>
 
-            <div className="bg-[#0066CC] p-10 rounded-[40px] shadow-2xl space-y-8">
+            <div className="bg-slate-50 p-10 rounded-[40px] border border-slate-200 shadow-xl space-y-8">
               {/* Card Responsável Técnico */}
               <div>
-                <div className="flex items-center gap-4 mb-4 text-white"><Signature size={24} /><h3 className="font-black text-white text-xs uppercase tracking-widest">Responsável Técnico</h3></div>
-                <div className="w-full h-14 bg-white/10 border border-white/20 rounded-2xl text-white px-6 font-black uppercase text-xs flex items-center">
+                <div className="flex items-center gap-4 mb-4 text-slate-900"><Signature size={24} className="text-[#0066CC]" /><h3 className="font-black text-slate-900 text-xs uppercase tracking-widest">Responsável Técnico</h3></div>
+                <div className="w-full h-14 bg-white border border-slate-200 rounded-2xl text-slate-900 px-6 font-black uppercase text-xs flex items-center">
                   {currentUser?.name || 'Técnico'}
                 </div>
               </div>
 
               {/* Card Responsável Cliente */}
               <div>
-                <div className="flex items-center gap-4 mb-4 text-white"><Signature size={24} /><h3 className="font-black text-white text-xs uppercase tracking-widest">Responsável Cliente</h3></div>
-                <input type="text" placeholder="Nome Completo do Representante" value={clientName} onChange={(e) => setClientName(e.target.value)} className="w-full h-14 bg-white/10 border border-white/20 rounded-2xl text-white px-6 font-black uppercase text-xs outline-none focus:ring-2 focus:ring-white/40 placeholder:text-white/40" />
+                <div className="flex items-center gap-4 mb-4 text-slate-900"><Signature size={24} className="text-[#0066CC]" /><h3 className="font-black text-slate-900 text-xs uppercase tracking-widest">Responsável Cliente</h3></div>
+                <input type="text" placeholder="Nome Completo do Representante" value={clientName} onChange={(e) => setClientName(e.target.value)} className="w-full h-14 bg-white border border-slate-200 rounded-2xl text-slate-900 px-6 font-black uppercase text-xs outline-none focus:ring-2 focus:ring-[#0066CC]/20 placeholder:text-slate-400" />
               </div>
             </div>
 
-            <button onClick={handleFinalSave} disabled={!clientName || isSubmitting} className={`w-full h-20 rounded-[32px] font-black uppercase text-sm tracking-widest shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all ${clientName ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
-              {isSubmitting ? <Loader2 className="animate-spin text-slate-500" /> : 'GERAR OS'}
-            </button>
+            <div className="flex gap-4">
+              <button onClick={handleFinalSave} disabled={!clientName || isSubmitting} className={`flex-1 h-14 rounded-[20px] font-black uppercase text-xs tracking-widest shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all ${clientName ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
+                {isSubmitting ? <Loader2 className="animate-spin text-slate-500" /> : 'GERAR OS'}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
+      {isSelectorOpen && createPortal(
+        <div className="fixed inset-0 bg-white z-[10000] flex items-center justify-center p-0 sm:p-6 animate-in fade-in">
+          <div className="bg-white w-full max-w-2xl h-full sm:h-[85vh] sm:rounded-[48px] flex flex-col overflow-hidden border border-slate-200 shadow-2xl animate-in zoom-in-95">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div>
+                <h3 className="text-xl font-black text-slate-900 uppercase">Selecionar Itens</h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Base de dados NR-11/12</p>
+              </div>
+              <button onClick={() => setIsSelectorOpen(false)} className="p-3 hover:bg-slate-200 rounded-full text-slate-400 transition-all"><X size={32} /></button>
+            </div>
+            <div className="p-6 bg-white border-b border-slate-50">
+              <div className="relative">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                <input type="text" placeholder="Filtrar por nome ou categoria..." className="w-full h-14 pl-14 pr-6 bg-slate-50 rounded-2xl border border-slate-200 font-bold text-sm outline-none focus:ring-4 focus:ring-[#0066CC]/10 focus:border-[#0066CC] transition-all" value={selectorSearch} onChange={e => setSelectorSearch(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-2 bg-slate-50/50">
+              {availableItems.filter(i => i.label.toLowerCase().includes(selectorSearch.toLowerCase()) || i.category.toLowerCase().includes(selectorSearch.toLowerCase())).map((item, idx) => {
+                const isSelected = !!items.find(s => s.label === item.label);
+                return (
+                  <button key={idx} onClick={() => toggleItemSelection(item)} className={`w-full p-5 rounded-[20px] border transition-all flex items-center justify-between text-left group ${isSelected ? 'bg-blue-50/50 border-[#0066CC] shadow-md ring-1 ring-[#0066CC]/20' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-[#0066CC] border-[#0066CC] text-white' : 'border-slate-200 group-hover:border-slate-300'}`}>
+                        {isSelected && <Check size={14} strokeWidth={4} />}
+                      </div>
+                      <div>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">{item.category}</p>
+                        <h4 className="text-xs font-black text-slate-800 uppercase leading-snug">{item.label}</h4>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="p-6 bg-white border-t border-slate-100">
+              <button onClick={() => setIsSelectorOpen(false)} className="w-full h-14 bg-[#0066CC] text-white rounded-[20px] font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">CONFIRMAR ({items.length})</button>
+            </div>
+          </div>
+        </div>, document.body
+      )}
+
       {infoModalText && createPortal(
         <div className="fixed inset-0 bg-white z-[10001] flex items-center justify-center p-6" onClick={() => setInfoModalText(null)}>
-          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 text-center border-2 border-slate-900 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 text-center border border-slate-200 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
             <p className="text-slate-700 font-bold text-sm leading-relaxed mb-8">{infoModalText}</p>
-            <button onClick={() => setInfoModalText(null)} className="w-full h-14 bg-[#0066CC] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all">Entendido</button>
+            <button onClick={() => setInfoModalText(null)} className="w-full h-14 bg-[#0066CC] text-white rounded-[20px] font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all">Entendido</button>
           </div>
         </div>, document.body
       )}

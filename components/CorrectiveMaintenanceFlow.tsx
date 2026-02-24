@@ -163,7 +163,8 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
       downtimeHours: 0,
       checklists: selectedItemsTemplate.map(i => ({ ...i })),
       clientRepresentative: clientName,
-      signature: `TÉCNICO: ${currentUser.name} | CLIENTE: ${clientName}`
+      signature: clientName ? `TÉCNICO: ${currentUser.name} | CLIENTE: ${clientName}` : 'DRAFT',
+      status: clientName ? 'COMPLETED' : 'OPEN'
     };
 
     onSave(newRecord);
@@ -295,7 +296,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
                 )}
                 {selectedItemsTemplate.length > 0 && (
                   <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 flex gap-4">
-                    <button onClick={onCancel} className="flex-1 h-14 bg-slate-100 text-slate-500 rounded-[20px] font-black text-xs uppercase">Cancelar</button>
+                    <button onClick={handleFinalSave} className="flex-1 h-14 bg-slate-100 text-slate-500 rounded-[20px] font-black text-xs uppercase">SALVAR</button>
                     <button onClick={() => setStep(FlowStep.FILL_CHECKLIST)} className="flex-1 h-14 bg-emerald-600 text-white rounded-[20px] font-black text-xs uppercase shadow-xl shadow-emerald-100 flex items-center justify-center gap-3 active:scale-95 transition-all"><CheckCircle2 size={24} /> Iniciar</button>
                   </div>
                 )}
@@ -339,7 +340,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
                 })}
               </div>
               <div className="p-6 bg-white border-t border-slate-100">
-                <button onClick={() => setIsSelectorOpen(false)} className="w-full h-14 bg-[#0066CC] text-white rounded-[20px] font-black uppercase text-xs shadow-xl active:scale-95 transition-all">Confirmar ({selectedItemsTemplate.length})</button>
+                <button onClick={() => setIsSelectorOpen(false)} className="w-full h-14 bg-[#0066CC] text-white rounded-[20px] font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">CONFIRMAR ({selectedItemsTemplate.length})</button>
               </div>
             </div>
           </div>, document.body
@@ -398,28 +399,28 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
               </div>
             ))}
 
-            <div className="bg-[#0066CC] text-white p-8 md:p-10 rounded-[40px] mt-10 shadow-2xl space-y-8">
+            <div className="bg-slate-50 p-8 md:p-10 rounded-[40px] border border-slate-200 mt-10 shadow-xl space-y-8">
               {/* Responsável Técnico */}
               <div>
-                <div className="flex items-center gap-3 mb-4 text-white">
-                  <Signature size={24} />
-                  <h3 className="font-black text-white text-xs uppercase tracking-widest">Responsável Técnico</h3>
+                <div className="flex items-center gap-3 mb-4 text-slate-900">
+                  <Signature size={24} className="text-[#0066CC]" />
+                  <h3 className="font-black text-slate-900 text-xs uppercase tracking-widest">Responsável Técnico</h3>
                 </div>
-                <div className="w-full h-16 bg-white/10 border border-white/20 rounded-2xl text-white px-6 flex items-center font-black uppercase text-sm">
+                <div className="w-full h-16 bg-white border border-slate-200 rounded-2xl text-slate-900 px-6 flex items-center font-black uppercase text-sm">
                   {currentUser?.name || 'TÉCNICO NÃO IDENTIFICADO'}
                 </div>
               </div>
 
               {/* Responsável Cliente */}
               <div>
-                <div className="flex items-center gap-3 mb-4 text-white">
-                  <Signature size={24} />
-                  <h3 className="font-black text-white text-xs uppercase tracking-widest">Responsável Cliente</h3>
+                <div className="flex items-center gap-3 mb-4 text-slate-900">
+                  <Signature size={24} className="text-[#0066CC]" />
+                  <h3 className="font-black text-slate-900 text-xs uppercase tracking-widest">Responsável Cliente</h3>
                 </div>
                 <input
                   type="text"
                   placeholder="Nome Completo do Representante"
-                  className="w-full h-14 bg-white/10 border border-white/20 rounded-2xl text-white px-6 font-black uppercase text-xs outline-none focus:ring-2 focus:ring-white/40 transition-all placeholder:text-white/40"
+                  className="w-full h-14 bg-white border border-slate-200 rounded-2xl text-slate-900 px-6 font-black uppercase text-xs outline-none focus:ring-2 focus:ring-[#0066CC]/20 transition-all placeholder:text-slate-400"
                   value={clientName}
                   onChange={e => setClientName(e.target.value)}
                 />
@@ -432,8 +433,8 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
         </div>
 
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-200 z-[100] flex gap-3 shadow-2xl">
-          <button onClick={onCancel} className="h-14 flex-1 rounded-[20px] border-2 border-slate-900 bg-white font-black text-[11px] uppercase tracking-widest text-slate-900 flex items-center justify-center gap-2">
-            CANCELAR
+          <button onClick={handleFinalSave} className="h-14 flex-1 rounded-[20px] bg-slate-100 text-slate-500 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-slate-100">
+            SALVAR
           </button>
           <button disabled={!clientName || selectedItemsTemplate.some(i => i.isOk === null) || isSubmitting} onClick={handleFinalSave} className={`h-14 flex-1 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${clientName && !selectedItemsTemplate.some(i => i.isOk === null) ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
             {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'GERAR CORRETIVA'}

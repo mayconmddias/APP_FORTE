@@ -281,9 +281,9 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
     if (showDeleteSelectionModal) {
       overlays.push(createPortal(
         <div key="del-sel" className="fixed inset-0 bg-white z-[9999] flex items-center justify-center p-6">
-          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 border-2 border-slate-900 shadow-2xl animate-in zoom-in-95 flex flex-col max-h-[90vh]">
+          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 border border-slate-200 shadow-2xl animate-in zoom-in-95 flex flex-col max-h-[90vh]">
             <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><AlertTriangle size={48} /></div>
-            <h3 className="text-2xl font-black text-slate-900 tracking-tight text-center mb-6">Excluir Cliente</h3>
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight text-center mb-6">Excluir {clientToDeleteName || 'Cliente'}</h3>
 
             <div className="flex-1 overflow-y-auto space-y-2 pr-2 scrollbar-transparent mb-8">
               {clientGroups.map(client => (
@@ -306,14 +306,14 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
             <div className="flex gap-4">
               <button
                 onClick={() => { setShowDeleteSelectionModal(false); setClientToDeleteName(null); }}
-                className="flex-1 h-16 bg-slate-50 text-slate-500 rounded-[24px] font-black text-[11px] uppercase tracking-widest transition-all"
+                className="flex-1 h-14 bg-slate-50 text-slate-500 rounded-[20px] font-black text-[11px] uppercase tracking-widest transition-all"
               >
                 Sair
               </button>
               <button
                 onClick={handleDeleteClient}
                 disabled={isDeleting || !clientToDeleteName}
-                className={`flex-1 h-16 rounded-[24px] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${!clientToDeleteName || isDeleting
+                className={`flex-1 h-14 rounded-[20px] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${!clientToDeleteName || isDeleting
                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   : 'bg-red-600 text-white shadow-lg shadow-red-200 active:scale-95'
                   }`}
@@ -328,13 +328,13 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
     if (showDeleteModal) {
       overlays.push(createPortal(
         <div key="asset-del" className="fixed inset-0 bg-white z-[9999] flex items-center justify-center p-6">
-          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 text-center border-2 border-slate-900 shadow-2xl animate-in zoom-in-95">
+          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 text-center border border-slate-200 shadow-2xl animate-in zoom-in-95">
             <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-8"><AlertTriangle size={48} /></div>
-            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Excluir Ativo?</h3>
-            <p className="text-slate-500 text-[10px] font-bold uppercase mt-4 mb-10 leading-relaxed px-4">Esta ação apagará todos os dados técnicos deste equipamento.</p>
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Excluir {assetToDelete?.name}?</h3>
+            <p className="text-slate-500 text-[10px] font-bold uppercase mt-4 mb-10 leading-relaxed px-4">Esta ação apagará todos os dados técnicos de {assetToDelete?.name} do cliente {assetToDelete?.client}.</p>
             <div className="flex gap-4">
-              <button onClick={() => setShowDeleteModal(false)} className="flex-1 h-16 bg-slate-50 text-slate-500 rounded-[24px] font-black text-[11px] uppercase tracking-widest transition-all">Sair</button>
-              <button onClick={confirmDelete} disabled={isDeleting} className="flex-1 h-16 bg-red-600 text-white rounded-[24px] font-black text-[11px] uppercase shadow-lg shadow-red-200 flex items-center justify-center gap-3 active:scale-95 transition-all">
+              <button onClick={() => setShowDeleteModal(false)} className="flex-1 h-14 bg-slate-50 text-slate-500 rounded-[20px] font-black text-[11px] uppercase tracking-widest transition-all">Sair</button>
+              <button onClick={confirmDelete} disabled={isDeleting} className="flex-1 h-14 bg-red-600 text-white rounded-[20px] font-black text-[11px] uppercase shadow-lg shadow-red-200 flex items-center justify-center gap-3 active:scale-95 transition-all">
                 {isDeleting ? <Loader2 size={18} className="animate-spin" /> : 'Confirmar'}
               </button>
             </div>

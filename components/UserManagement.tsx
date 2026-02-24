@@ -147,7 +147,7 @@ const UserManagement: React.FC<UserManagementProps> = ({
                 {!isNewUser && isAdmin && (
                   <button type="button" onClick={() => setShowConfirmDelete(true)} className="flex-1 h-14 bg-red-50 text-red-600 rounded-[20px] font-black text-xs uppercase flex items-center justify-center gap-2">Excluir</button>
                 )}
-                <button type="submit" className="flex-1 h-14 bg-emerald-600 text-white rounded-[20px] font-black text-xs uppercase shadow-xl flex items-center justify-center gap-2">Salvar</button>
+                <button type="submit" className="flex-1 h-14 bg-emerald-600 text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-2">SALVAR</button>
               </div>
             </div>
           </form>
@@ -157,14 +157,14 @@ const UserManagement: React.FC<UserManagementProps> = ({
     if (showConfirmDelete) {
       overlays.push(createPortal(
         <div key="user-del" className="fixed inset-0 bg-white z-[10000] flex items-center justify-center p-6" onClick={() => setShowConfirmDelete(false)}>
-          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 text-center border-2 border-slate-900 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 text-center border border-slate-200 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
             <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><AlertTriangle size={48} /></div>
             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Excluir Perfil?</h3>
             <p className="text-slate-500 text-[10px] font-bold uppercase mt-4 mb-10 leading-relaxed px-4">Deseja remover o acesso de <span className="font-black text-slate-800">"{editingUser?.name}"</span>?</p>
             <div className="flex gap-4">
-              <button onClick={() => setShowConfirmDelete(false)} className="flex-1 h-16 bg-slate-50 text-slate-500 rounded-[24px] font-black text-[11px] uppercase tracking-widest transition-all">Sair</button>
-              <button onClick={handleDeleteUser} disabled={isDeleting} className="flex-1 h-16 bg-red-600 text-white rounded-[24px] font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-200 flex items-center justify-center gap-2 active:scale-95 transition-all">
-                {isDeleting ? <Loader2 size={18} className="animate-spin" /> : 'Confirmar'}
+              <button onClick={() => setShowConfirmDelete(false)} className="flex-1 h-14 bg-slate-50 text-slate-500 rounded-[20px] font-black text-[11px] uppercase tracking-widest transition-all">Sair</button>
+              <button onClick={handleDeleteUser} disabled={isDeleting} className="flex-1 h-14 bg-red-600 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-200 flex items-center justify-center gap-2 active:scale-95 transition-all">
+                {isDeleting ? <Loader2 size={18} className="animate-spin" /> : 'CONFIRMAR'}
               </button>
             </div>
           </div>

@@ -134,8 +134,8 @@ const OpenInspections: React.FC<OpenInspectionsProps> = ({ onContinue, assets, o
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button onClick={() => { setIdToDelete(draft.id); setShowDeleteModal(true); }} className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
-                <button onClick={() => onContinue(draft)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[#0066CC] text-white rounded-xl font-black text-[11px] uppercase hover:bg-[#0055AA] transition-all shadow-md group">
-                  Retomar <Play size={14} className="fill-current group-hover:translate-x-1 transition-transform" />
+                <button onClick={() => onContinue(draft)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 h-14 bg-[#0066CC] text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all group">
+                  RETOMAR <Play size={14} className="fill-current group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </div>
@@ -145,13 +145,13 @@ const OpenInspections: React.FC<OpenInspectionsProps> = ({ onContinue, assets, o
 
       {showDeleteModal && (
         <div className="fixed inset-0 bg-white z-[110] flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 text-center border-2 border-slate-900 shadow-2xl animate-in zoom-in-95">
+          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 text-center border border-slate-200 shadow-2xl animate-in zoom-in-95">
             <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><AlertTriangle size={48} /></div>
             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Excluir Rascunho?</h3>
             <p className="text-slate-500 text-[10px] font-bold uppercase mt-4 mb-10 leading-relaxed px-4">Esta ação removerá permanentemente os dados desta OS incompleta.</p>
             <div className="flex gap-4">
-              <button onClick={() => { setShowDeleteModal(false); setIdToDelete(null); }} className="flex-1 h-16 bg-slate-50 text-slate-500 rounded-[24px] font-black text-[11px] uppercase tracking-widest transition-all">Sair</button>
-              <button onClick={confirmDelete} className="flex-1 h-16 bg-red-600 text-white rounded-[24px] font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-200 active:scale-95 transition-all">Confirmar</button>
+              <button onClick={() => { setShowDeleteModal(false); setIdToDelete(null); }} className="flex-1 h-14 bg-slate-50 text-slate-500 rounded-[20px] font-black text-[11px] uppercase tracking-widest transition-all">Sair</button>
+              <button onClick={confirmDelete} className="flex-1 h-14 bg-red-600 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-200 active:scale-95 transition-all">Confirmar</button>
             </div>
           </div>
         </div>
