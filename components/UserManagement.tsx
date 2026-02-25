@@ -110,7 +110,9 @@ const UserManagement: React.FC<UserManagementProps> = ({
     }
   };
 
-  const filteredUsers = users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredUsers = users
+    .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const inputClasses = "w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#0066CC]/10 focus:border-[#0066CC] outline-none transition-all font-bold text-slate-800 text-sm";
   const labelClasses = "text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block";
@@ -143,11 +145,11 @@ const UserManagement: React.FC<UserManagementProps> = ({
               </div>
             </div>
             <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 z-10">
-              <div className="max-w-3xl mx-auto flex gap-4">
+              <div className="max-w-3xl mx-auto flex justify-center gap-4">
                 {!isNewUser && isAdmin && (
                   <button type="button" onClick={() => setShowConfirmDelete(true)} className="flex-1 h-14 bg-red-50 text-red-600 rounded-[20px] font-black text-xs uppercase flex items-center justify-center gap-2">Excluir</button>
                 )}
-                <button type="submit" className="flex-1 h-14 bg-emerald-600 text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-2">SALVAR</button>
+                <button type="submit" className={`${!isNewUser && isAdmin ? 'flex-1' : 'w-1/2'} h-14 bg-emerald-600 text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-2`}>SALVAR</button>
               </div>
             </div>
           </form>
