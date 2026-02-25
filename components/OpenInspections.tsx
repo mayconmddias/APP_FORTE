@@ -132,9 +132,9 @@ const OpenInspections: React.FC<OpenInspectionsProps> = ({ onContinue, assets, o
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <button onClick={() => { setIdToDelete(draft.id); setShowDeleteModal(true); }} className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
-                <button onClick={() => onContinue(draft)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 h-14 bg-[#0066CC] text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all group">
+              <div className="flex items-center gap-2 w-full sm:w-auto relative justify-center">
+                <button onClick={() => { setIdToDelete(draft.id); setShowDeleteModal(true); }} className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all absolute left-0"><Trash2 size={18} /></button>
+                <button onClick={() => onContinue(draft)} className="w-1/2 sm:w-40 flex items-center justify-center gap-2 h-10 bg-[#0066CC] text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all group">
                   RETOMAR <Play size={14} className="fill-current group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>

@@ -53,7 +53,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
       {/* Overlay - Backdrop */}
       {isExpanded && (
         <div
-          className="fixed inset-0 bg-white z-[100] transition-opacity duration-300"
+          className="fixed inset-0 bg-transparent z-[100] transition-opacity duration-300"
           onClick={() => setIsExpanded(false)}
         />
       )}

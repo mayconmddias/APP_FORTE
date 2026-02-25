@@ -277,7 +277,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
             <div className="flex gap-4">
               <button onClick={() => setRecordToDelete(null)} className="flex-1 h-14 bg-slate-50 text-slate-500 rounded-[20px] font-black text-[11px] uppercase tracking-widest transition-all">Sair</button>
               <button onClick={() => { if (recordToDelete && onDelete) onDelete(recordToDelete.id); setRecordToDelete(null); }} className="flex-1 h-14 bg-red-600 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-200 flex items-center justify-center gap-2 active:scale-95 transition-all">
-                {String(recordToDelete?.id || '').startsWith('temp-') ? <Loader2 size={18} className="animate-spin" /> : 'Confirmar'}
+                {String(recordToDelete?.id || '').startsWith('temp-') ? <Loader2 size={18} className="animate-spin" /> : 'CONFIRMAR'}
               </button>
             </div>
           </div>

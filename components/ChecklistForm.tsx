@@ -243,7 +243,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
           </div>
         )}
 
-        {editingRecord?.type !== MaintenanceType.CORRETIVA && (
+        {editingRecord?.type !== MaintenanceType.CORRETIVA && !['Monovia', 'Talha'].includes(selectedAsset?.equipmentType || '') && (
           <div className="bg-slate-100/50 p-1 rounded-2xl flex items-center gap-1">
             {Object.values(Frequency).map((freq) => (
               <button key={freq} onClick={() => setFrequency(freq)} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase ${frequency === freq ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-200'}`}>{freq}</button>
@@ -326,8 +326,8 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
               </div>
             </div>
 
-            <div className="flex gap-4">
-              <button onClick={handleFinalSave} disabled={!clientName || isSubmitting} className={`flex-1 h-14 rounded-[20px] font-black uppercase text-xs tracking-widest shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all ${clientName ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
+            <div className="flex justify-center">
+              <button onClick={handleFinalSave} disabled={!clientName || isSubmitting} className={`w-1/2 h-14 rounded-[20px] font-black uppercase text-xs tracking-widest shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all ${clientName ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
                 {isSubmitting ? <Loader2 className="animate-spin text-slate-500" /> : 'GERAR OS'}
               </button>
             </div>
@@ -369,8 +369,8 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
                 );
               })}
             </div>
-            <div className="p-6 bg-white border-t border-slate-100">
-              <button onClick={() => setIsSelectorOpen(false)} className="w-full h-14 bg-[#0066CC] text-white rounded-[20px] font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">CONFIRMAR ({items.length})</button>
+            <div className="p-6 bg-white border-t border-slate-100 flex justify-center">
+              <button onClick={() => setIsSelectorOpen(false)} className="w-1/2 h-14 bg-[#0066CC] text-white rounded-[20px] font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">CONFIRMAR ({items.length})</button>
             </div>
           </div>
         </div>, document.body

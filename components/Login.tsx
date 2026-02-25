@@ -96,7 +96,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, users, onRegisterNewUser }) => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-1/2 h-14 text-white rounded-[20px] font-black uppercase text-xs tracking-widest shadow-2xl shadow-blue-900/30 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-3"
+                className="w-1/2 h-10 text-white rounded-[20px] font-black uppercase text-xs tracking-widest shadow-2xl shadow-blue-900/30 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-3"
                 style={{ backgroundColor: 'rgb(0, 102, 204)' }}
               >
                 {isLoading ? <Loader2 size={22} className="animate-spin" /> : 'ENTRAR'}

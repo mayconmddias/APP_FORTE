@@ -339,8 +339,8 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
                   );
                 })}
               </div>
-              <div className="p-6 bg-white border-t border-slate-100">
-                <button onClick={() => setIsSelectorOpen(false)} className="w-full h-14 bg-[#0066CC] text-white rounded-[20px] font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">CONFIRMAR ({selectedItemsTemplate.length})</button>
+              <div className="p-6 bg-white border-t border-slate-100 flex justify-center">
+                <button onClick={() => setIsSelectorOpen(false)} className="w-1/2 h-14 bg-[#0066CC] text-white rounded-[20px] font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">CONFIRMAR ({selectedItemsTemplate.length})</button>
               </div>
             </div>
           </div>, document.body
@@ -432,11 +432,11 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-200 z-[100] flex gap-3 shadow-2xl">
-          <button onClick={handleFinalSave} className="h-14 flex-1 rounded-[20px] bg-slate-100 text-slate-500 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-slate-100">
+        <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-200 z-[100] flex justify-center gap-3 shadow-2xl">
+          <button onClick={handleFinalSave} className="h-14 w-32 rounded-[20px] bg-slate-100 text-slate-500 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-slate-100">
             SALVAR
           </button>
-          <button disabled={!clientName || selectedItemsTemplate.some(i => i.isOk === null) || isSubmitting} onClick={handleFinalSave} className={`h-14 flex-1 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${clientName && !selectedItemsTemplate.some(i => i.isOk === null) ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+          <button disabled={!clientName || selectedItemsTemplate.some(i => i.isOk === null) || isSubmitting} onClick={handleFinalSave} className={`h-14 w-1/2 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${clientName && !selectedItemsTemplate.some(i => i.isOk === null) ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
             {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'GERAR CORRETIVA'}
           </button>
         </div>
