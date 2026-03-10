@@ -24,20 +24,6 @@ registerRoute(
     })
 );
 
-// Network-first for API calls
-registerRoute(
-    ({ url }) => url.hostname.includes('supabase.co'),
-    new NetworkFirst({
-        cacheName: 'api-cache',
-        plugins: [
-            new ExpirationPlugin({
-                maxEntries: 100,
-                maxAgeSeconds: 24 * 60 * 60, // 24 Hours
-            }),
-        ],
-    })
-);
-
 // Offline fallback
 const OFFLINE_URL = '/offline.html';
 const networkOnly = new NetworkOnly();
