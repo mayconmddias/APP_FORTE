@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   Clock,
   Calendar,
@@ -9,7 +9,9 @@ import {
   Loader2
 } from 'lucide-react';
 import { CraneAsset, MaintenanceRecord } from '../types';
-import { supabase } from '../supabaseClient';
+import { db } from '../services/offlineDb';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { syncEngine } from '../services/syncEngine';
 
 interface OpenInspectionsProps {
   onContinue: (record: MaintenanceRecord) => void;
@@ -18,69 +20,36 @@ interface OpenInspectionsProps {
 }
 
 const OpenInspections: React.FC<OpenInspectionsProps> = ({ onContinue, assets, onTitleChange }) => {
-  const [drafts, setDrafts] = useState<MaintenanceRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [idToDelete, setIdToDelete] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [idToDelete, setIdToDelete] = React.useState<string | null>(null);
 
   useEffect(() => {
     onTitleChange?.('ORDENS EM ABERTO');
   }, [onTitleChange]);
 
-  const loadDrafts = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('maintenance_records')
-        .select('*')
-        .eq('signature', 'DRAFT')
-        .order('date', { ascending: false });
-
-      if (error) throw error;
-
-      if (data) {
-        const mappedDrafts = data.map((r: any) => ({
-          id: r.id,
-          inspectionNumber: r.inspection_number || r.inspectionNumber,
-          assetId: r.asset_id || r.assetId,
-          type: r.type,
-          checklistType: r.checklist_type || r.checklistType,
-          frequency: r.frequency,
-          date: r.date,
-          technician: r.technician,
-          technicianId: r.technician_id || r.technicianId,
-          downtimeHours: r.downtime_hours || r.downtimeHours,
-          criticality: r.criticality,
-          checklists: r.checklists,
-          clientRepresentative: r.client_representative || r.clientRepresentative,
-          signature: r.signature,
-          status: r.status
-        })) as MaintenanceRecord[];
-
-        setDrafts(mappedDrafts);
-      }
-    } catch (error) {
-      console.error('Error loading drafts:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadDrafts();
-  }, []);
+  const drafts = useLiveQuery(
+    () => db.ordens_servico.where('status').equals('OPEN').toArray(),
+    []
+  );
 
   const confirmDelete = async () => {
     if (idToDelete) {
       try {
-        const { error } = await supabase
-          .from('maintenance_records')
-          .delete()
-          .eq('id', idToDelete);
+        const record = await db.ordens_servico.get(idToDelete);
 
-        if (error) throw error;
+        // 1. REGISTRAR NA FILA DE EXCLUSÃO se tiver ID de servidor
+        if (record?.server_id) {
+          console.log("OpenInspections: Queueing server deletion for:", record.server_id);
+          await db.exclusoes_pendentes.add({
+            server_id: record.server_id,
+            table_name: 'maintenance_records',
+            timestamp: new Date().toISOString()
+          });
+        }
 
-        loadDrafts();
+        // 2. Remover localmente
+        await db.ordens_servico.delete(idToDelete);
+        syncEngine.triggerSync();
         setShowDeleteModal(false);
         setIdToDelete(null);
       } catch (error) {
@@ -98,7 +67,7 @@ const OpenInspections: React.FC<OpenInspectionsProps> = ({ onContinue, assets, o
     return assets.find(a => a.id === assetId)?.client || 'Cliente Desconhecido';
   };
 
-  if (loading) {
+  if (drafts === undefined) {
     return (
       <div className="flex justify-center items-center py-20">
         <Loader2 className="animate-spin text-slate-400" size={32} />
@@ -117,12 +86,15 @@ const OpenInspections: React.FC<OpenInspectionsProps> = ({ onContinue, assets, o
       ) : (
         <div className="grid grid-cols-1 gap-3">
           {drafts.map((draft) => (
-            <div key={draft.id} className="bg-white border border-slate-200 rounded-[24px] p-5 shadow-sm hover:border-slate-300 transition-all flex flex-col sm:flex-row items-center gap-4">
+            <div key={draft.local_id || draft.id} className="bg-white border border-slate-200 rounded-[24px] p-5 shadow-sm hover:border-slate-300 transition-all flex flex-col sm:flex-row items-center gap-4">
               <div className="p-3 bg-orange-100 text-orange-600 rounded-xl hidden sm:block"><Clock size={22} /></div>
 
               <div className="flex-1 text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
                   <span className="text-[8px] font-black uppercase bg-orange-500 text-white px-1.5 py-0.5 rounded tracking-tighter">EM ABERTO</span>
+                  <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded tracking-tighter ${draft.type === 'CORRETIVA' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                    {draft.type}
+                  </span>
                   <span className="text-[8px] font-bold uppercase bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded tracking-tighter">{draft.technician}</span>
                 </div>
                 <h3 className="text-base font-black text-slate-800 leading-tight uppercase">{getAssetName(draft.assetId)}</h3>
@@ -132,8 +104,14 @@ const OpenInspections: React.FC<OpenInspectionsProps> = ({ onContinue, assets, o
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto relative justify-center">
-                <button onClick={() => { setIdToDelete(draft.id); setShowDeleteModal(true); }} className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all absolute left-0"><Trash2 size={18} /></button>
+              <div className="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-end">
+                <button
+                  onClick={() => { setIdToDelete(draft.local_id || draft.id); setShowDeleteModal(true); }}
+                  className="w-10 h-10 flex items-center justify-center bg-white text-slate-900 border border-slate-100 rounded-xl shadow-sm hover:bg-red-50 hover:text-red-500 transition-all active:scale-95"
+                  title="Excluir Rascunho"
+                >
+                  <Trash2 size={18} />
+                </button>
                 <button onClick={() => onContinue(draft)} className="w-1/2 sm:w-40 flex items-center justify-center gap-2 h-10 bg-[#0066CC] text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all group">
                   RETOMAR <Play size={14} className="fill-current group-hover:translate-x-1 transition-transform" />
                 </button>

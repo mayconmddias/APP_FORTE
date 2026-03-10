@@ -9,6 +9,9 @@ import { createClient } from '@supabase/supabase-js';
  * Acesse o Dashboard do Supabase -> SQL Editor -> New Query e execute:
  * 
  * ALTER TABLE public.crane_assets ADD COLUMN IF NOT EXISTS equipment_type text DEFAULT 'Ponte';
+ * ALTER TABLE public.crane_assets ADD COLUMN IF NOT EXISTS version integer DEFAULT 1;
+ * ALTER TABLE public.maintenance_records ADD COLUMN IF NOT EXISTS version integer DEFAULT 1;
+ * ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS version integer DEFAULT 1;
  * 
  * ==============================================================================
  */
@@ -21,7 +24,8 @@ import { createClient } from '@supabase/supabase-js';
  *   name text NOT NULL,
  *   email text UNIQUE NOT NULL,
  *   role text NOT NULL CHECK (role IN ('ADMIN', 'TECNICO')),
- *   password text NOT NULL
+ *   password text NOT NULL,
+ *   version integer DEFAULT 1
  * );
  * 
  * CREATE TABLE IF NOT EXISTS public.crane_assets (
@@ -35,7 +39,8 @@ import { createClient } from '@supabase/supabase-js';
  *   location text,
  *   commissioning_date text,
  *   status text DEFAULT 'OPERACIONAL',
- *   equipment_type text DEFAULT 'Ponte'
+ *   equipment_type text DEFAULT 'Ponte',
+ *   version integer DEFAULT 1
  * );
  * 
  * ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
@@ -59,7 +64,8 @@ import { createClient } from '@supabase/supabase-js';
  *   criticality text,
  *   checklists jsonb,
  *   client_representative text,
- *   signature text
+ *   signature text,
+ *   version integer DEFAULT 1
  * );
  * ALTER TABLE public.maintenance_records ENABLE ROW LEVEL SECURITY;
  * CREATE POLICY "Acesso total registros" ON public.maintenance_records FOR ALL USING (true);

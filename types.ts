@@ -58,7 +58,8 @@ export interface ChecklistItem {
 }
 
 export interface MaintenanceRecord {
-  id: string;
+  id: string; // Server ID or Local UUID
+  local_id?: string; // Dexie Primary Key
   inspectionNumber?: number;
   assetId: string;
   type: MaintenanceType;

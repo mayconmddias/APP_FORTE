@@ -9,9 +9,13 @@ import {
   Clock,
   Menu,
   X,
-  Wrench
+  Wrench,
+  RefreshCw
 } from 'lucide-react';
 import { UserProfile } from '../types';
+import SyncStatus from './SyncStatus';
+import { db } from '../services/offlineDb';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -24,25 +28,26 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLogout, currentUser, pageTitle, headerAction }) => {
+  console.log("Layout: Rendering with currentUser:", currentUser?.email, "activeTab:", activeTab);
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const [openDraftsCount, setOpenDraftsCount] = useState(0);
-
-  useEffect(() => {
-    const checkDrafts = () => {
-      const keys = Object.keys(localStorage);
-      const drafts = keys.filter(key => key.startsWith('forte_global_draft_'));
-      setOpenDraftsCount(drafts.length);
-    };
-    checkDrafts();
-    const interval = setInterval(checkDrafts, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  const openDraftsCount = useLiveQuery(
+    async () => {
+      try {
+        return await db.ordens_servico.where('status').equals('OPEN').count();
+      } catch (e) {
+        console.warn("Layout: Failed to query open drafts", e);
+        return 0;
+      }
+    },
+    []
+  ) || 0;
 
   const menuItems = [
     { id: 'assets', label: 'CLIENTES', icon: <Construction size={22} /> },
     { id: 'history', label: 'HISTÓRICO', icon: <History size={22} /> },
     { id: 'open-orders', label: 'OS EM ABERTAS', icon: <Clock size={22} />, badge: openDraftsCount > 0 ? openDraftsCount : undefined },
+    { id: 'sync-pendencies', label: 'SINCRONIZAÇÃO', icon: <RefreshCw size={22} /> },
     ...(currentUser.role === 'ADMIN' ? [
       { id: 'users', label: 'USUÁRIOS', icon: <Users size={22} /> }
     ] : []),
@@ -126,6 +131,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
           </div>
 
           <div className="flex items-center gap-4">
+            <SyncStatus />
             {headerAction}
           </div>
         </header>

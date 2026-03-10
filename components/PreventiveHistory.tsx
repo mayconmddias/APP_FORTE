@@ -64,7 +64,10 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
 
   const clientGroups = useMemo(() => {
     const groups: Record<string, { name: string; assetCount: number; inspectionCount: number }> = {};
+    if (!Array.isArray(assetsWithMeta)) return [];
+
     assetsWithMeta.forEach(asset => {
+      if (!asset || !asset.client) return;
       const clientName = asset.client.trim();
       if (!groups[clientName]) groups[clientName] = { name: clientName, assetCount: 0, inspectionCount: 0 };
       groups[clientName].assetCount += 1;
@@ -77,20 +80,29 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     const term = searchTerm.toLowerCase().trim();
     if (term) {
       const matchedAssets = assetsWithMeta.filter(asset =>
-        asset.client.toLowerCase().includes(term) ||
-        asset.name.toLowerCase().includes(term) ||
-        asset.serialNumber.toLowerCase().includes(term) ||
+        (asset.client || '').toLowerCase().includes(term) ||
+        (asset.name || '').toLowerCase().includes(term) ||
+        (asset.serialNumber || '').toLowerCase().includes(term) ||
         asset.osList.some(os => os.raw.includes(term) || os.padded.includes(term))
       );
-      return { type: 'SEARCH', data: matchedAssets };
+      return {
+        type: 'SEARCH',
+        data: matchedAssets.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }))
+      };
     }
-    if (selectedClient) return { type: 'ASSETS', data: assetsWithMeta.filter(a => a.client.trim() === selectedClient.trim()) };
+    if (selectedClient) {
+      const filtered = assetsWithMeta.filter(a => (a.client || '').trim() === selectedClient.trim());
+      return {
+        type: 'ASSETS',
+        data: filtered.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }))
+      };
+    }
     return { type: 'CLIENTS', data: clientGroups };
   }, [searchTerm, selectedClient, clientGroups, assetsWithMeta]);
 
   const selectedAsset = assets.find(a => a.id === selectedAssetId);
   const selectedRecords = history
-    .filter(r => r.assetId === selectedAssetId || (r as any).asset_id === selectedAssetId)
+    .filter(r => (r.assetId === selectedAssetId || (r as any).asset_id === selectedAssetId) && r.status !== 'OPEN')
     .sort((a, b) => (b.inspectionNumber || 0) - (a.inspectionNumber || 0));
 
   const handleGeneratePdf = (record: MaintenanceRecord) => {
@@ -243,7 +255,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
           </div>
           <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-3 pb-24">
             {selectedRecords.map((record) => (
-              <div key={record.id} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+              <div key={record.local_id || record.id} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${record.type === MaintenanceType.CORRETIVA ? 'bg-red-50 text-red-600' : 'bg-[#0066CC] text-white'}`}><Hash size={14} /></div>
@@ -276,7 +288,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
             <p className="text-slate-500 text-[10px] font-bold uppercase mt-4 mb-10 leading-relaxed px-4">Esta ação removerá permanentemente a Ordem de Serviço #{String(recordToDelete?.inspectionNumber || 0).padStart(4, '0')}.</p>
             <div className="flex gap-4">
               <button onClick={() => setRecordToDelete(null)} className="flex-1 h-14 bg-slate-50 text-slate-500 rounded-[20px] font-black text-[11px] uppercase tracking-widest transition-all">Sair</button>
-              <button onClick={() => { if (recordToDelete && onDelete) onDelete(recordToDelete.id); setRecordToDelete(null); }} className="flex-1 h-14 bg-red-600 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-200 flex items-center justify-center gap-2 active:scale-95 transition-all">
+              <button onClick={() => { if (recordToDelete && onDelete) onDelete(recordToDelete.local_id || recordToDelete.id); setRecordToDelete(null); }} className="flex-1 h-14 bg-red-600 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-200 flex items-center justify-center gap-2 active:scale-95 transition-all">
                 {String(recordToDelete?.id || '').startsWith('temp-') ? <Loader2 size={18} className="animate-spin" /> : 'CONFIRMAR'}
               </button>
             </div>

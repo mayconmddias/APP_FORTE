@@ -14,7 +14,5 @@ if (!rootElement) {
 console.log("APP FORTE: Starting render...");
 const root = ReactDOM.createRoot(rootElement);
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  <App />
 );

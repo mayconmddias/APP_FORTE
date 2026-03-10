@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { createPortal } from 'react-dom';
 import {
   Search,
@@ -29,6 +30,7 @@ interface CorrectiveMaintenanceFlowProps {
   nextOsNumber: number;
   onTitleChange?: (title: string | null) => void;
   initialAssetId?: string | null;
+  editingRecord?: MaintenanceRecord | null;
 }
 
 enum FlowStep {
@@ -39,20 +41,29 @@ enum FlowStep {
   SUCCESS
 }
 
-const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ onSave, onCancel, currentUser, assets, nextOsNumber, onTitleChange, initialAssetId }) => {
-  const [step, setStep] = useState<FlowStep>(FlowStep.SELECT_CLIENT);
+const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
+  onSave,
+  onCancel,
+  currentUser,
+  assets,
+  nextOsNumber,
+  onTitleChange,
+  initialAssetId,
+  editingRecord
+}) => {
+  const [step, setStep] = useState<FlowStep>(editingRecord ? FlowStep.FILL_CHECKLIST : FlowStep.SELECT_CLIENT);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<CraneAsset | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const [selectedItemsTemplate, setSelectedItemsTemplate] = useState<ChecklistItem[]>([]);
+  const [selectedItemsTemplate, setSelectedItemsTemplate] = useState<ChecklistItem[]>(editingRecord?.checklists || []);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [selectorSearch, setSelectorSearch] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activePhotoItemId, setActivePhotoItemId] = useState<string | null>(null);
   const [infoModalText, setInfoModalText] = useState<string | null>(null);
-  const [clientName, setClientName] = useState('');
+  const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastOsNumber, setLastOsNumber] = useState<number>(0);
 
@@ -92,10 +103,12 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
       if (asset) {
         setSelectedAsset(asset);
         setSelectedClient(asset.client);
-        setStep(FlowStep.BUILD_CHECKLIST);
+        if (!editingRecord) {
+          setStep(FlowStep.BUILD_CHECKLIST);
+        }
       }
     }
-  }, [initialAssetId, assets, selectedAsset]);
+  }, [initialAssetId, assets, selectedAsset, editingRecord]);
 
   useEffect(() => {
     if (step === FlowStep.SELECT_CLIENT) onTitleChange?.('MANUTENÇÃO CORRETIVA');
@@ -134,6 +147,11 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
   }, [selectedAsset]);
 
   const toggleItemSelection = (item: ChecklistItem) => {
+    // Se estiver editando e o item já estava no registro original, não permite desmarcar ou alterar
+    if (editingRecord?.checklists?.find(i => i.label === item.label)) {
+      return;
+    }
+
     if (selectedItemsTemplate.find(i => i.label === item.label)) {
       setSelectedItemsTemplate(selectedItemsTemplate.filter(i => i.label !== item.label));
     } else {
@@ -145,14 +163,18 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
     setSelectedItemsTemplate(selectedItemsTemplate.map(item => item.id === id ? { ...item, ...updates } : item));
   };
 
-  const handleFinalSave = () => {
+  const handleFinalSave = (isDraft: boolean = false) => {
     if (!selectedAsset || !currentUser) return;
     setIsSubmitting(true);
     setLastOsNumber(nextOsNumber);
 
+    const id = editingRecord?.id || `h-${Date.now()}`;
+    const localId = editingRecord?.local_id || uuidv4();
+
     const newRecord: MaintenanceRecord = {
-      id: `h-corretiva-${Date.now()}`,
-      inspectionNumber: nextOsNumber,
+      id: id,
+      local_id: localId,
+      inspectionNumber: editingRecord?.inspectionNumber || nextOsNumber,
       assetId: selectedAsset.id,
       type: MaintenanceType.CORRETIVA,
       checklistType: (selectedAsset.equipmentType === 'Talha' || selectedAsset.equipmentType === 'Monovia') ? 'TALHA_PRINCIPAL' : 'PONTE_PRINCIPAL',
@@ -163,13 +185,17 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
       downtimeHours: 0,
       checklists: selectedItemsTemplate.map(i => ({ ...i })),
       clientRepresentative: clientName,
-      signature: clientName ? `TÉCNICO: ${currentUser.name} | CLIENTE: ${clientName}` : 'DRAFT',
-      status: clientName ? 'COMPLETED' : 'OPEN'
+      signature: (clientName && !isDraft) ? `TÉCNICO: ${currentUser.name} | CLIENTE: ${clientName}` : 'DRAFT',
+      status: (clientName && !isDraft) ? 'COMPLETED' : 'OPEN'
     };
 
     onSave(newRecord);
     setIsSubmitting(false);
-    setStep(FlowStep.SUCCESS);
+    if (!isDraft) {
+      setStep(FlowStep.SUCCESS);
+    } else {
+      onCancel();
+    }
   };
 
   if (step === FlowStep.SUCCESS) {
@@ -296,7 +322,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
                 )}
                 {selectedItemsTemplate.length > 0 && (
                   <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 flex gap-4">
-                    <button onClick={handleFinalSave} className="flex-1 h-14 bg-slate-100 text-slate-500 rounded-[20px] font-black text-xs uppercase">SALVAR</button>
+                    <button onClick={() => handleFinalSave(true)} className="flex-1 h-14 bg-slate-100 text-slate-500 rounded-[20px] font-black text-xs uppercase">SALVAR</button>
                     <button onClick={() => setStep(FlowStep.FILL_CHECKLIST)} className="flex-1 h-14 bg-emerald-600 text-white rounded-[20px] font-black text-xs uppercase shadow-xl shadow-emerald-100 flex items-center justify-center gap-3 active:scale-95 transition-all"><CheckCircle2 size={24} /> Iniciar</button>
                   </div>
                 )}
@@ -324,14 +350,21 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
               <div className="flex-1 overflow-y-auto p-6 space-y-2 bg-slate-50/50">
                 {availableItems.filter(i => i.label.toLowerCase().includes(selectorSearch.toLowerCase()) || i.category.toLowerCase().includes(selectorSearch.toLowerCase())).map((item, idx) => {
                   const isSelected = !!selectedItemsTemplate.find(s => s.label === item.label);
+                  const isOriginal = !!editingRecord?.checklists?.find(s => s.label === item.label);
+
                   return (
-                    <button key={idx} onClick={() => toggleItemSelection(item)} className={`w-full p-5 rounded-[20px] border transition-all flex items-center justify-between text-left group ${isSelected ? 'bg-blue-50/50 border-[#0066CC] shadow-md ring-1 ring-[#0066CC]/20' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
+                    <button
+                      key={idx}
+                      onClick={() => !isOriginal && toggleItemSelection(item)}
+                      disabled={isOriginal}
+                      className={`w-full p-5 rounded-[20px] border transition-all flex items-center justify-between text-left group ${isSelected ? 'bg-blue-50/50 border-[#0066CC] shadow-md ring-1 ring-[#0066CC]/20' : 'bg-white border-slate-200 hover:border-slate-300'} ${isOriginal ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
                       <div className="flex items-center gap-4">
                         <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-[#0066CC] border-[#0066CC] text-white' : 'border-slate-200 group-hover:border-slate-300'}`}>
                           {isSelected && <Check size={14} strokeWidth={4} />}
                         </div>
                         <div>
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">{item.category}</p>
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">{item.category} {isOriginal && '(ORIGINAL)'}</p>
                           <h4 className="text-xs font-black text-slate-800 uppercase leading-snug">{item.label}</h4>
                         </div>
                       </div>
@@ -433,10 +466,10 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({ o
         </div>
 
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-200 z-[100] flex justify-center gap-3 shadow-2xl">
-          <button onClick={handleFinalSave} className="h-14 w-32 rounded-[20px] bg-slate-100 text-slate-500 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-slate-100">
+          <button onClick={() => handleFinalSave(true)} className="h-14 w-32 rounded-[20px] bg-slate-100 text-slate-500 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-slate-100">
             SALVAR
           </button>
-          <button disabled={!clientName || selectedItemsTemplate.some(i => i.isOk === null) || isSubmitting} onClick={handleFinalSave} className={`h-14 w-1/2 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${clientName && !selectedItemsTemplate.some(i => i.isOk === null) ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+          <button disabled={!clientName || selectedItemsTemplate.some(i => i.isOk === null) || isSubmitting} onClick={() => handleFinalSave(false)} className={`h-14 w-1/2 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${clientName && !selectedItemsTemplate.some(i => i.isOk === null) ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
             {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'GERAR CORRETIVA'}
           </button>
         </div>

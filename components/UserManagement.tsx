@@ -20,7 +20,8 @@ import { supabase } from '../supabaseClient';
 
 interface UserManagementProps {
   users: UserProfile[];
-  setUsers: (users: UserProfile[]) => void;
+  onSave: (user: UserProfile) => Promise<void>;
+  onDelete: (userId: string) => Promise<void>;
   userRole: 'ADMIN' | 'TECNICO';
   onTitleChange?: (title: string | null) => void;
   onHeaderActionChange?: (action: React.ReactNode) => void;
@@ -28,7 +29,8 @@ interface UserManagementProps {
 
 const UserManagement: React.FC<UserManagementProps> = ({
   users,
-  setUsers,
+  onSave,
+  onDelete,
   userRole,
   onTitleChange,
   onHeaderActionChange
@@ -79,27 +81,24 @@ const UserManagement: React.FC<UserManagementProps> = ({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isNewUser) {
-      const lastNum = users.reduce((max, u) => {
-        const numPart = u.id.includes('-') ? parseInt(u.id.split('-')[1]) : 0;
-        return isNaN(numPart) ? max : Math.max(max, numPart);
-      }, 0);
-      const nextId = `FE-${String(lastNum + 1).padStart(3, '0')}`;
-      const newUser = { ...form, id: nextId } as UserProfile;
-      setUsers([...users, newUser]);
-    } else {
-      setUsers(users.map(u => u.id === editingUser?.id ? { ...form, id: u.id } as UserProfile : u));
+    try {
+      const userToSave = {
+        ...form,
+        id: isNewUser ? `FE-${String(users.length + 1).padStart(3, '0')}` : editingUser?.id
+      } as UserProfile;
+      await onSave(userToSave);
+      setShowModal(false);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao salvar.");
     }
-    setShowModal(false);
   };
 
   const handleDeleteUser = async () => {
     if (!editingUser || isDeleting) return;
     setIsDeleting(true);
     try {
-      const { error } = await supabase.from('user_profiles').delete().eq('id', editingUser.id);
-      if (error) throw error;
-      setUsers(users.filter(u => u.id !== editingUser.id));
+      await onDelete(editingUser.id);
       setShowConfirmDelete(false);
       setShowModal(false);
     } catch (err) {
@@ -110,9 +109,14 @@ const UserManagement: React.FC<UserManagementProps> = ({
     }
   };
 
-  const filteredUsers = users
-    .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const filteredUsers = (users || [])
+    .filter(u => {
+      const name = u.name || '';
+      const email = u.email || '';
+      return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        email.toLowerCase().includes(searchTerm.toLowerCase());
+    })
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
   const inputClasses = "w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#0066CC]/10 focus:border-[#0066CC] outline-none transition-all font-bold text-slate-800 text-sm";
   const labelClasses = "text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block";
