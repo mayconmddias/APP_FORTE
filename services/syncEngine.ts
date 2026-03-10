@@ -14,8 +14,8 @@ class SyncEngine {
             }
         });
 
-        // Background heart-beat sync
-        setInterval(() => this.triggerSync(), 1 * 60 * 1000);
+        // Background heart-beat sync (Acelado para 30s para mobile)
+        setInterval(() => this.triggerSync(), 30 * 1000);
     }
 
     async triggerSync() {

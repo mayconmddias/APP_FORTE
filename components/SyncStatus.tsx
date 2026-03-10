@@ -34,6 +34,16 @@ const SyncStatus: React.FC = () => {
         );
     }
 
+    // NEW: Connection unstable (Online but cannot reach server)
+    if (network.quality === 'none') {
+        return (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-full border border-amber-100 shadow-sm">
+                <AlertCircle size={14} className="animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-wider">Conexão Instável</span>
+            </div>
+        );
+    }
+
     if (errorCount && errorCount > 0) {
         return (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 rounded-full border border-red-100 shadow-sm">

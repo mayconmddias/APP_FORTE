@@ -26,7 +26,9 @@ class NetworkManager {
     }
 
     async checkSupabaseConnection(): Promise<boolean> {
-        if (!navigator.onLine) {
+        const isNavigatorOnline = navigator.onLine;
+
+        if (!isNavigatorOnline) {
             this.emit({ online: false, quality: 'none' });
             return false;
         }
@@ -37,14 +39,17 @@ class NetworkManager {
             const { error } = await supabase.from('crane_assets').select('id').limit(1);
             const duration = Date.now() - startTime;
 
-            const isOnline = !error;
-            const quality = duration < 500 ? 'good' : 'poor';
+            const hasServerAccess = !error;
+            const quality = hasServerAccess ? (duration < 1000 ? 'good' : 'poor') : 'none';
 
-            this.emit({ online: isOnline, quality: isOnline ? quality : 'none' });
-            return isOnline;
+            // IMPORTANT: We trust navigator.onLine for "online" status, 
+            // but we use Supabase to determine quality/reachability.
+            this.emit({ online: true, quality });
+            return true;
         } catch (e) {
-            this.emit({ online: false, quality: 'none' });
-            return false;
+            // Even if ping fails, if navigator says we are online, we stay "online" but with "none" quality
+            this.emit({ online: true, quality: 'none' });
+            return true;
         }
     }
 
