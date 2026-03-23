@@ -114,7 +114,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     items.forEach((i, index) => {
       let photosHtml = '';
       if (i.photos) i.photos.forEach(photo => { photosHtml += `<div style="margin-top:10px;"><img src="${photo}" style="width:120px;height:120px;object-fit:cover;border-radius:12px;border:2px solid #f1f5f9;display:block;"></div>`; });
-      rowsHtml += `<tr><td><div style="display:flex;align-items:flex-start;"><span style="color:#94a3b8;font-weight:900;margin-right:12px;">${String(index + 1).padStart(2, '0')}</span><div><strong style="font-size:11px;">${i.label}</strong><br/><small style="color:#475569;font-size:8px;font-weight:700;">${i.category}</small></div></div></td><td style="text-align:center;color:${i.isOk ? '#059669' : '#dc2626'};font-weight:900;">${i.isOk ? 'OK' : 'NOK'}</td><td>${i.observation || '-'}${photosHtml}</td></tr>`;
+      rowsHtml += `<tr><td><div style="display:flex;align-items:flex-start;"><span style="color:#000;font-weight:900;margin-right:12px;">${String(index + 1).padStart(2, '0')}</span><div><strong style="font-size:11px;">${i.label}</strong><br/><small style="color:#475569;font-size:8px;font-weight:700;">${i.category}</small></div></div></td><td style="text-align:center;color:${i.isOk ? '#059669' : '#dc2626'};font-weight:900;">${i.isOk ? 'OK' : 'NOK'}</td><td>${i.observation || '-'}${photosHtml}</td></tr>`;
     });
 
     const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
@@ -133,7 +133,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
 
       table.results { width: 100%; border-collapse: collapse; margin-top: 20px; }
       table.results th, table.results td { border: 1px solid #e2e8f0; padding: 6px 12px; text-align: left; }
-      table.results th { background: #f8fafc; font-size: 10px; text-transform: uppercase; color: #64748b; }
+      table.results th { background: #f8fafc; font-size: 10px; text-transform: uppercase; color: #0f172a; border: 1px solid #e2e8f0; }
       .nok { color: #dc2626; font-weight: 900; }
       .ok { color: #059669; font-weight: 900; }
 
@@ -144,6 +144,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       .signature-label { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; }
       @media print {
         @page { margin: 10mm; }
+        thead { display: table-header-group; }
         tr { page-break-inside: avoid !important; }
         body { padding: 0; }
       }
