@@ -50,6 +50,21 @@ export const NORMS = [
   'ABNT ISO 4309 - Cabos de Aço'
 ];
 
+export const REPORT_NORMS = `
+NORMAS
+Todas as ações efetuadas neste trabalho estiveram respaldadas por normas técnicas e/ou prática de Engenharia comumente aceita;
+Normas Brasileiras – NBR
+NBR 5410/2004 Instalações elétricas em Baixa tensão;
+NBR 16147/2013 – Equipamentos de elevação e movimentação de cargas;
+NR10 – Segurança em serviços de eletricidade;
+`;
+
+export const REPORT_ATTESTATION = `
+ATESTADO / COMENTÁRIO GERAL
+Atestamos para os devidos fins, que todas as informações contidas neste relatório técnico, de Inspeção visual, e medição dos equipamentos da Contratante, são verdadeiras e são de inteira responsabilidade da empresa Forte Engenharia. Desde que não surjam informações adicionais, após a sua entrega, informações, essas que não sejam de autoria ou tenham a autorização e/ou o conhecimento expresso do nosso departamento de Engenharia.
+`;
+
+
 export const CHECKLIST_PONTE: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>[] = [
   { category: 'ELÉTRICO', label: 'TENSÃO DE ENTRADA DO EQUIPAMENTO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM MULTÍMETRO.' },
   { category: 'ELÉTRICO', label: 'TENSÃO DE COMANDO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM MULTÍMETRO.' },
@@ -68,7 +83,7 @@ export const CHECKLIST_PONTE: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>
   { category: 'ELÉTRICO', label: 'FIM DE CURSO TRANSLAÇÃO RÁPIDA - ATRÁS', instruction: 'TESTE FUNCIONAL: MOVIMENTAR PARA ATRÁS O EQUIPAMENTO ATÉ ACIONAR O FIM DE CURSO, VERIFICAR SE O MESMO SERÁ ACIONADO.' },
   { category: 'ELÉTRICO', label: 'FIM DE CURSO TRANSLAÇÃO LENTA - ATRÁS', instruction: 'TESTE FUNCIONAL: MOVIMENTAR PARA ATRÁS O EQUIPAMENTO ATÉ ACIONAR O FIM DE CURSO, VERIFICAR SE O MESMO SERÁ ACIONADO.' },
   { category: 'MECÂNICO', label: 'VEDAÇÃO DOS REDUTORES DE TRANSLAÇÃO', instruction: 'INSPEÇÃO VISUAL: VERIFICAR SE EXISTE VAZAMENTO DE ÓLEO.' },
-  { category: 'MECÂNICO', label: 'EXISTE ALGUM RUIDO NO REDUTOR DE TRANSLAÇÃO', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'MECÂNICO', label: 'AUSÊNCIA DE RUIDO NO REDUTOR DE TRANSLAÇÃO', instruction: 'INSPEÇÃO VISUAL.' },
   { category: 'MECÂNICO', label: 'NIVEL DO ÓLEO DO REDUTOR DE TRANSLAÇÃO', instruction: 'INSPEÇÃO VISUAL.' },
   { category: 'MECÂNICO', label: 'RODA MOTRIZ PONTE', instruction: 'INSPEÇÃO VISUAL E MEDIÇÃO: VERIFICAR DESGASTES, MEDIR CANAL E ABA DAS RODAS.' },
   { category: 'MECÂNICO', label: 'RODA LIVRE PONTE', instruction: 'INSPEÇÃO VISUAL E MEDIÇÃO: VERIFICAR DESGASTES, MEDIR CANAL E ABA DAS RODAS.' },
@@ -80,18 +95,18 @@ export const CHECKLIST_PONTE: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>
   { category: 'MECÂNICO', label: 'LUBRIFICAÇÃO DE PINHÃO E ENGRENAGENS DE RODAS', instruction: 'REALIZAR LUBRIFICAÇÃO.' },
   { category: 'MECÂNICO', label: 'AJUSTE DOS FREIOS DE TRANSLAÇÃO', instruction: 'MEDIÇÃO DA REGULAGEM E AJUSTE: REALIZAR AJUSTE E MEDIR AS DISTÂNCIAS DE REGULAGEM.' },
   { category: 'MECÂNICO', label: 'FREIO DE TRANSLAÇÃO ESTÁ EM BOM ESTADO DE FUNCIONAMENTO', instruction: 'INSPEÇÃO VISUAL.' },
-  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR TRANSLAÇÃO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM AMPERÍMETRO.' },
-  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO DE TRASLAÇÃO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM AMPERÍMETRO.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR TRANSLAÇÃO (ANOTAR)', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM AMPERÍMETRO.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO DE TRASLAÇÃO (ANOTAR)', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM AMPERÍMETRO.' },
   { category: 'SEGURANÇA', label: 'FIM DE CURSO ANTI - COLISÃO', instruction: 'TESTE FUNCIONAL: MOVIMENTAR O EQUIPAMENTO ATÉ SE APROXIMAR A OUTRO EXISTENTE, ATÉ O MESMO SER ACIONADO, REALIZAR O AJUSTE DE DISTÂNCIA SE NECESSÁRIO.' },
   { category: 'MECÂNICO', label: 'RODA MOTRIZ - CARRO', instruction: 'INSPEÇÃO VISUAL E MEDIÇÃO: VERIFICAR DESGASTES, MEDIR CANAL E ABA DAS RODAS.' },
   { category: 'MECÂNICO', label: 'RODA LIVRE - CARRO', instruction: 'INSPEÇÃO VISUAL E MEDIÇÃO: VERIFICAR DESGASTES, MEDIR CANAL E ABA DAS RODAS.' },
   { category: 'MECÂNICO', label: 'PINHÃO DA RODA', instruction: 'INSPEÇÃO VISUAL: VERIFICAR FOLGA DO PINHÃO.' },
   { category: 'MECÂNICO', label: 'VEDAÇÃO DO REDUTOR DE DIREÇÃO', instruction: 'INSPEÇÃO VISUAL: VERIFICAR SE EXISTE VAZAMENTO DE ÓLEO.' },
-  { category: 'MECÂNICO', label: 'RUIDO DO REDUTOR DE DIREÇÃO', instruction: 'INSPEÇÃO FUNCIONAL: ACIONAR REDUTORES E VERIFICAR RUÍDOS.' },
+  { category: 'MECÂNICO', label: 'AUSÊNCIA DE RUIDO DO REDUTOR DE DIREÇÃO', instruction: 'INSPEÇÃO FUNCIONAL: ACIONAR REDUTORES E VERIFICAR RUÍDOS.' },
   { category: 'MECÂNICO', label: 'NIVEL DO OLEO DO REDUTOR DE DIREÇÃO', instruction: 'INSPEÇÃO VISUAL.' },
   { category: 'ELÉTRICO', label: 'MOTOR DE DIREÇÃO', instruction: 'INSPEÇÃO VISUAL: VERIFICAR CONECTORES, EMENDAS E SINAIS DE AQUECIMENTO.' },
-  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR DIREÇÃO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM AMPERÍMETRO.' },
-  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO DE DIREÇÃO', instruction: 'MEDIÇÃO: REALIZA MEDIÇÃO COM AMPERÍMETRO.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR DIREÇÃO (ANOTAR)', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM AMPERÍMETRO.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO DE DIREÇÃO (ANOTAR)', instruction: 'MEDIÇÃO: REALIZA MEDIÇÃO COM AMPERÍMETRO.' },
   { category: 'MECÂNICO', label: 'AJUSTE DE FREIO DE DIREÇÃO', instruction: 'MEDIÇÃO DA REGULAGEM E AJUSTE.' },
   { category: 'MECÂNICO', label: 'FREIO DE DIREÇÃO ESTÁ EM BOM ESTADO DE FUNCIONAMENTO', instruction: 'INSPEÇÃO VISUAL.' },
   { category: 'ELÉTRICO', label: 'FIM DE CURSO DIREÇÃO RAPIDA - DIREITA', instruction: 'TESTE FUNCIONAL: MOVIMENTAR O EQUIPAMENTO PARA DIREITA ATÉ ACIONAR O FIM DE CURSO, VERIFICAR SE O MESMO SERÁ ACIONADO.' },
@@ -99,13 +114,13 @@ export const CHECKLIST_PONTE: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>
   { category: 'ELÉTRICO', label: 'FIM DE CURSO DIREÇÃO RAPIDA - ESQUERDA', instruction: 'TESTE FUNCIONAL: MOVIMENTAR O EQUIPAMENTO PARA ESQUERDA ATÉ ACIONAR O FIM DE CURSO, VERIFICAR SE O MESMO SERÁ ACIONADO.' },
   { category: 'ELÉTRICO', label: 'FIM DE CURSO DIREÇÃO LENTA - ESQUERDA', instruction: 'TESTE FUNCIONAL: MOVIMENTAR O EQUIPAMENTO PARA ESQUERDA ATÉ ACIONAR O FIM DE CURSO, VERIFICAR SE O MESMO SERÁ ACIONADO.' },
   { category: 'MECÂNICO', label: 'VEDAÇÃO DO REDUTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO VISUAL: VERIFICAR SE EXISTE VAZAMENTO DE ÓLEO.' },
-  { category: 'MECÂNICO', label: 'RUIDO DO REDUTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO FUNCIONAL: ACIONAR REDUTORES E VERIFICAR RUÍDOS.' },
+  { category: 'MECÂNICO', label: 'AUSÊNCIA DE RUIDO DO REDUTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO FUNCIONAL: ACIONAR REDUTORES E VERIFICAR RUÍDOS.' },
   { category: 'MECÂNICO', label: 'NIVEL DO OLEO DO REDUTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO VISUAL.' },
   { category: 'ELÉTRICO', label: 'MOTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO VISUAL: VERIFICAR CONECTORES, EMENDAS E SINAIS DE AQUECIMENTO.' },
   { category: 'MECÂNICO', label: 'AJUSTE DE FREIO DE ELEVAÇÃO', instruction: 'MEDIÇÃO DA REGULAGEM E AJUSTE: REALIZAR AJUSTE E MEDIR AS DISTÂNCIAS DE REGULAGEM.' },
   { category: 'MECÂNICO', label: 'FREIO DE ELEVAÇÃO ESTÁ EM BOM ESTADO DE FUNCIONAMENTO', instruction: 'INSPEÇÃO VISUAL.' },
-  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR ELEVAÇÃO PRINCIPAL', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM AMPERÍMETRO.' },
-  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO ELEVAÇÃO PRINCIPAL', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM AMPERÍMETRO.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR ELEVAÇÃO PRINCIPAL (ANOTAR)', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM AMPERÍMETRO.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO ELEVAÇÃO PRINCIPAL (ANOTAR)', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM AMPERÍMETRO.' },
   { category: 'MECÂNICO', label: 'CABO DE AÇO - VER MEDIDA', instruction: 'MEDIÇÃO E INSPEÇÃO VISUAL: MEDIR A BITOLA DO CABO E VERIFICA POSSÍVEL PONTO DE RUPTURA. O CABO NÃO PODE TER MAIS QUE 2% DE DESGASTE.' },
   { category: 'MECÂNICO', label: 'CLIP´S CABO DE AÇO', instruction: 'INSPEÇÃO VISUAL E REAPERTO: REALIZAR REAPERTO E VERIFICAR SE NÃO TEM PONTO DE CORROSÃO OU ROSCA DANIFICADA.' },
   { category: 'MECÂNICO', label: 'RANHURAS DO TAMBOR DENTRO DA MEDIDA', instruction: 'INSPEÇÃO VISUAL.' },

@@ -15,6 +15,8 @@ import {
   Loader2
 } from 'lucide-react';
 import { CraneAsset, MaintenanceRecord, MaintenanceType, UserProfile } from '../types';
+import { REPORT_NORMS, REPORT_ATTESTATION } from '../constants';
+
 
 interface PreventiveHistoryProps {
   currentUser: UserProfile | null;
@@ -143,8 +145,9 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       .signature-line { border-top: 1px solid #000; width: 100%; margin-bottom: 5px; }
       .signature-label { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; }
       @media print {
-        @page { margin: 10mm; }
+        @page { margin: 15mm; }
         thead { display: table-header-group; }
+
         tr { page-break-inside: avoid !important; }
         body { padding: 0; }
       }
@@ -192,7 +195,19 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
           </td>
         </tr>
       </table>
+
+      <div style="page-break-inside: avoid; margin-top: 30px; padding: 15px 20px; border-top: 1px solid #e2e8f0;">
+        <div style="font-size: 11px; font-weight: 900; color: #475569; margin-bottom: 12px; text-transform: uppercase; text-align: center; letter-spacing: 1px;">Normas e Regulamentações</div>
+        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.4; text-align: left;">${REPORT_NORMS.trim()}</div>
+      </div>
+
+      <div style="page-break-inside: avoid; margin-top: 5px; padding: 15px 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9;">
+        <div style="font-size: 11px; font-weight: 900; color: #475569; margin-bottom: 12px; text-transform: uppercase; text-align: center; letter-spacing: 1px;">Atestado de Responsabilidade</div>
+        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.4; text-align: left;">${REPORT_ATTESTATION.trim()}</div>
+      </div>
     </body></html>`;
+
+
 
     const blob = new Blob([reportHtml], { type: 'text/html' });
     window.open(URL.createObjectURL(blob), '_blank');

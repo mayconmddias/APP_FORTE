@@ -161,6 +161,11 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const handleFinalSave = async () => {
     if (!selectedAsset || !currentUser) return;
     setIsSubmitting(true);
+
+    const isEditingWithTechnician = editingRecord && editingRecord.technician;
+    const finalTechnician = isEditingWithTechnician ? editingRecord.technician : currentUser.name;
+    const finalTechnicianId = isEditingWithTechnician ? editingRecord.technicianId : currentUser.id;
+
     const newRecord: MaintenanceRecord = {
       id: editingRecord?.id || `h-${Date.now()}`,
       local_id: editingRecord?.local_id,
@@ -169,19 +174,20 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       type: editingRecord ? editingRecord.type : MaintenanceType.PREVENTIVE,
       checklistType: checklistType!,
       frequency: frequency,
-      date: new Date().toISOString().split('T')[0],
-      technician: currentUser.name,
-      technicianId: currentUser.id,
+      date: editingRecord?.date || new Date().toISOString().split('T')[0],
+      technician: finalTechnician,
+      technicianId: finalTechnicianId,
       downtimeHours: 2.5,
       checklists: items,
       clientRepresentative: clientName,
-      signature: `Técnico: ${currentUser.name} | Cliente: ${clientName}`,
+      signature: `Técnico: ${finalTechnician} | Cliente: ${clientName}`,
       status: 'COMPLETED'
     };
 
     await onSave(newRecord);
     setIsSubmitting(false);
   };
+
 
   if (isSuccess) {
     return createPortal(

@@ -171,6 +171,10 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
     const id = editingRecord?.id || `h-${Date.now()}`;
     const localId = editingRecord?.local_id || uuidv4();
 
+    const isEditingWithTechnician = editingRecord && editingRecord.technician;
+    const finalTechnician = isEditingWithTechnician ? editingRecord.technician! : currentUser.name;
+    const finalTechnicianId = isEditingWithTechnician ? editingRecord.technicianId! : currentUser.id;
+
     const newRecord: MaintenanceRecord = {
       id: id,
       local_id: localId,
@@ -179,13 +183,13 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
       type: MaintenanceType.CORRETIVA,
       checklistType: (selectedAsset.equipmentType === 'Talha' || selectedAsset.equipmentType === 'Monovia') ? 'TALHA_PRINCIPAL' : 'PONTE_PRINCIPAL',
       frequency: Frequency.MENSAL,
-      date: new Date().toISOString().split('T')[0],
-      technician: currentUser.name,
-      technicianId: currentUser.id,
+      date: editingRecord?.date || new Date().toISOString().split('T')[0],
+      technician: finalTechnician,
+      technicianId: finalTechnicianId,
       downtimeHours: 0,
       checklists: selectedItemsTemplate.map(i => ({ ...i })),
       clientRepresentative: clientName,
-      signature: (clientName && !isDraft) ? `TÉCNICO: ${currentUser.name} | CLIENTE: ${clientName}` : 'DRAFT',
+      signature: (clientName && !isDraft) ? `TÉCNICO: ${finalTechnician} | CLIENTE: ${clientName}` : 'DRAFT',
       status: (clientName && !isDraft) ? 'COMPLETED' : 'OPEN'
     };
 
@@ -197,6 +201,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
       onCancel();
     }
   };
+
 
   if (step === FlowStep.SUCCESS) {
     return createPortal(
