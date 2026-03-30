@@ -184,8 +184,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       <table class="signature-section">
         <tr>
           <td>
-            <div class="signature-name">${record.technician || currentUser?.name || '---'}</div>
-
+            <div class="signature-name">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</div>
             <div class="signature-line"></div>
             <div class="signature-label">RESPONSÁVEL TÉCNICO</div>
           </td>
@@ -197,15 +196,17 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
         </tr>
       </table>
 
-      <div style="page-break-inside: avoid; margin-top: 30px; padding: 15px 20px; border-top: 1px solid #e2e8f0;">
+      <!-- PDF_CONTENT_V2 -->
+      <div style="page-break-inside: avoid; margin-top: 40px; padding: 20px; border-top: 2px solid #f1f5f9; display: block !important;">
         <div style="font-size: 11px; font-weight: 900; color: #475569; margin-bottom: 12px; text-transform: uppercase; text-align: center; letter-spacing: 1px;">Normas e Regulamentações</div>
-        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.4; text-align: left;">${REPORT_NORMS.trim()}</div>
+        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.5; text-align: left; display: block !important;">${(REPORT_NORMS || '').trim()}</div>
       </div>
 
-      <div style="page-break-inside: avoid; margin-top: 5px; padding: 15px 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9;">
+      <div style="page-break-inside: avoid; margin-top: 10px; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; display: block !important;">
         <div style="font-size: 11px; font-weight: 900; color: #475569; margin-bottom: 12px; text-transform: uppercase; text-align: center; letter-spacing: 1px;">Atestado de Responsabilidade</div>
-        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.4; text-align: left;">${REPORT_ATTESTATION.trim()}</div>
+        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.5; text-align: left; display: block !important;">${(REPORT_ATTESTATION || '').trim()}</div>
       </div>
+
     </body></html>`;
 
 

@@ -10,6 +10,7 @@ interface ChecklistReviewProps {
     onBack: () => void;
     onClientNameChange: (name: string) => void;
     onFinalSave: () => void;
+    technicianName?: string;
 }
 
 const ChecklistReview: React.FC<ChecklistReviewProps> = ({
@@ -19,8 +20,10 @@ const ChecklistReview: React.FC<ChecklistReviewProps> = ({
     isSubmitting,
     onBack,
     onClientNameChange,
-    onFinalSave
+    onFinalSave,
+    technicianName
 }) => {
+
     return (
         <div className="fixed inset-0 bg-white z-[10000] overflow-y-auto animate-in slide-in-from-bottom-10 flex flex-col">
             <header className="h-20 border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-10">
@@ -58,8 +61,9 @@ const ChecklistReview: React.FC<ChecklistReviewProps> = ({
                     <div>
                         <div className="flex items-center gap-4 mb-4 text-slate-900"><Signature size={24} className="text-[#0066CC]" /><h3 className="font-black text-slate-900 text-xs uppercase tracking-widest">Responsável Técnico</h3></div>
                         <div className="w-full h-14 bg-white border border-slate-200 rounded-2xl text-slate-900 px-6 font-black uppercase text-xs flex items-center">
-                            {currentUser?.name || 'Técnico'}
+                            {technicianName || currentUser?.name || 'Técnico'}
                         </div>
+
                     </div>
 
                     <div>

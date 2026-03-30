@@ -445,8 +445,9 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
                   <h3 className="font-black text-slate-900 text-xs uppercase tracking-widest">Responsável Técnico</h3>
                 </div>
                 <div className="w-full h-16 bg-white border border-slate-200 rounded-2xl text-slate-900 px-6 flex items-center font-black uppercase text-sm">
-                  {currentUser?.name || 'TÉCNICO NÃO IDENTIFICADO'}
+                  {editingRecord?.technician || currentUser?.name || 'TÉCNICO NÃO IDENTIFICADO'}
                 </div>
+
               </div>
 
               {/* Responsável Cliente */}

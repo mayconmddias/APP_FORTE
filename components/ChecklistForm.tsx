@@ -276,6 +276,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
           onBack={() => setIsPreview(false)}
           onClientNameChange={setClientName}
           onFinalSave={handleFinalSave}
+          technicianName={editingRecord?.technician || currentUser?.name}
         />
       )}
 
