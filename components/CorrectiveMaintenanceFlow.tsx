@@ -61,7 +61,9 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [selectorSearch, setSelectorSearch] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [activePhotoItemId, setActivePhotoItemId] = useState<string | null>(null);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [infoModalText, setInfoModalText] = useState<string | null>(null);
   const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -390,7 +392,8 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   if (step === FlowStep.FILL_CHECKLIST) {
     return createPortal(
       <div className="fixed inset-0 bg-white z-[9999] flex flex-col animate-in fade-in duration-500 overflow-hidden">
-        <input type="file" accept="image/*" capture="environment" className="hidden" ref={fileInputRef} onChange={(e) => {
+        {/* Input para galeria (sem capture) */}
+        <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={(e) => {
           const file = e.target.files?.[0];
           if (file && activePhotoItemId) {
             const reader = new FileReader();
@@ -398,6 +401,21 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
               const compressed = await compressImage(reader.result as string);
               updateItem(activePhotoItemId, { photos: [compressed] });
               setActivePhotoItemId(null);
+              e.target.value = '';
+            };
+            reader.readAsDataURL(file);
+          }
+        }} />
+        {/* Input para câmera (com capture) */}
+        <input type="file" accept="image/*" capture="environment" className="hidden" ref={cameraInputRef} onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && activePhotoItemId) {
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+              const compressed = await compressImage(reader.result as string);
+              updateItem(activePhotoItemId, { photos: [compressed] });
+              setActivePhotoItemId(null);
+              e.target.value = '';
             };
             reader.readAsDataURL(file);
           }
@@ -419,7 +437,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
                       <button onClick={() => setInfoModalText(item.instruction || 'Inspeção técnica padrão.')} className="w-10 h-10 rounded-xl bg-slate-50 text-slate-300 hover:bg-blue-50 hover:text-[#0066CC] transition-all flex items-center justify-center shadow-inner"><HelpCircle size={18} /></button>
                       <button onClick={() => updateItem(item.id, { isOk: true })} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all border ${item.isOk === true ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg' : 'bg-slate-50 border-slate-100 text-slate-300'}`}><Check size={20} strokeWidth={4} /></button>
                       <button onClick={() => updateItem(item.id, { isOk: false })} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all border ${item.isOk === false ? 'bg-red-600 border-red-600 text-white shadow-lg' : 'bg-slate-50 border-slate-100 text-slate-300'}`}><X size={20} strokeWidth={4} /></button>
-                      <button onClick={() => { setActivePhotoItemId(item.id); fileInputRef.current?.click(); }} className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${item.photos?.length ? 'bg-[#0066CC] border-[#0066CC] text-white shadow-lg' : 'bg-slate-50 border-slate-100 text-slate-300'}`}><Camera size={18} /></button>
+                      <button onClick={() => { setActivePhotoItemId(item.id); setShowPhotoModal(true); }} className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${item.photos?.length ? 'bg-[#0066CC] border-[#0066CC] text-white shadow-lg' : 'bg-slate-50 border-slate-100 text-slate-300'}`}><Camera size={18} /></button>
                     </div>
                   </div>
                   <input type="text" placeholder="Observações do defeito ou reparo executado..." value={item.observation} onChange={(e) => updateItem(item.id, { observation: e.target.value })} className="w-full h-12 px-5 bg-slate-50/50 border border-slate-100 rounded-xl text-[11px] outline-none font-bold text-slate-600 uppercase focus:bg-white focus:ring-4 focus:ring-[#0066CC]/5 transition-all" />
@@ -479,6 +497,41 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
             {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'GERAR CORRETIVA'}
           </button>
         </div>
+
+        {/* Modal de escolha: câmera ou galeria */}
+        {showPhotoModal && (
+          <div
+            className="fixed inset-0 z-[10002] flex items-end justify-center"
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setShowPhotoModal(false)}
+          >
+            <div
+              className="w-full max-w-lg bg-white rounded-t-[40px] p-6 pb-10 space-y-3 animate-in slide-in-from-bottom-4 duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-6" />
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center mb-4">Anexar Foto</p>
+              <button
+                onClick={() => { setShowPhotoModal(false); setTimeout(() => cameraInputRef.current?.click(), 100); }}
+                className="w-full h-16 bg-[#0066CC] text-white rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-blue-100 active:scale-95 transition-all"
+              >
+                <span className="text-xl">📷</span> Usar Câmera
+              </button>
+              <button
+                onClick={() => { setShowPhotoModal(false); setTimeout(() => fileInputRef.current?.click(), 100); }}
+                className="w-full h-16 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-all"
+              >
+                <span className="text-xl">🖼️</span> Galeria de Fotos
+              </button>
+              <button
+                onClick={() => setShowPhotoModal(false)}
+                className="w-full h-12 text-slate-400 font-black text-xs uppercase tracking-widest"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
 
         {infoModalText && createPortal(
           <div className="fixed inset-0 bg-white z-[10001] flex items-center justify-center p-6" onClick={() => setInfoModalText(null)}>
