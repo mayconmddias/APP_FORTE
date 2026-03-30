@@ -184,7 +184,8 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       <table class="signature-section">
         <tr>
           <td>
-            <div class="signature-name">${currentUser?.name || record.technician || '---'}</div>
+            <div class="signature-name">${record.technician || currentUser?.name || '---'}</div>
+
             <div class="signature-line"></div>
             <div class="signature-label">RESPONSÁVEL TÉCNICO</div>
           </td>
