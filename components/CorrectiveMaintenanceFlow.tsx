@@ -68,7 +68,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recordId] = useState(editingRecord?.id || `h-${Date.now()}`);
-  const [localId] = useState(editingRecord?.local_id || uuidv4());
+  const [localId] = useState(editingRecord?.local_id || recordId);
   const [lastOsNumber, setLastOsNumber] = useState<number>(0);
 
   const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {

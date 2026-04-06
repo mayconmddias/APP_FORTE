@@ -126,7 +126,7 @@ class SyncEngine {
                 const newVersion = (serverRecord?.version || 0) + 1;
 
                 let mapped: any = {
-                    id: server_id || local_id,
+                    id: server_id || data.id || local_id,
                     version: newVersion
                 };
 

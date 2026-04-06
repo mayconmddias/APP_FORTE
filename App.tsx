@@ -147,6 +147,27 @@ const App: React.FC = () => {
             await db.ordens_servico.bulkDelete(historyToDelete.map(h => h.local_id));
           }
 
+          // LOCAL DEDUPLICATION: Remove duplicates sharing the same logical id
+          const allLocal = await db.ordens_servico.toArray();
+          const seenIds = new Set<string>();
+          const duplicatesToRemove: string[] = [];
+          
+          // Sort by updated_at descending to keep the most recent
+          allLocal.sort((a, b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
+          
+          allLocal.forEach(rec => {
+            if (seenIds.has(rec.id)) {
+              duplicatesToRemove.push(rec.local_id);
+            } else {
+              seenIds.add(rec.id);
+            }
+          });
+          
+          if (duplicatesToRemove.length > 0) {
+            await db.ordens_servico.bulkDelete(duplicatesToRemove);
+            console.log(`Deduplication: Removed ${duplicatesToRemove.length} local duplicates.`);
+          }
+
           const mappedHistory = await Promise.all(historyData.map(async h => {
             const existing = await db.ordens_servico.where('server_id').equals(h.id).first();
             const local_id = existing?.local_id || uuidv4();

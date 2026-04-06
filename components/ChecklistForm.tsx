@@ -39,7 +39,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [frequency, setFrequency] = useState<Frequency>(editingRecord?.frequency || Frequency.MENSAL);
 
   const [recordId] = useState(editingRecord?.id || `h-${Date.now()}`);
-  const [localId] = useState(editingRecord?.local_id || uuidv4());
+  const [localId] = useState(editingRecord?.local_id || recordId);
   const [selectedAsset] = useState<CraneAsset | null>(() => {
     if (editingRecord) return assets.find(a => a.id === editingRecord.assetId) || null;
     return assets.find(a => a.id === initialAssetId) || null;
