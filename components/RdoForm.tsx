@@ -354,7 +354,6 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
                   <h3 className="text-xl font-black uppercase leading-tight">{siteName || "DESCRIÇÃO NÃO DEFINIDA"}</h3>
                   <div className="flex gap-4 mt-4">
                     <div className="flex items-center gap-2 opacity-80"><Calendar size={14} /> <span className="font-bold text-[10px]">{date.split('-').reverse().join('/')}</span></div>
-                    {startTime && <div className="flex items-center gap-2 opacity-80"><Clock size={14} /> <span className="font-bold text-[10px]">{startTime}</span></div>}
                   </div>
                 </div>
              </div>
