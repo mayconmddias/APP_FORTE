@@ -111,13 +111,15 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     if (!selectedAsset) return;
     const reportNum = record.inspectionNumber || '0';
     const formattedOs = String(reportNum).padStart(4, '0');
-    let items = record.checklists || [];
+    let items = [...(record.checklists || [])];
+    const type = String(record.type || '').toUpperCase();
+    const freq = String(record.frequency || '').toUpperCase();
     
     // Filtrar itens com base na periodicidade para inspeções preventivas
-    if (record.type === MaintenanceType.PREVENTIVE) {
-      if (record.frequency === Frequency.MENSAL) {
+    if (type === 'PREVENTIVA') {
+      if (freq === 'MENSAL') {
         items = items.slice(0, 69); // Itens 1 a 69
-      } else if (record.frequency === Frequency.SEMESTRAL) {
+      } else if (freq === 'SEMESTRAL') {
         items = items.slice(0, 76); // Itens 1 a 76
       }
     }

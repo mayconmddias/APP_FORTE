@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { createPortal } from 'react-dom';
 import {
   Loader2,
@@ -38,6 +39,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [frequency, setFrequency] = useState<Frequency>(editingRecord?.frequency || Frequency.MENSAL);
 
   const [recordId] = useState(editingRecord?.id || `h-${Date.now()}`);
+  const [localId] = useState(editingRecord?.local_id || uuidv4());
   const [selectedAsset] = useState<CraneAsset | null>(() => {
     if (editingRecord) return assets.find(a => a.id === editingRecord.assetId) || null;
     return assets.find(a => a.id === initialAssetId) || null;
@@ -136,7 +138,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
 
     const draftRecord: MaintenanceRecord = {
       id: recordId,
-      local_id: editingRecord?.local_id,
+      local_id: localId,
       inspectionNumber: editingRecord?.inspectionNumber || nextOsNumber,
       assetId: selectedAsset.id,
       type: editingRecord ? editingRecord.type : MaintenanceType.PREVENTIVE,
@@ -173,7 +175,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
 
     const newRecord: MaintenanceRecord = {
       id: recordId,
-      local_id: editingRecord?.local_id,
+      local_id: localId,
       inspectionNumber: editingRecord?.inspectionNumber || nextOsNumber,
       assetId: selectedAsset.id,
       type: editingRecord ? editingRecord.type : MaintenanceType.PREVENTIVE,
