@@ -67,6 +67,8 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [infoModalText, setInfoModalText] = useState<string | null>(null);
   const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recordId] = useState(editingRecord?.id || `h-${Date.now()}`);
+  const [localId] = useState(editingRecord?.local_id || uuidv4());
   const [lastOsNumber, setLastOsNumber] = useState<number>(0);
 
   const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
@@ -170,15 +172,12 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
     setIsSubmitting(true);
     setLastOsNumber(nextOsNumber);
 
-    const id = editingRecord?.id || `h-${Date.now()}`;
-    const localId = editingRecord?.local_id || uuidv4();
-
     const isEditingWithTechnician = editingRecord && editingRecord.technician;
     const finalTechnician = isEditingWithTechnician ? editingRecord.technician! : currentUser.name;
     const finalTechnicianId = isEditingWithTechnician ? editingRecord.technicianId! : currentUser.id;
 
     const newRecord: MaintenanceRecord = {
-      id: id,
+      id: recordId,
       local_id: localId,
       inspectionNumber: editingRecord?.inspectionNumber || nextOsNumber,
       assetId: selectedAsset.id,

@@ -14,7 +14,7 @@ import {
   X,
   Loader2
 } from 'lucide-react';
-import { CraneAsset, MaintenanceRecord, MaintenanceType, UserProfile } from '../types';
+import { CraneAsset, MaintenanceRecord, MaintenanceType, UserProfile, Frequency } from '../types';
 import { REPORT_NORMS, REPORT_ATTESTATION } from '../constants';
 
 
@@ -111,7 +111,16 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     if (!selectedAsset) return;
     const reportNum = record.inspectionNumber || '0';
     const formattedOs = String(reportNum).padStart(4, '0');
-    const items = record.checklists || [];
+    let items = record.checklists || [];
+    
+    // Filtrar itens com base na periodicidade para inspeções preventivas
+    if (record.type === MaintenanceType.PREVENTIVE) {
+      if (record.frequency === Frequency.MENSAL) {
+        items = items.slice(0, 69); // Itens 1 a 69
+      } else if (record.frequency === Frequency.SEMESTRAL) {
+        items = items.slice(0, 76); // Itens 1 a 76
+      }
+    }
     let rowsHtml = '';
     items.forEach((i, index) => {
       let photosHtml = '';

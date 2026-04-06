@@ -37,6 +37,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
   const [frequency, setFrequency] = useState<Frequency>(editingRecord?.frequency || Frequency.MENSAL);
 
+  const [recordId] = useState(editingRecord?.id || `h-${Date.now()}`);
   const [selectedAsset] = useState<CraneAsset | null>(() => {
     if (editingRecord) return assets.find(a => a.id === editingRecord.assetId) || null;
     return assets.find(a => a.id === initialAssetId) || null;
@@ -118,10 +119,12 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   };
 
   const visibleItems = useMemo(() => {
+    const isPreventive = editingRecord ? editingRecord.type === MaintenanceType.PREVENTIVE : true;
+    if (!isPreventive) return items;
     if (frequency === Frequency.MENSAL) return items.slice(0, 69);
     if (frequency === Frequency.SEMESTRAL) return items.slice(0, 76);
     return items;
-  }, [items, frequency]);
+  }, [items, frequency, editingRecord]);
 
   const isFormComplete = visibleItems.length > 0 && visibleItems.every(i => i.isOk !== null);
 
@@ -132,7 +135,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
     setIsSavingProgress(true);
 
     const draftRecord: MaintenanceRecord = {
-      id: editingRecord?.id || `draft-${Date.now()}`,
+      id: recordId,
       local_id: editingRecord?.local_id,
       inspectionNumber: editingRecord?.inspectionNumber || nextOsNumber,
       assetId: selectedAsset.id,
@@ -143,7 +146,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       technician: currentUser.name,
       technicianId: currentUser.id,
       downtimeHours: 0,
-      checklists: items,
+      checklists: visibleItems,
       clientRepresentative: clientName,
       signature: 'DRAFT',
       status: 'OPEN'
@@ -169,7 +172,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
     const finalTechnicianId = isEditingWithTechnician ? editingRecord.technicianId : currentUser.id;
 
     const newRecord: MaintenanceRecord = {
-      id: editingRecord?.id || `h-${Date.now()}`,
+      id: recordId,
       local_id: editingRecord?.local_id,
       inspectionNumber: editingRecord?.inspectionNumber || nextOsNumber,
       assetId: selectedAsset.id,
@@ -180,7 +183,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       technician: finalTechnician,
       technicianId: finalTechnicianId,
       downtimeHours: 2.5,
-      checklists: items,
+      checklists: visibleItems,
       clientRepresentative: clientName,
       signature: `Técnico: ${finalTechnician} | Cliente: ${clientName}`,
       status: 'COMPLETED'
