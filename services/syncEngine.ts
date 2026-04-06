@@ -29,6 +29,7 @@ class SyncEngine {
             await this.syncTable('ativos', 'crane_assets');
             await this.syncTable('ordens_servico', 'maintenance_records');
             await this.syncTable('usuarios', 'user_profiles');
+            await this.syncTable('rdo', 'rdo');
 
             // 4. Process Pending Deletions
             await this.processPendingDeletions();
@@ -44,7 +45,7 @@ class SyncEngine {
         this.lastAttempt = {};
     }
 
-    private async syncTable(localTableName: 'ativos' | 'ordens_servico' | 'usuarios', serverTableName: string) {
+    private async syncTable(localTableName: 'ativos' | 'ordens_servico' | 'usuarios' | 'rdo', serverTableName: string) {
         const pending = await db[localTableName]
             .where('sync_status')
             .anyOf(['PENDING', 'ERROR'])
@@ -99,7 +100,7 @@ class SyncEngine {
         }
     }
 
-    private async processBatch(localTable: 'ativos' | 'ordens_servico' | 'usuarios', serverTable: string, batch: any[]) {
+    private async processBatch(localTable: 'ativos' | 'ordens_servico' | 'usuarios' | 'rdo', serverTable: string, batch: any[]) {
         try {
             // 1. Fetch current versions from server to detect conflicts
             const { data: serverRecords, error: fetchError } = await supabase
@@ -150,7 +151,7 @@ class SyncEngine {
                         role: data.role,
                         password: data.password
                     });
-                } else {
+                } else if (localTable === 'ordens_servico') {
                     const [asset, technician] = await Promise.all([
                         db.ativos.get(data.assetId),
                         db.usuarios.get(data.technicianId)
@@ -167,6 +168,26 @@ class SyncEngine {
                         checklists: data.checklists,
                         client_representative: data.clientRepresentative,
                         signature: data.signature
+                    });
+                } else if (localTable === 'rdo') {
+                    Object.assign(mapped, {
+                        date: data.date,
+                        arrival_time: data.arrivalTime,
+                        start_time: data.startTime,
+                        site_name: data.siteName,
+                        client_name: data.clientName,
+                        weather: data.weather,
+                        team_description: data.teamDescription,
+                        activities: data.activities,
+                        materials: data.materials,
+                        equipment: data.equipment,
+                        occurrences: data.occurrences,
+                        photos: data.photos,
+                        technician_id: data.technicianId,
+                        technician_name: data.technicianName,
+                        signature: data.signature,
+                        status: data.status,
+                        end_time: data.endTime
                     });
                 }
                 recordsToUpsert.push(mapped);

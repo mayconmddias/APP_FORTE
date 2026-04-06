@@ -9,7 +9,9 @@ import PreventiveHistory from './components/PreventiveHistory';
 import UserManagement from './components/UserManagement';
 import OpenInspections from './components/OpenInspections';
 import SyncPendencyScreen from './components/SyncPendencyScreen';
-import { MaintenanceRecord, UserProfile, CraneAsset } from './types';
+import RdoForm from './components/RdoForm';
+import RdoHistory from './components/RdoHistory';
+import { MaintenanceRecord, UserProfile, CraneAsset, RdoRecord } from './types';
 import { supabase } from './supabaseClient';
 import { Loader2 } from 'lucide-react';
 import { db, LocalAsset, LocalMaintenanceRecord } from './services/offlineDb';
@@ -24,6 +26,7 @@ const App: React.FC = () => {
   const [dynamicTitle, setDynamicTitle] = useState<string | null>(null);
   const [headerAction, setHeaderAction] = useState<React.ReactNode>(null);
   const [history, setHistory] = useState<MaintenanceRecord[]>([]);
+  const [rdos, setRdos] = useState<RdoRecord[]>([]);
   const [assets, setAssets] = useState<CraneAsset[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +34,7 @@ const App: React.FC = () => {
 
   const [preselectedAssetId, setPreselectedAssetId] = useState<string | null>(null);
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
+  const [editingRdo, setEditingRdo] = useState<RdoRecord | null>(null);
 
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [selectedAssetIdForAction, setSelectedAssetIdForAction] = useState<string | null>(null);
@@ -39,10 +43,12 @@ const App: React.FC = () => {
     const localAssets = await db.ativos.toArray();
     const localHistory = await db.ordens_servico.toArray();
     const localUsers = await db.usuarios.toArray();
+    const localRdos = await db.rdo.toArray();
 
     setAssets(localAssets as any);
     setHistory(localHistory as any);
     setUsers(localUsers as any);
+    setRdos(localRdos as any);
 
     // LOGICA DE NUMERAÇÃO: Busca o maior número de OS existente e soma 1
     if (localHistory.length > 0) {
@@ -201,10 +207,46 @@ const App: React.FC = () => {
           await db.ordens_servico.bulkPut(mappedHistory);
         }
 
-        // RECONCILIAÇÃO: Se o servidor estiver vazio, limpa o histórico local sincronizado para permitir reset total
-        if (historyData && historyData.length === 0) {
-          console.log("App: Server history is empty. Clearing local synced records for reset to #01.");
-          await db.ordens_servico.where('sync_status').equals('SYNCED').delete();
+        // RDO
+        const { data: rdoData } = await supabase.from('rdo').select('*');
+        if (rdoData) {
+            const serverRdoIds = rdoData.map(r => r.id);
+            const localSyncedRdos = await db.rdo.where('sync_status').equals('SYNCED').toArray();
+            const rdosToDelete = localSyncedRdos.filter(lr => lr.server_id && !serverRdoIds.includes(lr.server_id));
+            if (rdosToDelete.length > 0) {
+                await db.rdo.bulkDelete(rdosToDelete.map(r => r.local_id));
+            }
+
+            const mappedRdos = await Promise.all(rdoData.map(async r => {
+                const existing = await db.rdo.where('server_id').equals(r.id).first();
+                const local_id = existing?.local_id || uuidv4();
+
+                return {
+                    id: local_id,
+                    local_id: local_id,
+                    server_id: r.id,
+                    date: r.date,
+                    arrivalTime: r.arrival_time,
+                    startTime: r.start_time,
+                    siteName: r.site_name,
+                    clientName: r.client_name,
+                    weather: r.weather,
+                    teamDescription: r.team_description,
+                    activities: r.activities,
+                    materials: r.materials,
+                    equipment: r.equipment,
+                    occurrences: r.occurrences,
+                    photos: r.photos,
+                    technicianId: r.technician_id,
+                    technicianName: r.technician_name,
+                    signature: r.signature,
+                    status: r.status,
+                    sync_status: 'SYNCED',
+                    updated_at: new Date().toISOString(),
+                    version: 1
+                } as any;
+            }));
+            await db.rdo.bulkPut(mappedRdos);
         }
 
         // Recarregar após sync inicial
@@ -310,6 +352,48 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Erro ao excluir OS:", error);
       alert("Erro ao excluir. O registro será removido da nuvem na próxima sincronização.");
+    }
+  };
+
+  const handleSaveRdo = async (record: RdoRecord) => {
+    try {
+      const localId = record.local_id || uuidv4();
+      const localRecord = {
+        ...record,
+        id: record.id?.startsWith('rdo-') ? localId : (record.id || localId),
+        local_id: localId,
+        sync_status: 'PENDING',
+        updated_at: new Date().toISOString(),
+        version: ((record as any).version || 0) + 1
+      };
+
+      await db.rdo.put(localRecord as any);
+      await loadLocalData();
+      syncEngine.triggerSync();
+      
+      setEditingRdo(null);
+      setActiveTab('rdo');
+    } catch (error) {
+      console.error("Erro ao salvar RDO:", error);
+    }
+  };
+
+  const handleDeleteRdo = async (recordId: string) => {
+    if (!confirm("Tem certeza que deseja excluir este RDO?")) return;
+    try {
+      const record = await db.rdo.get(recordId);
+      if (record?.server_id) {
+         await db.exclusoes_pendentes.add({
+           server_id: record.server_id,
+           table_name: 'rdo',
+           timestamp: new Date().toISOString()
+         });
+      }
+      await db.rdo.delete(recordId);
+      await loadLocalData();
+      syncEngine.triggerSync();
+    } catch (error) {
+      console.error("Erro ao excluir RDO:", error);
     }
   };
 
@@ -568,6 +652,26 @@ const App: React.FC = () => {
         );
       case 'sync-pendencies':
         return <SyncPendencyScreen onTitleChange={setDynamicTitle} />;
+      case 'rdo':
+        return (
+          <RdoHistory 
+            records={rdos}
+            userRole={currentUser?.role}
+            onNew={() => setActiveTab('rdo-form')}
+            onEdit={(rec) => { setEditingRdo(rec); setActiveTab('rdo-form'); }}
+            onDelete={handleDeleteRdo}
+            onGeneratePdf={(rec) => { /* handleGeneratePdf is now inside RdoHistory */ }}
+          />
+        );
+      case 'rdo-form':
+        return (
+          <RdoForm 
+            currentUser={currentUser}
+            editingRdo={editingRdo}
+            onSave={handleSaveRdo}
+            onCancel={() => { setEditingRdo(null); setActiveTab('rdo'); }}
+          />
+        );
       default:
         return <AssetManagement
           history={history}

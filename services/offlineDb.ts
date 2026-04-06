@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { MaintenanceRecord, UserProfile, CraneAsset } from '../types';
+import { MaintenanceRecord, UserProfile, CraneAsset, RdoRecord } from '../types';
 
 export type SyncStatus = 'PENDING' | 'SYNCED' | 'ERROR';
 
@@ -16,6 +16,7 @@ export interface LocalMetadata {
 export type LocalAsset = CraneAsset & LocalMetadata;
 export type LocalMaintenanceRecord = MaintenanceRecord & LocalMetadata;
 export type LocalUserProfile = UserProfile & LocalMetadata;
+export type LocalRdoRecord = RdoRecord & LocalMetadata;
 
 export interface PendingDeletion {
   id?: number;
@@ -39,6 +40,7 @@ export class OfflineDatabase extends Dexie {
   anexos!: Table<{ local_id: string; metadata: any } & LocalMetadata>;
   exclusoes_pendentes!: Table<PendingDeletion>;
   logs_sincronizacao!: Table<SyncLog>;
+  rdo!: Table<LocalRdoRecord>;
 
   constructor() {
     super('ForteOfflineDB');
@@ -48,7 +50,8 @@ export class OfflineDatabase extends Dexie {
       usuarios: 'local_id, server_id, email, sync_status, updated_at',
       anexos: 'local_id, server_id, sync_status',
       exclusoes_pendentes: '++id, server_id, table_name',
-      logs_sincronizacao: '++id, timestamp, level'
+      logs_sincronizacao: '++id, timestamp, level',
+      rdo: 'local_id, server_id, date, clientName, siteName, status, sync_status, updated_at'
     });
   }
 

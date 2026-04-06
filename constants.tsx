@@ -162,3 +162,21 @@ export const CHECKLIST_TALHA: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>
   ...CHECKLIST_PONTE.slice(23, 26),    // 24 a 26
   ...CHECKLIST_PONTE.slice(32, 66)     // 33 a 66 (O item 66 agora é o card 48)
 ];
+
+export const RDO_MATERIAIS = [
+  { category: 'MATERIAIS', label: 'EPIs (Capacete, Luva, Óculos, Bota)' },
+  { category: 'MATERIAIS', label: 'FERRAMENTAS MANUAIS' },
+  { category: 'MATERIAIS', label: 'FERRAMENTAS ELÉTRICAS' },
+  { category: 'MATERIAIS', label: 'CONSUMÍVEIS (Eletrodo, Disco de Corte)' },
+  { category: 'MATERIAIS', label: 'CABOS DE AÇO / CINTAS DE IÇAMENTO' },
+  { category: 'MATERIAIS', label: 'MATERIAL DE LIMPEZA E ORGANIZAÇÃO' }
+];
+
+export const RDO_EQUIPAMENTOS = [
+  { category: 'EQUIPAMENTOS', label: 'VEÍCULO DE TRANSPORTE' },
+  { category: 'EQUIPAMENTOS', label: 'ESCADAS E ANDAIMES' },
+  { category: 'EQUIPAMENTOS', label: 'INSTRUMENTOS DE MEDIÇÃO (Multímetro/Célula)' },
+  { category: 'EQUIPAMENTOS', label: 'MÁQUINA DE SOLDA' },
+  { category: 'EQUIPAMENTOS', label: 'COMPRESSOR / GERADOR' },
+  { category: 'EQUIPAMENTOS', label: 'PLATAFORMA ELEVATÓRIA (SE APLICÁVEL)' }
+];

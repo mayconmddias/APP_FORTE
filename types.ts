@@ -78,3 +78,33 @@ export interface MaintenanceRecord {
   clientRepresentative?: string;
   status?: 'OPEN' | 'COMPLETED';
 }
+
+export enum Weather {
+  SOL = 'SOL',
+  CHUVA_FRACA = 'CHUVA FRACA',
+  CHUVA_FORTE = 'CHUVA FORTE'
+}
+
+export interface RdoRecord {
+  id: string; // Server ID or Local UUID
+  local_id?: string;
+  date: string;
+  arrivalTime: string;
+  startTime: string;
+  siteName: string;
+  clientName: string;
+  weather: Weather;
+  teamDescription: string;
+  activities: string[]; // Lista de atividades
+  materials: { label: string; isOk: boolean | null; observation: string }[];
+  equipment: { label: string; isOk: boolean | null; observation: string }[];
+  occurrences: string;
+  photos: string[]; // Base64 ou URLs
+  technicianId: string;
+  technicianName: string;
+  signature?: string;
+  endTime?: string; // Horário de fechamento
+  status: 'OPEN' | 'COMPLETED';
+  created_at?: string;
+  updated_at?: string;
+}
