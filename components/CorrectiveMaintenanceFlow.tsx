@@ -17,7 +17,8 @@ import {
   Check,
   ClipboardList,
   Building2,
-  CheckCircle
+  CheckCircle,
+  Calendar
 } from 'lucide-react';
 import { CHECKLIST_PONTE, CHECKLIST_TALHA } from '../constants';
 import { ChecklistItem, CraneAsset, MaintenanceRecord, MaintenanceType, UserProfile, Frequency } from '../types';
@@ -67,6 +68,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [infoModalText, setInfoModalText] = useState<string | null>(null);
   const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inspectionDate, setInspectionDate] = useState(editingRecord?.date || new Date().toISOString().split('T')[0]);
   const [recordId] = useState(editingRecord?.id || `h-${Date.now()}`);
   const [localId] = useState(editingRecord?.local_id || recordId);
   const [lastOsNumber, setLastOsNumber] = useState<number>(0);
@@ -184,7 +186,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
       type: MaintenanceType.CORRETIVA,
       checklistType: (selectedAsset.equipmentType === 'Talha' || selectedAsset.equipmentType === 'Monovia') ? 'TALHA_PRINCIPAL' : 'PONTE_PRINCIPAL',
       frequency: Frequency.MENSAL,
-      date: editingRecord?.date || new Date().toISOString().split('T')[0],
+      date: inspectionDate,
       technician: finalTechnician,
       technicianId: finalTechnicianId,
       downtimeHours: 0,
@@ -455,6 +457,20 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
             ))}
 
             <div className="bg-slate-50 p-8 md:p-10 rounded-[40px] border border-slate-200 mt-10 shadow-xl space-y-8">
+              {/* Data da Inspeção */}
+              <div>
+                <div className="flex items-center gap-3 mb-4 text-slate-900">
+                  <Calendar size={24} className="text-[#0066CC]" />
+                  <h3 className="font-black text-slate-900 text-xs uppercase tracking-widest">Data da Inspeção</h3>
+                </div>
+                <input
+                  type="date"
+                  className="w-full h-14 bg-white border border-slate-200 rounded-2xl text-slate-900 px-6 font-black uppercase text-xs outline-none focus:ring-2 focus:ring-[#0066CC]/20 transition-all"
+                  value={inspectionDate}
+                  onChange={e => setInspectionDate(e.target.value)}
+                />
+              </div>
+
               {/* Responsável Técnico */}
               <div>
                 <div className="flex items-center gap-3 mb-4 text-slate-900">

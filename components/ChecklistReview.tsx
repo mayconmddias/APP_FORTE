@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Check, X, Camera, Signature, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, X, Camera, Signature, Loader2, Calendar } from 'lucide-react';
 import { ChecklistItem, UserProfile } from '../types';
 
 interface ChecklistReviewProps {
@@ -9,6 +9,8 @@ interface ChecklistReviewProps {
     isSubmitting: boolean;
     onBack: () => void;
     onClientNameChange: (name: string) => void;
+    inspectionDate: string;
+    onDateChange: (date: string) => void;
     onFinalSave: () => void;
     technicianName?: string;
 }
@@ -20,6 +22,8 @@ const ChecklistReview: React.FC<ChecklistReviewProps> = ({
     isSubmitting,
     onBack,
     onClientNameChange,
+    inspectionDate,
+    onDateChange,
     onFinalSave,
     technicianName
 }) => {
@@ -58,6 +62,16 @@ const ChecklistReview: React.FC<ChecklistReviewProps> = ({
                 </div>
 
                 <div className="bg-slate-50 p-10 rounded-[40px] border border-slate-200 shadow-xl space-y-8">
+                    <div>
+                        <div className="flex items-center gap-4 mb-4 text-slate-900"><Calendar size={24} className="text-[#0066CC]" /><h3 className="font-black text-slate-900 text-xs uppercase tracking-widest">Data da Inspeção</h3></div>
+                        <input
+                            type="date"
+                            value={inspectionDate}
+                            onChange={(e) => onDateChange(e.target.value)}
+                            className="w-full h-14 bg-white border border-slate-200 rounded-2xl text-slate-900 px-6 font-black uppercase text-xs outline-none focus:ring-2 focus:ring-[#0066CC]/20 transition-all"
+                        />
+                    </div>
+
                     <div>
                         <div className="flex items-center gap-4 mb-4 text-slate-900"><Signature size={24} className="text-[#0066CC]" /><h3 className="font-black text-slate-900 text-xs uppercase tracking-widest">Responsável Técnico</h3></div>
                         <div className="w-full h-14 bg-white border border-slate-200 rounded-2xl text-slate-900 px-6 font-black uppercase text-xs flex items-center">

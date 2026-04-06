@@ -37,6 +37,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [selectorSearch, setSelectorSearch] = useState('');
   const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
   const [frequency, setFrequency] = useState<Frequency>(editingRecord?.frequency || Frequency.MENSAL);
+  const [inspectionDate, setInspectionDate] = useState(editingRecord?.date || new Date().toISOString().split('T')[0]);
 
   const [recordId] = useState(editingRecord?.id || `h-${Date.now()}`);
   const [localId] = useState(editingRecord?.local_id || recordId);
@@ -144,7 +145,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       type: editingRecord ? editingRecord.type : MaintenanceType.PREVENTIVE,
       checklistType: checklistType!,
       frequency: frequency,
-      date: new Date().toISOString().split('T')[0],
+      date: inspectionDate,
       technician: currentUser.name,
       technicianId: currentUser.id,
       downtimeHours: 0,
@@ -181,7 +182,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       type: editingRecord ? editingRecord.type : MaintenanceType.PREVENTIVE,
       checklistType: checklistType!,
       frequency: frequency,
-      date: editingRecord?.date || new Date().toISOString().split('T')[0],
+      date: inspectionDate,
       technician: finalTechnician,
       technicianId: finalTechnicianId,
       downtimeHours: 2.5,
@@ -333,6 +334,8 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
           isSubmitting={isSubmitting}
           onBack={() => setIsPreview(false)}
           onClientNameChange={setClientName}
+          inspectionDate={inspectionDate}
+          onDateChange={setInspectionDate}
           onFinalSave={handleFinalSave}
           technicianName={editingRecord?.technician || currentUser?.name}
         />
