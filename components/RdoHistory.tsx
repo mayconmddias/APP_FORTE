@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -23,6 +23,7 @@ interface RdoHistoryProps {
   onDelete: (id: string) => void;
   onNew: () => void;
   onGeneratePdf: (record: RdoRecord) => void;
+  onTitleChange?: (title: string | null) => void;
   loading?: boolean;
 }
 
@@ -32,10 +33,14 @@ const formatDate = (dateStr: string) => {
   return `${day}/${month}/${year}`;
 };
 
-const RdoHistory: React.FC<RdoHistoryProps> = ({ records, userRole, onEdit, onDelete, onNew, loading }) => {
+const RdoHistory: React.FC<RdoHistoryProps> = ({ records, userRole, onEdit, onDelete, onNew, onTitleChange, loading }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'OPEN' | 'COMPLETED'>('COMPLETED');
   const [dateFilter, setDateFilter] = useState('');
+
+  useEffect(() => {
+    onTitleChange?.('RELATÓRIOS DIÁRIOS');
+  }, [onTitleChange]);
 
   const handleGeneratePdf = (record: RdoRecord) => {
     let activitiesHtml = '';

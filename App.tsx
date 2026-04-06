@@ -661,6 +661,7 @@ const App: React.FC = () => {
             onEdit={(rec) => { setEditingRdo(rec); setActiveTab('rdo-form'); }}
             onDelete={handleDeleteRdo}
             onGeneratePdf={(rec) => { /* handleGeneratePdf is now inside RdoHistory */ }}
+            onTitleChange={setDynamicTitle}
           />
         );
       case 'rdo-form':
@@ -669,7 +670,8 @@ const App: React.FC = () => {
             currentUser={currentUser}
             editingRdo={editingRdo}
             onSave={handleSaveRdo}
-            onCancel={() => { setEditingRdo(null); setActiveTab('rdo'); }}
+            onCancel={() => { setEditingRdo(null); setActiveTab('rdo'); setDynamicTitle(null); }}
+            onTitleChange={setDynamicTitle}
           />
         );
       default:

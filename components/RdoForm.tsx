@@ -30,10 +30,15 @@ interface RdoFormProps {
   onCancel: () => void;
   currentUser: UserProfile | null;
   editingRdo?: RdoRecord | null;
+  onTitleChange?: (title: string | null) => void;
 }
 
-const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editingRdo }) => {
+const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editingRdo, onTitleChange }) => {
   const [isSaving, setIsSaving] = useState(false);
+  
+  useEffect(() => {
+    onTitleChange?.('NOVO RDO');
+  }, [onTitleChange]);
   
   // State for RDO fields
   const [recordId] = useState(editingRdo?.id || `rdo-${Date.now()}`);
@@ -156,18 +161,22 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="pointer-events-none opacity-80">
                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2 block">Data</label>
                  <div className="relative">
                    <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 text-[#0066CC]/40" size={18} />
-                   <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full h-16 bg-white border border-slate-200 rounded-2xl pl-16 pr-6 font-black uppercase text-sm outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all text-center shadow-sm" />
+                   <div className="w-full h-16 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center font-black uppercase text-sm text-slate-900 shadow-sm">
+                      {date.split('-').reverse().join('/')}
+                   </div>
                  </div>
               </div>
-              <div>
+              <div className="pointer-events-none opacity-80">
                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2 block">Chegada Empresa</label>
                  <div className="relative">
                    <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-[#0066CC]/40" size={18} />
-                   <input type="time" value={arrivalTime} readOnly className="w-full h-16 bg-slate-200/50 border border-slate-200 rounded-2xl pl-16 pr-6 font-black uppercase text-sm outline-none text-center cursor-not-allowed text-slate-400 shadow-sm" />
+                   <div className="w-full h-16 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center font-black uppercase text-sm text-slate-900 shadow-sm">
+                      {arrivalTime}
+                   </div>
                  </div>
               </div>
             </div>
