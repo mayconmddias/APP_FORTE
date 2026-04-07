@@ -251,6 +251,23 @@ const App: React.FC = () => {
             await db.rdo.bulkPut(mappedRdos);
         }
 
+        // -- DEEP CLEANUP: Purge all invalid RDOs and clear error logs (Applied to all devices on load) --
+        const allLocalRdos = await db.rdo.toArray();
+        const invalidRdos = allLocalRdos.filter(r => String(r.local_id).startsWith('rdo-') || String(r.id).startsWith('rdo-'));
+        
+        if (invalidRdos.length > 0) {
+            console.warn(`[SyncEngine] Purging ${invalidRdos.length} invalid RDOs...`);
+            await db.rdo.bulkDelete(invalidRdos.map(r => r.local_id));
+            
+            // Clear past sync error logs specifically for RDOs
+            const errorLogs = await db.logs_sincronizacao.where('level').equals('ERROR').toArray();
+            const logsToDelete = errorLogs.filter(log => log.message.includes('RDO')).map(log => log.id!);
+            if (logsToDelete.length > 0) {
+                await db.logs_sincronizacao.bulkDelete(logsToDelete);
+            }
+            await loadLocalData();
+        }
+
         // Recarregar após sync inicial
         await loadLocalData();
         await syncEngine.triggerSync();
