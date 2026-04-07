@@ -67,6 +67,41 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
   const [materials, setMaterials] = useState(editingRdo?.materials || defaultMaterials);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+  const [replaceMode, setReplaceMode] = useState<'camera' | 'gallery' | null>(null);
+
+  const handleReplacePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && selectedPhotoIndex !== null) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const newPhotos = [...photos];
+        newPhotos[selectedPhotoIndex] = reader.result as string;
+        setPhotos(newPhotos);
+        setSelectedPhotoIndex(null);
+        setReplaceMode(null);
+      };
+      reader.readAsDataURL(file);
+    }
+    if (replaceInputRef.current) replaceInputRef.current.value = '';
+  };
+
+  const triggerReplace = (mode: 'camera' | 'gallery') => {
+    setReplaceMode(mode);
+    setTimeout(() => {
+      if (replaceInputRef.current) {
+        replaceInputRef.current.setAttribute('capture', mode === 'camera' ? 'environment' : '');
+        if (mode === 'gallery') replaceInputRef.current.removeAttribute('capture');
+        replaceInputRef.current.click();
+      }
+    }, 50);
+  };
+
+  const handleDeletePhoto = (index: number) => {
+    setPhotos(photos.filter((_, i) => i !== index));
+    setSelectedPhotoIndex(null);
+  };
 
   const addActivity = () => setActivities([...activities, '']);
   const updateActivity = (index: number, val: string) => {
@@ -352,11 +387,38 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {photos.map((photo, idx) => (
-                  <div key={idx} className="relative group aspect-square rounded-[32px] overflow-hidden border-4 border-white shadow-md">
+                  <div key={idx} className="relative aspect-square rounded-[32px] overflow-hidden border-4 border-white shadow-md cursor-pointer" onClick={() => setSelectedPhotoIndex(idx)}>
                     <img src={photo} alt="Evidência" className="w-full h-full object-cover" />
-                    <button onClick={() => setPhotos(photos.filter((_, i) => i !== idx))} className="absolute top-2 right-2 p-3 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg">
-                      <Trash2 size={16} />
-                    </button>
+                    
+                    {/* Popup de Ações */}
+                    {selectedPhotoIndex === idx && (
+                      <>
+                        {/* Overlay para fechar ao clicar fora */}
+                        <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setSelectedPhotoIndex(null); }} />
+                        
+                        {/* Menu de Ações */}
+                        <div className="absolute inset-0 bg-black/70 z-[9999] flex flex-col items-center justify-center gap-3 p-4" onClick={(e) => e.stopPropagation()}>
+                          <button 
+                            onClick={() => triggerReplace('camera')}
+                            className="w-full py-3 bg-white rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-800 hover:bg-blue-50 transition-all"
+                          >
+                            Nova Foto
+                          </button>
+                          <button 
+                            onClick={() => triggerReplace('gallery')}
+                            className="w-full py-3 bg-white rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-800 hover:bg-blue-50 transition-all"
+                          >
+                            Galeria
+                          </button>
+                          <button 
+                            onClick={() => handleDeletePhoto(idx)}
+                            className="w-full py-3 bg-red-500 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white hover:bg-red-600 transition-all"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
                 <button onClick={() => fileInputRef.current?.click()} className="aspect-square bg-white border-2 border-dashed border-slate-300 rounded-[32px] flex flex-col items-center justify-center gap-3 text-slate-400 hover:bg-blue-50 hover:border-[#0066CC]/30 hover:text-[#0066CC] transition-all group shadow-sm">
@@ -365,6 +427,7 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
                 </button>
               </div>
               <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
+              <input type="file" ref={replaceInputRef} onChange={handleReplacePhoto} className="hidden" accept="image/*" />
             </div>
           </section>
 
