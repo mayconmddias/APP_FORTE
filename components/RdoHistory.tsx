@@ -80,7 +80,11 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
       equipmentHtml += `<tr><td>${e.label}</td><td style="text-align:center; font-weight:bold; color:${e.isOk ? '#059669' : '#dc2626'}">${e.isOk === true ? 'OK' : e.isOk === false ? 'NOK' : '-'}</td><td>${e.observation || '-'}</td></tr>`;
     });
 
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+    const [day, month, year] = (record.date || '').split('-').reverse();
+    const formattedDate = `${day}-${month}-${year?.slice(-2)}`;
+    const pdfTitle = `Relatorio Diario - RD ${record.rdoNumber} - ${formattedDate}`;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${pdfTitle}</title><style>
       body { font-family: 'Inter', sans-serif; padding: 30px; color: #1e293b; line-height: 1.4; text-transform: uppercase; }
       .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #0066CC; padding-bottom: 20px; }
       .logo { height: 50px; }
