@@ -35,6 +35,9 @@ const App: React.FC = () => {
   const [preselectedAssetId, setPreselectedAssetId] = useState<string | null>(null);
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
   const [editingRdo, setEditingRdo] = useState<RdoRecord | null>(null);
+  const [nextRdoNumber, setNextRdoNumber] = useState<number>(1);
+  const [rdoSelectedClient, setRdoSelectedClient] = useState<string | null>(null);
+  const [rdoSourceTab, setRdoSourceTab] = useState<string | null>(null);
 
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [selectedAssetIdForAction, setSelectedAssetIdForAction] = useState<string | null>(null);
@@ -50,17 +53,15 @@ const App: React.FC = () => {
     setUsers(localUsers as any);
     setRdos(localRdos as any);
 
-    // LOGICA DE NUMERAÇÃO: Busca o maior número de OS existente e soma 1
-    if (localHistory.length > 0) {
-      const maxOs = localHistory.reduce((max, rec) => {
-        const num = (rec.inspectionNumber || 0);
+    // LOGICA DE NUMERAÇÃO RDO: Busca o maior número de RDO existente e soma 1
+    if (localRdos.length > 0) {
+      const maxRdo = localRdos.reduce((max, rec) => {
+        const num = (rec.rdoNumber || 0);
         return num > max ? num : max;
       }, 0);
-      setNextOsNumber(maxOs + 1);
+      setNextRdoNumber(maxRdo + 1);
     } else {
-      // Se não há histórico (limpo), começa do 1
-      console.log("App: No local history. Resetting OS counter to 1.");
-      setNextOsNumber(1);
+      setNextRdoNumber(1);
     }
   };
 
@@ -655,12 +656,33 @@ const App: React.FC = () => {
       case 'rdo':
         return (
           <RdoHistory 
-            records={rdos}
+            mode="COMPLETED"
+            records={rdos.filter(r => r.status === 'COMPLETED')}
             userRole={currentUser?.role}
-            onNew={() => setActiveTab('rdo-form')}
-            onEdit={(rec) => { setEditingRdo(rec); setActiveTab('rdo-form'); }}
+            selectedClient={rdoSelectedClient}
+            onSelectClient={setRdoSelectedClient}
+            onNew={() => { setRdoSourceTab('rdo'); setActiveTab('rdo-form'); }}
+            onEdit={(rec) => { setRdoSourceTab('rdo'); setEditingRdo(rec); setActiveTab('rdo-form'); }}
             onDelete={handleDeleteRdo}
-            onGeneratePdf={(rec) => { /* handleGeneratePdf is now inside RdoHistory */ }}
+            onGeneratePdf={(rec) => { /* handleGeneratePdf is inside RdoHistory */ }}
+            onTitleChange={setDynamicTitle}
+          />
+        );
+      case 'open-rdos':
+        return (
+          <RdoHistory 
+            mode="OPEN"
+            records={rdos.filter(r => {
+              const isOpen = r.status === 'OPEN';
+              if (!isOpen) return false;
+              if (currentUser?.role === 'ADMIN') return true;
+              return r.technicianId === currentUser?.id;
+            })}
+            userRole={currentUser?.role}
+            onNew={() => { setRdoSourceTab('open-rdos'); setActiveTab('rdo-form'); }}
+            onEdit={(rec) => { setRdoSourceTab('open-rdos'); setEditingRdo(rec); setActiveTab('rdo-form'); }}
+            onDelete={handleDeleteRdo}
+            onGeneratePdf={(rec) => { /* handleGeneratePdf is inside RdoHistory */ }}
             onTitleChange={setDynamicTitle}
           />
         );
@@ -669,8 +691,14 @@ const App: React.FC = () => {
           <RdoForm 
             currentUser={currentUser}
             editingRdo={editingRdo}
+            nextRdoNumber={nextRdoNumber}
+            allowFinalize={rdoSourceTab === 'open-rdos' && editingRdo !== null}
             onSave={handleSaveRdo}
-            onCancel={() => { setEditingRdo(null); setActiveTab('rdo'); setDynamicTitle(null); }}
+            onCancel={() => { 
+              setEditingRdo(null); 
+              setActiveTab(rdoSourceTab === 'open-rdos' ? 'open-rdos' : 'rdo'); 
+              setDynamicTitle(null); 
+            }}
             onTitleChange={setDynamicTitle}
           />
         );

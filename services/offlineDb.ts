@@ -44,14 +44,14 @@ export class OfflineDatabase extends Dexie {
 
   constructor() {
     super('ForteOfflineDB');
-    this.version(4).stores({
+    this.version(5).stores({
       ativos: 'local_id, server_id, client, sync_status, updated_at',
       ordens_servico: 'local_id, server_id, assetId, signature, status, sync_status, updated_at',
       usuarios: 'local_id, server_id, email, sync_status, updated_at',
       anexos: 'local_id, server_id, sync_status',
       exclusoes_pendentes: '++id, server_id, table_name',
       logs_sincronizacao: '++id, timestamp, level',
-      rdo: 'local_id, server_id, date, clientName, siteName, status, sync_status, updated_at'
+      rdo: 'local_id, server_id, rdoNumber, date, clientName, siteName, status, sync_status, updated_at'
     });
   }
 

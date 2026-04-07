@@ -30,19 +30,22 @@ interface RdoFormProps {
   onCancel: () => void;
   currentUser: UserProfile | null;
   editingRdo?: RdoRecord | null;
+  nextRdoNumber: number;
+  allowFinalize?: boolean;
   onTitleChange?: (title: string | null) => void;
 }
 
-const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editingRdo, onTitleChange }) => {
+const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editingRdo, nextRdoNumber, allowFinalize, onTitleChange }) => {
   const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
-    onTitleChange?.('NOVO RDO');
+    onTitleChange?.('NOVO RD');
   }, [onTitleChange]);
   
   // State for RDO fields
   const [recordId] = useState(editingRdo?.id || `rdo-${Date.now()}`);
   const [localId] = useState(editingRdo?.local_id || recordId);
+  const [rdoNumber] = useState(editingRdo?.rdoNumber || nextRdoNumber);
   const [siteName, setSiteName] = useState(editingRdo?.siteName || '');
   const [clientName, setClientName] = useState(editingRdo?.clientName || '');
   const [date, setDate] = useState(editingRdo?.date || new Date().toISOString().split('T')[0]);
@@ -107,6 +110,7 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
       technicianId: currentUser.id,
       technicianName: currentUser.name,
       endTime: isFinal ? new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : (editingRdo?.endTime || undefined),
+      rdoNumber,
       status: isFinal ? 'COMPLETED' : 'OPEN',
       signature: isFinal ? 'SIGNED' : undefined
     };
@@ -122,8 +126,11 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
         <div className="flex items-center gap-6">
           <button onClick={onCancel} className="p-3 hover:bg-slate-100 rounded-full text-slate-400 transition-all focus:ring-2 focus:ring-[#0066CC]/20 outline-none"><ArrowLeft size={32} /></button>
           <div>
-            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">NOVO RDO</h2>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-1">Relatório Diário de Obra</p>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">NOVO RD</h2>
+              <span className="bg-blue-50 text-[#0066CC] px-3 py-1 rounded-lg font-black text-[10px] tracking-widest">#{rdoNumber}</span>
+            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-1">Relatório Diário</p>
           </div>
         </div>
       </header>
@@ -278,7 +285,21 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
              </div>
           </section>
 
-          {/* Seção 4: ATIVIDADES */}
+          {/* Seção 4: OCORRÊNCIAS (MOVE TO TOP OF SECTION GROUP) */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-4 mb-4 border-b border-slate-200 pb-4">
+              <div className="w-10 h-10 bg-blue-50 text-[#0066CC] rounded-2xl flex items-center justify-center shadow-sm"><AlertCircle size={20} /></div>
+              <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Ocorrências / Imprevistos</h3>
+            </div>
+            <textarea 
+              value={occurrences} 
+              onChange={e => setOccurrences(e.target.value.toUpperCase())} 
+              placeholder="DESCREVA PROBLEMAS, ATRASOS OU OBSERVAÇÕES RELEVANTES DO DIA..." 
+              className="w-full h-32 bg-white border border-slate-200 rounded-2xl p-6 font-black uppercase text-sm outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all resize-none placeholder:text-slate-300 shadow-sm" 
+            />
+          </section>
+
+          {/* Seção 5: ATIVIDADES */}
           <section className="space-y-6">
             <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
               <div className="flex items-center gap-4">
@@ -306,7 +327,7 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
             </div>
           </section>
 
-          {/* Seção 5: FOTOS E OCORRÊNCIAS */}
+          {/* Seção 6: FOTOS */}
           <section className="space-y-8">
             <div className="space-y-6">
               <div className="flex items-center gap-4 mb-4 border-b border-slate-200 pb-4">
@@ -330,34 +351,10 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
               </div>
               <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
             </div>
-
-            <div className="space-y-4">
-                <div className="flex items-center gap-4 mb-4 border-b border-slate-200 pb-4">
-                  <div className="w-10 h-10 bg-blue-50 text-[#0066CC] rounded-2xl flex items-center justify-center shadow-sm"><AlertCircle size={20} /></div>
-                  <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Ocorrências / Imprevistos</h3>
-                </div>
-                <textarea 
-                  value={occurrences} 
-                  onChange={e => setOccurrences(e.target.value.toUpperCase())} 
-                  placeholder="DESCREVA PROBLEMAS, ATRASOS OU OBSERVAÇÕES RELEVANTES DO DIA..." 
-                  className="w-full h-32 bg-white border border-slate-200 rounded-2xl p-6 font-black uppercase text-sm outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all resize-none placeholder:text-slate-300 shadow-sm" 
-                />
-            </div>
           </section>
 
-          {/* Seção 6: REVISÃO E SALVAMENTO */}
+          {/* Seção 7: FINALIZAÇÃO (REMOVED BLUE CARD) */}
           <section className="space-y-6 pt-12 border-t border-slate-200">
-             <div className="bg-[#0066CC] p-8 rounded-[40px] shadow-2xl text-white relative overflow-hidden group hover:shadow-blue-200 transition-all">
-                <div className="absolute -right-20 -top-20 w-80 h-80 bg-white/10 rounded-full blur-3xl opacity-50 group-hover:scale-110 transition-all duration-700" />
-                <div className="relative">
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-60 mb-2">Resumo da Obra</p>
-                  <h3 className="text-xl font-black uppercase leading-tight">{siteName || "DESCRIÇÃO NÃO DEFINIDA"}</h3>
-                  <div className="flex gap-4 mt-4">
-                    <div className="flex items-center gap-2 opacity-80"><Calendar size={14} /> <span className="font-bold text-[10px]">{date.split('-').reverse().join('/')}</span></div>
-                  </div>
-                </div>
-             </div>
-
              <div className="bg-white p-8 rounded-[40px] border border-slate-200 shadow-xl space-y-6">
                 <div>
                    <div className="flex items-center gap-4 mb-4 text-slate-800">
@@ -367,15 +364,30 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
                    <div className="w-full h-16 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 px-6 font-black uppercase text-sm flex items-center">{currentUser?.name || "CARREGANDO..."}</div>
                 </div>
                 
-                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 border-dashed">
-                  <p className="text-[9px] font-bold text-slate-500 leading-relaxed uppercase tracking-wider text-center">Ao finalizar, este relatório será bloqueado para edições e enviado oficialmente.</p>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 border-dashed text-center">
+                  <p className="text-[10px] font-bold text-slate-500 leading-relaxed uppercase tracking-wider">
+                    {allowFinalize 
+                      ? "Ao finalizar, este relatório será bloqueado para edições e enviado oficialmente." 
+                      : "SALVE ESTE RELATÓRIO PARA PODER FINALIZÁ-LO POSTERIORMENTE NA TELA DE RELATÓRIOS ABERTOS."}
+                  </p>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  <button onClick={() => handleSave(true)} className="w-full h-16 bg-[#0066CC] text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-4">
-                     {isSaving ? <Loader2 className="animate-spin" /> : <>FINALIZAR REGISTRO <CheckCircle size={18} /></>}
+                <div className="flex flex-col gap-4">
+                  <button 
+                    onClick={() => handleSave(false)} 
+                    disabled={isSaving}
+                    className="w-full h-16 bg-white border border-slate-200 text-slate-800 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    {isSaving ? <Loader2 className="animate-spin" /> : 'SALVAR'}
                   </button>
-                  <button onClick={() => handleSave(false)} className="w-full h-14 bg-white border border-slate-200 text-slate-400 rounded-2xl font-black uppercase text-[9px] tracking-widest active:scale-95 transition-all">SALVAR COMO RASCUNHO</button>
+
+                  <button 
+                    onClick={() => handleSave(true)} 
+                    disabled={isSaving || !allowFinalize}
+                    className={`w-full h-16 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center justify-center gap-4 ${allowFinalize && !isSaving ? 'bg-[#0066CC] text-white shadow-xl shadow-blue-100 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                  >
+                    {isSaving ? <Loader2 className="animate-spin" /> : <>FINALIZAR REGISTRO <CheckCircle size={18} /></>}
+                  </button>
                 </div>
              </div>
           </section>

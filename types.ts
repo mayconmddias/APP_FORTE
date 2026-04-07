@@ -104,6 +104,7 @@ export interface RdoRecord {
   technicianName: string;
   signature?: string;
   endTime?: string; // Horário de fechamento
+  rdoNumber: number; // Número sequencial global
   status: 'OPEN' | 'COMPLETED';
   created_at?: string;
   updated_at?: string;

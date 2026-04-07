@@ -187,7 +187,8 @@ class SyncEngine {
                         technician_name: data.technicianName,
                         signature: data.signature,
                         status: data.status,
-                        end_time: data.endTime
+                        end_time: data.endTime,
+                        rdo_number: data.rdoNumber
                     });
                 }
                 recordsToUpsert.push(mapped);

@@ -48,7 +48,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
     { id: 'assets', label: 'CLIENTES', icon: <Construction size={22} /> },
     { id: 'history', label: 'HISTÓRICO', icon: <History size={22} /> },
     { id: 'open-orders', label: 'OS EM ABERTAS', icon: <Clock size={22} />, badge: openDraftsCount > 0 ? openDraftsCount : undefined },
-    { id: 'rdo', label: 'RDO', icon: <FileText size={22} /> },
+    { id: 'rdo', label: 'RELATÓRIO DIÁRIO', icon: <FileText size={22} /> },
+    { id: 'open-rdos', label: 'RELATÓRIOS ABERTOS', icon: <Clock size={22} /> },
     { id: 'sync-pendencies', label: 'SINCRONIZAÇÃO', icon: <RefreshCw size={22} /> },
     ...(currentUser.role === 'ADMIN' ? [
       { id: 'users', label: 'USUÁRIOS', icon: <Users size={22} /> }
@@ -68,7 +69,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
       {/* Sidebar Retrátil */}
       <aside
         ref={sidebarRef}
-        className={`fixed top-0 left-0 h-full bg-white text-[#0066CC] flex flex-col border-r border-slate-200 shadow-xl z-[110] transition-transform duration-300 ease-in-out w-52
+        className={`fixed top-0 left-0 h-full bg-white text-[#0066CC] flex flex-col border-r border-slate-200 shadow-xl z-[110] transition-transform duration-300 ease-in-out w-64
           ${isExpanded ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="p-6 flex items-center justify-between border-b border-white/5">
