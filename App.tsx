@@ -242,6 +242,7 @@ const App: React.FC = () => {
                     technicianName: r.technician_name,
                     signature: r.signature,
                     status: r.status,
+                    endTime: r.end_time,
                     rdoNumber: r.rdo_number,
                     sync_status: 'SYNCED',
                     updated_at: new Date().toISOString(),
