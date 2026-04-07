@@ -251,29 +251,6 @@ const App: React.FC = () => {
             await db.rdo.bulkPut(mappedRdos);
         }
 
-        // -- MIGRATION: Fix RDOs with invalid local_id formats --
-        const allRdos = await db.rdo.toArray();
-        const rdosToFix = allRdos.filter(r => String(r.local_id).startsWith('rdo-') || String(r.id).startsWith('rdo-'));
-        
-        if (rdosToFix.length > 0) {
-            console.log(`Migrando ${rdosToFix.length} RDOs para formato UUID...`);
-            for (const r of rdosToFix) {
-                const newUuid = uuidv4();
-                const updatedRecord = { 
-                    ...r, 
-                    id: newUuid, 
-                    local_id: newUuid, 
-                    sync_status: 'PENDING' as const 
-                };
-                
-                // We must delete the old one because local_id is the primary key
-                await db.rdo.delete(r.local_id);
-                await db.rdo.put(updatedRecord);
-                console.log(`RDO ${r.local_id} migrado para ${newUuid}`);
-            }
-            await loadLocalData();
-        }
-
         // Recarregar após sync inicial
         await loadLocalData();
         await syncEngine.triggerSync();

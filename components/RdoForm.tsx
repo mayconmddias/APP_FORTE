@@ -43,7 +43,7 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
   }, [onTitleChange]);
   
   // State for RDO fields
-  const [recordId] = useState(editingRdo?.id || `rdo-${Date.now()}`);
+  const [recordId] = useState(editingRdo?.id || uuidv4());
   const [localId] = useState(editingRdo?.local_id || recordId);
   const [rdoNumber] = useState(editingRdo?.rdoNumber || nextRdoNumber);
   const [siteName, setSiteName] = useState(editingRdo?.siteName || '');
