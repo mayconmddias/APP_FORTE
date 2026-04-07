@@ -7,10 +7,9 @@ import { syncEngine } from '../services/syncEngine';
 interface SyncPendencyScreenProps {
     onTitleChange: (title: string | null) => void;
     onForceSync?: () => void;
-    onClearData?: () => void;
 }
 
-const SyncPendencyScreen: React.FC<SyncPendencyScreenProps> = ({ onTitleChange, onForceSync, onClearData }) => {
+const SyncPendencyScreen: React.FC<SyncPendencyScreenProps> = ({ onTitleChange, onForceSync }) => {
     React.useEffect(() => {
         onTitleChange('PENDÊNCIAS DE SINCRONIZAÇÃO');
         return () => onTitleChange(null);
@@ -57,15 +56,6 @@ const SyncPendencyScreen: React.FC<SyncPendencyScreenProps> = ({ onTitleChange, 
                         <RefreshCw size={16} />
                         Forçar Sincronização
                     </button>
-                    {onClearData && (
-                        <button
-                            onClick={onClearData}
-                            className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 border border-red-100 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all"
-                        >
-                            <Trash2 size={16} />
-                            Limpar Tudo
-                        </button>
-                    )}
                 </div>
 
                 {total === 0 ? (

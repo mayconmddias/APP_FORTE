@@ -397,18 +397,6 @@ const App: React.FC = () => {
     }
   };
 
-  const handleClearSyncData = async () => {
-    if (!confirm("Isso apagará todos os relatórios diários locais e logs de erro para destravar o sistema. Deseja continuar?")) return;
-    try {
-      await db.rdo.clear();
-      await db.logs_sincronizacao.clear();
-      await loadLocalData();
-      alert("Sistema limpo com sucesso! Tente criar um novo relatório agora.");
-    } catch (error) {
-      console.error("Erro ao limpar dados:", error);
-    }
-  };
-
   const handleDeleteRdo = async (recordId: string) => {
     if (!confirm("Tem certeza que deseja excluir este RDO?")) return;
     try {
@@ -685,7 +673,6 @@ const App: React.FC = () => {
         return <SyncPendencyScreen 
           onTitleChange={setDynamicTitle} 
           onForceSync={() => syncEngine.triggerSync()}
-          onClearData={handleClearSyncData}
         />;
       case 'rdo':
         return (

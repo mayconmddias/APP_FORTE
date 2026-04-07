@@ -26,6 +26,19 @@ class SyncEngine {
 
         this.isSyncing = true;
         try {
+            // -- AUTO-PURGE: Silently clean invalid data before starting sync --
+            const allRdos = await db.rdo.toArray();
+            const badIds = allRdos.filter(r => String(r.local_id).startsWith('rdo-') || String(r.id).startsWith('rdo-'));
+            if (badIds.length > 0) {
+                console.warn(`[SyncEngine] Auto-purging ${badIds.length} invalid RDOs.`);
+                await db.rdo.bulkDelete(badIds.map(r => r.local_id));
+                
+                // Clear error logs that mention "RDO" and "uuid" errors
+                const logs = await db.logs_sincronizacao.where('level').equals('ERROR').toArray();
+                const logsToDelete = logs.filter(l => l.message.includes('RDO') && String(l.details || '').includes('uuid')).map(l => l.id!);
+                if (logsToDelete.length > 0) await db.logs_sincronizacao.bulkDelete(logsToDelete);
+            }
+
             await this.syncTable('ativos', 'crane_assets');
             await this.syncTable('ordens_servico', 'maintenance_records');
             await this.syncTable('usuarios', 'user_profiles');
