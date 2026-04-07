@@ -56,6 +56,8 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
   const [activities, setActivities] = useState<string[]>(editingRdo?.activities || ['']);
   const [occurrences, setOccurrences] = useState(editingRdo?.occurrences || '');
   const [photos, setPhotos] = useState<string[]>(editingRdo?.photos || []);
+  const [technicianId] = useState(editingRdo?.technicianId || currentUser?.id);
+  const [technicianName] = useState(editingRdo?.technicianName || currentUser?.name);
   
   // Simplified Checklist (Fixed 2 items as requested)
   const defaultMaterials = [
@@ -107,8 +109,8 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
       equipment: [], // Replaced by the 2 materials items
       occurrences: occurrences.toUpperCase(),
       photos,
-      technicianId: currentUser.id,
-      technicianName: currentUser.name,
+      technicianId,
+      technicianName,
       endTime: isFinal ? new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : (editingRdo?.endTime || undefined),
       rdoNumber,
       status: isFinal ? 'COMPLETED' : 'OPEN',
