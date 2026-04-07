@@ -251,13 +251,25 @@ const App: React.FC = () => {
             await db.rdo.bulkPut(mappedRdos);
         }
 
-        // -- MIGRATION: Convert old 'rdo-' IDs to valid UUIDs --
-        const rdosToMigrate = await db.rdo.filter(r => String(r.id).startsWith('rdo-')).toArray();
-        if (rdosToMigrate.length > 0) {
-            console.log(`Migrando ${rdosToMigrate.length} RDOs com ID inválido...`);
-            for (const r of rdosToMigrate) {
-                const newUuid = r.local_id || uuidv4();
-                await db.rdo.update(r.local_id, { id: newUuid, sync_status: 'PENDING' });
+        // -- MIGRATION: Fix RDOs with invalid local_id formats --
+        const allRdos = await db.rdo.toArray();
+        const rdosToFix = allRdos.filter(r => String(r.local_id).startsWith('rdo-') || String(r.id).startsWith('rdo-'));
+        
+        if (rdosToFix.length > 0) {
+            console.log(`Migrando ${rdosToFix.length} RDOs para formato UUID...`);
+            for (const r of rdosToFix) {
+                const newUuid = uuidv4();
+                const updatedRecord = { 
+                    ...r, 
+                    id: newUuid, 
+                    local_id: newUuid, 
+                    sync_status: 'PENDING' as const 
+                };
+                
+                // We must delete the old one because local_id is the primary key
+                await db.rdo.delete(r.local_id);
+                await db.rdo.put(updatedRecord);
+                console.log(`RDO ${r.local_id} migrado para ${newUuid}`);
             }
             await loadLocalData();
         }
