@@ -114,6 +114,13 @@ class SyncEngine {
             const conflictedRecords: any[] = [];
 
             for (const localRecord of batch) {
+                // Defensive: Skip invalid RDO IDs before they hit Supabase
+                if (localTable === 'rdo' && String(localRecord.local_id).startsWith('rdo-')) {
+                    console.warn(`[SyncEngine] Skipping invalid RDO local_id: ${localRecord.local_id}`);
+                    await db.rdo.update(localRecord.local_id, { sync_status: 'SYNCED' });
+                    continue;
+                }
+
                 const serverRecord = serverRecords?.find(r => r.id === (localRecord.server_id || localRecord.local_id));
 
                 // CONFLICT DETECTION: 
