@@ -251,6 +251,17 @@ const App: React.FC = () => {
             await db.rdo.bulkPut(mappedRdos);
         }
 
+        // -- MIGRATION: Convert old 'rdo-' IDs to valid UUIDs --
+        const rdosToMigrate = await db.rdo.filter(r => String(r.id).startsWith('rdo-')).toArray();
+        if (rdosToMigrate.length > 0) {
+            console.log(`Migrando ${rdosToMigrate.length} RDOs com ID inválido...`);
+            for (const r of rdosToMigrate) {
+                const newUuid = r.local_id || uuidv4();
+                await db.rdo.update(r.local_id, { id: newUuid, sync_status: 'PENDING' });
+            }
+            await loadLocalData();
+        }
+
         // Recarregar após sync inicial
         await loadLocalData();
         await syncEngine.triggerSync();
@@ -362,7 +373,7 @@ const App: React.FC = () => {
       const localId = record.local_id || uuidv4();
       const localRecord = {
         ...record,
-        id: record.id?.startsWith('rdo-') ? localId : (record.id || localId),
+        id: localId, // Always use localId (which is a UUID) to avoid format errors on Supabase
         local_id: localId,
         sync_status: 'PENDING',
         updated_at: new Date().toISOString(),
