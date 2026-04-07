@@ -36,6 +36,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [selectorSearch, setSelectorSearch] = useState('');
   const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
+  const [clientSignature, setClientSignature] = useState(editingRecord?.clientSignature || '');
   const [frequency, setFrequency] = useState<Frequency>(editingRecord?.frequency || Frequency.MENSAL);
   const [inspectionDate, setInspectionDate] = useState(editingRecord?.date || new Date().toISOString().split('T')[0]);
 
@@ -151,6 +152,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       downtimeHours: 0,
       checklists: visibleItems,
       clientRepresentative: clientName,
+      clientSignature: clientSignature,
       signature: 'DRAFT',
       status: 'OPEN'
     };
@@ -188,6 +190,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       downtimeHours: 2.5,
       checklists: visibleItems,
       clientRepresentative: clientName,
+      clientSignature: clientSignature,
       signature: `Técnico: ${finalTechnician} | Cliente: ${clientName}`,
       status: 'COMPLETED'
     };
@@ -331,9 +334,11 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
           items={visibleItems}
           currentUser={currentUser}
           clientName={clientName}
+          clientSignature={clientSignature}
           isSubmitting={isSubmitting}
           onBack={() => setIsPreview(false)}
           onClientNameChange={setClientName}
+          onClientSignatureChange={setClientSignature}
           inspectionDate={inspectionDate}
           onDateChange={setInspectionDate}
           onFinalSave={handleFinalSave}

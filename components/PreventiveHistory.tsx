@@ -152,9 +152,11 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
 
       .signature-section { width: 100%; margin-top: 80px; border-collapse: collapse; }
       .signature-section td { width: 50%; padding: 0 40px; text-align: center; border: none !important; }
-      .signature-name { font-weight: 700; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; min-height: 18px; }
-      .signature-line { border-top: 1px solid #000; width: 100%; margin-bottom: 5px; }
-      .signature-label { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+      .signature-name { font-weight: 700; font-size: 11px; text-transform: uppercase; margin-top: 5px; min-height: 15px; }
+      .signature-line { border-top: 1.5px solid #000; width: 100%; margin-top: 5px; }
+      .signature-label { font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+      .client-signature-img { height: 60px; max-width: 200px; object-fit: contain; margin-bottom: -10px; }
+      .tech-signature-text { font-family: 'cursive', 'Brush Script MT', cursive; font-size: 22px; color: #0066CC; margin-bottom: -15px; }
       @media print {
         @page { margin: 15mm; }
         thead { display: table-header-group; }
@@ -195,13 +197,19 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       <table class="signature-section">
         <tr>
           <td>
-            <div class="signature-name">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</div>
+             <div style="height: 60px; display: flex; align-items: flex-end; justify-content: center;">
+                <span class="tech-signature-text">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</span>
+             </div>
             <div class="signature-line"></div>
+            <div class="signature-name">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</div>
             <div class="signature-label">RESPONSÁVEL TÉCNICO</div>
           </td>
           <td>
-            <div class="signature-name">${record.clientRepresentative || '---'}</div>
+            <div style="height: 60px; display: flex; align-items: flex-end; justify-content: center;">
+              ${record.clientSignature ? `<img src="${record.clientSignature}" class="client-signature-img" />` : ''}
+            </div>
             <div class="signature-line"></div>
+            <div class="signature-name">${record.clientRepresentative || '---'}</div>
             <div class="signature-label">RESPONSÁVEL CLIENTE</div>
           </td>
         </tr>

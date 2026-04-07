@@ -76,6 +76,7 @@ export interface MaintenanceRecord {
   partsUsed?: string[];
   signature?: string;
   clientRepresentative?: string;
+  clientSignature?: string;
   status?: 'OPEN' | 'COMPLETED';
 }
 

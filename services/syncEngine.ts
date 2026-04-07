@@ -167,6 +167,7 @@ class SyncEngine {
                         technician_id: technician?.server_id || data.technicianId,
                         checklists: data.checklists,
                         client_representative: data.clientRepresentative,
+                        client_signature: data.clientSignature,
                         signature: data.signature
                     });
                 } else if (localTable === 'rdo') {

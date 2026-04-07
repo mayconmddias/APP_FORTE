@@ -18,10 +18,12 @@ import {
   ClipboardList,
   Building2,
   CheckCircle,
-  Calendar
+  Calendar,
+  Eraser
 } from 'lucide-react';
 import { CHECKLIST_PONTE, CHECKLIST_TALHA } from '../constants';
 import { ChecklistItem, CraneAsset, MaintenanceRecord, MaintenanceType, UserProfile, Frequency } from '../types';
+import SignaturePad from './SignaturePad';
 
 interface CorrectiveMaintenanceFlowProps {
   onSave: (record: MaintenanceRecord) => void;
@@ -67,6 +69,8 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [infoModalText, setInfoModalText] = useState<string | null>(null);
   const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
+  const [clientSignature, setClientSignature] = useState(editingRecord?.clientSignature || '');
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inspectionDate, setInspectionDate] = useState(editingRecord?.date || new Date().toISOString().split('T')[0]);
   const [recordId] = useState(editingRecord?.id || `h-${Date.now()}`);
@@ -191,9 +195,10 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
       technicianId: finalTechnicianId,
       downtimeHours: 0,
       checklists: selectedItemsTemplate.map(i => ({ ...i })),
-      clientRepresentative: clientName,
-      signature: (clientName && !isDraft) ? `TÉCNICO: ${finalTechnician} | CLIENTE: ${clientName}` : 'DRAFT',
-      status: (clientName && !isDraft) ? 'COMPLETED' : 'OPEN'
+      clientRepresentative: clientName.toUpperCase(),
+      clientSignature: clientSignature,
+      signature: (clientName && clientSignature && !isDraft) ? `TÉCNICO: ${finalTechnician} | CLIENTE: ${clientName.toUpperCase()}` : 'DRAFT',
+      status: (clientName && clientSignature && !isDraft) ? 'COMPLETED' : 'OPEN'
     };
 
     onSave(newRecord);
@@ -491,11 +496,37 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
                 </div>
                 <input
                   type="text"
-                  placeholder="Nome Completo do Representante"
+                  placeholder="NOME COMPLETO DO REPRESENTANTE"
                   className="w-full h-14 bg-white border border-slate-200 rounded-2xl text-slate-900 px-6 font-black uppercase text-xs outline-none focus:ring-2 focus:ring-[#0066CC]/20 transition-all placeholder:text-slate-400"
                   value={clientName}
-                  onChange={e => setClientName(e.target.value)}
+                  onChange={e => setClientName(e.target.value.toUpperCase())}
                 />
+              </div>
+
+              {/* Assinatura do Cliente */}
+              <div>
+                <div className="flex items-center gap-3 mb-4 text-slate-900">
+                  <Signature size={24} className="text-[#0066CC]" />
+                  <h3 className="font-black text-slate-900 text-xs uppercase tracking-widest">Assinatura do Cliente</h3>
+                </div>
+                <div
+                  onClick={() => setShowSignaturePad(true)}
+                  className={`w-full aspect-[4/2] bg-white border-2 border-dashed rounded-[32px] flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative ${clientSignature ? 'border-[#0066CC]/30 bg-[#0066CC]/5' : 'border-slate-200 hover:border-[#0066CC]/30'}`}
+                >
+                  {clientSignature ? (
+                    <>
+                      <img src={clientSignature} alt="Assinatura Cliente" className="w-full h-full object-contain p-4" />
+                      <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-sm text-[#0066CC]">
+                        <Eraser size={16} />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Signature size={32} strokeWidth={1} className="text-slate-300 mb-2" />
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Clique para assinar</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -508,7 +539,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
           <button onClick={() => handleFinalSave(true)} className="h-14 w-32 rounded-[20px] bg-slate-100 text-slate-500 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-slate-100">
             SALVAR
           </button>
-          <button disabled={!clientName || selectedItemsTemplate.some(i => i.isOk === null) || isSubmitting} onClick={() => handleFinalSave(false)} className={`h-14 w-1/2 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${clientName && !selectedItemsTemplate.some(i => i.isOk === null) ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+          <button disabled={!clientName || !clientSignature || selectedItemsTemplate.some(i => i.isOk === null) || isSubmitting} onClick={() => handleFinalSave(false)} className={`h-14 w-1/2 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 ${clientName && clientSignature && !selectedItemsTemplate.some(i => i.isOk === null) ? 'bg-emerald-600 text-white active:scale-95' : 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'}`}>
             {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'GERAR CORRETIVA'}
           </button>
         </div>
@@ -555,6 +586,16 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
               <button onClick={() => setInfoModalText(null)} className="w-full h-14 bg-[#0066CC] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all">Entendido</button>
             </div>
           </div>, document.body
+        )}
+
+        {showSignaturePad && (
+          <SignaturePad 
+            onSave={(sig) => {
+              setClientSignature(sig);
+              setShowSignaturePad(false);
+            }}
+            onCancel={() => setShowSignaturePad(false)}
+          />
         )}
       </div>, document.body
     );
