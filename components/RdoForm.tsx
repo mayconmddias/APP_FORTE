@@ -388,16 +388,16 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
                 <div className="flex flex-col gap-4">
                   <button 
                     onClick={() => handleSave(false)} 
-                    disabled={isSaving}
-                    className="w-full h-16 bg-white border border-slate-200 text-slate-800 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2"
+                    disabled={isSaving || !clientName.trim() || !siteName.trim()}
+                    className={`w-full h-16 border rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 ${(!clientName.trim() || !siteName.trim()) ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed opacity-50' : 'bg-white border-slate-200 text-slate-800'}`}
                   >
                     {isSaving ? <Loader2 className="animate-spin" /> : 'SALVAR'}
                   </button>
 
                   <button 
                     onClick={() => handleSave(true)} 
-                    disabled={isSaving || !allowFinalize}
-                    className={`w-full h-16 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center justify-center gap-4 ${allowFinalize && !isSaving ? 'bg-[#0066CC] text-white shadow-xl shadow-blue-100 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                    disabled={isSaving || !allowFinalize || !clientName.trim() || !siteName.trim()}
+                    className={`w-full h-16 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center justify-center gap-4 ${allowFinalize && !isSaving && clientName.trim() && siteName.trim() ? 'bg-[#0066CC] text-white shadow-xl shadow-blue-100 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
                   >
                     {isSaving ? <Loader2 className="animate-spin" /> : <>FINALIZAR REGISTRO <CheckCircle size={18} /></>}
                   </button>
