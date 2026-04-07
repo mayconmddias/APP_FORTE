@@ -283,24 +283,24 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
 
       {/* Filtros de Busca - HIDE IN OPEN MODE */}
       {mode !== 'OPEN' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm">
-          <div className="md:col-span-2 relative">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+        <div className="flex flex-col gap-3 bg-white p-3 rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+          <div className="relative w-full">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
             <input 
               type="text" 
-              placeholder="Buscar por Obra ou Descrição..." 
+              placeholder="BUSCAR POR OBRA OU DESCRIÇÃO..." 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full h-14 pl-16 pr-6 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-xs uppercase outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all" 
+              className="w-full h-12 pl-12 pr-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-[10px] uppercase outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all" 
             />
           </div>
-          <div className="relative">
-            <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+          <div className="relative w-full">
+            <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
             <input 
               type="date" 
               value={dateFilter}
               onChange={e => setDateFilter(e.target.value)}
-              className="w-full h-14 pl-16 pr-6 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-xs outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all text-center" 
+              className="w-full h-12 pl-12 pr-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-[10px] outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all text-center" 
             />
           </div>
         </div>
@@ -311,57 +311,51 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
         {filteredReports.map((rdo) => (
           <div 
             key={rdo.id}
-            className="group bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:border-[#0066CC]/20 transition-all duration-300 relative"
+            className="group bg-white p-4 rounded-[28px] border border-slate-100 shadow-sm hover:shadow-lg hover:border-[#0066CC]/20 transition-all duration-300"
           >
-            <div className="flex items-center justify-between gap-4">
-               <div className="flex items-center gap-4 flex-1">
-                  {/* Ícone Estilo Imagem 2 */}
-                  <div className="w-12 h-12 bg-[#0066CC] text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-100">
-                    <span className="font-black text-lg">#</span>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">RD</span>
-                      <span className="text-sm font-black text-slate-900 uppercase">#{rdo.rdoNumber}</span>
-                    </div>
-                    <h3 className="text-base font-black text-slate-800 uppercase tracking-tight truncate group-hover:text-[#0066CC] transition-colors leading-tight">
-                      {rdo.siteName || "Descrição não informada"}
-                    </h3>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
-                      {rdo.clientName}
-                    </p>
-                  </div>
-               </div>
-
-               {/* Ações Estilo Imagem 2 */}
-               <div className="flex items-center gap-1">
-                  <button 
-                    onClick={() => onEdit(rdo)} 
-                    className={`w-10 h-10 text-slate-300 hover:text-[#0066CC] transition-all flex items-center justify-center ${rdo.status === 'COMPLETED' && userRole !== 'ADMIN' ? 'hidden' : ''}`}
-                  >
-                    <Edit3 size={18} />
-                  </button>
-                  <button 
-                    onClick={() => handleGeneratePdf(rdo)} 
-                    className="w-10 h-10 text-slate-300 hover:text-slate-900 transition-all flex items-center justify-center"
-                  >
-                    <FileText size={18} />
-                  </button>
-                  <button 
-                    onClick={() => onDelete(rdo.local_id || rdo.id)} 
-                    className="w-10 h-10 text-red-100 hover:text-red-500 transition-all flex items-center justify-center"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-               </div>
+            {/* Linha 1: RD # e Cliente */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <span className="text-[9px] font-black uppercase tracking-widest">RD</span>
+                <span className="text-[11px] font-black text-slate-900"># {rdo.rdoNumber}</span>
+              </div>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[120px]">
+                {rdo.clientName}
+              </span>
             </div>
 
-            {/* Rodapé Interno Estilo Imagem 2 */}
-            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              <span>{rdo.date.split('-').reverse().join('/')}</span>
-              <div className="flex items-center gap-2">
-                <span>TÉCNICO: {rdo.technicianName}</span>
+            {/* Linha 2: Descrição da Obra (Destaque) */}
+            <h3 className="text-[13px] font-black text-slate-900 uppercase tracking-tight leading-tight mb-3 group-hover:text-[#0066CC] transition-colors truncate">
+              {rdo.siteName || "DESCRIÇÃO NÃO INFORMADA"}
+            </h3>
+
+            {/* Linha 3: Rodapé (Data e Ações) */}
+            <div className="pt-2 border-t border-slate-50 flex items-center justify-between">
+              <span className="text-[9px] font-black text-slate-400">
+                {rdo.date.split('-').reverse().join('/')}
+              </span>
+
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => onEdit(rdo)} 
+                  className={`w-9 h-9 text-slate-300 hover:text-[#0066CC] transition-all flex items-center justify-center ${rdo.status === 'COMPLETED' && userRole !== 'ADMIN' ? 'hidden' : ''}`}
+                >
+                  <Edit3 size={16} />
+                </button>
+                <button 
+                  onClick={() => handleGeneratePdf(rdo)} 
+                  className="w-9 h-9 text-slate-300 hover:text-slate-900 transition-all flex items-center justify-center"
+                >
+                  <FileText size={16} />
+                </button>
+                {userRole === 'ADMIN' && (
+                  <button 
+                    onClick={() => onDelete(rdo.local_id || rdo.id)} 
+                    className="w-9 h-9 text-red-100 hover:text-red-500 transition-all flex items-center justify-center"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </div>
             </div>
           </div>

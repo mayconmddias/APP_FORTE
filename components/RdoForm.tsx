@@ -167,7 +167,7 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="pointer-events-none opacity-80">
                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2 block">Data</label>
                  <div className="relative">
@@ -188,33 +188,46 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
               </div>
             </div>
 
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2 block">Início dos Trabalhos</label>
-              <div className="relative">
-                <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-[#0066CC]/40" size={18} />
-                <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full h-16 bg-white border border-slate-200 rounded-2xl pl-16 pr-6 font-black uppercase text-sm outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all text-center shadow-sm" />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2 block">Clima Predominante</label>
-              <div className="relative">
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 text-[#0066CC]/40 pointer-events-none">
-                  {weather === Weather.SOL && <Sun size={20} />}
-                  {weather === Weather.CHUVA_FRACA && <CloudRain size={20} />}
-                  {weather === Weather.CHUVA_FORTE && <CloudLightning size={20} />}
+            <div className="space-y-6">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2 block">Início dos Trabalhos</label>
+                <div className="relative h-16">
+                  {/* Camada Visual (Igual ao Chegada Empresa) */}
+                  <div className="absolute inset-0 w-full h-full bg-white border border-slate-200 rounded-2xl flex items-center justify-center font-black uppercase text-sm text-slate-900 shadow-sm pointer-events-none">
+                    <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-[#0066CC]/40" size={18} />
+                    <span>{startTime || '--:--'}</span>
+                  </div>
+                  
+                  {/* Camada de Interação (Invisível) */}
+                  <input 
+                    type="time" 
+                    value={startTime} 
+                    onChange={e => setStartTime(e.target.value)} 
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
                 </div>
-                <select 
-                  value={weather} 
-                  onChange={e => setWeather(e.target.value as Weather)}
-                  className="w-full h-16 bg-white border border-slate-200 rounded-2xl pl-16 pr-6 font-black uppercase text-sm outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all appearance-none shadow-sm"
-                >
-                  <option value={Weather.SOL}>SOL</option>
-                  <option value={Weather.CHUVA_FRACA}>CHUVA FRACA</option>
-                  <option value={Weather.CHUVA_FORTE}>CHUVA FORTE</option>
-                </select>
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                  <ChevronDown size={20} />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2 block">Clima Predominante</label>
+                <div className="relative">
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 text-[#0066CC]/40 pointer-events-none">
+                    {weather === Weather.SOL && <Sun size={20} />}
+                    {weather === Weather.CHUVA_FRACA && <CloudRain size={20} />}
+                    {weather === Weather.CHUVA_FORTE && <CloudLightning size={20} />}
+                  </div>
+                  <select 
+                    value={weather} 
+                    onChange={e => setWeather(e.target.value as Weather)}
+                    className="w-full h-16 bg-white border border-slate-200 rounded-2xl pl-16 pr-6 font-black uppercase text-sm outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all appearance-none shadow-sm"
+                  >
+                    <option value={Weather.SOL}>SOL</option>
+                    <option value={Weather.CHUVA_FRACA}>CHUVA FRACA</option>
+                    <option value={Weather.CHUVA_FORTE}>CHUVA FORTE</option>
+                  </select>
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <ChevronDown size={20} />
+                  </div>
                 </div>
               </div>
             </div>
