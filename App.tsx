@@ -211,14 +211,6 @@ const App: React.FC = () => {
         // RDO
         const { data: rdoData } = await supabase.from('rdo').select('*');
         if (rdoData) {
-            // -- INÍCIO DA LIMPEZA DE REGISTROS INVÁLIDOS --
-            const invalidServerIds = rdoData.filter(r => !r.client_name?.trim() || !r.site_name?.trim()).map(r => r.id);
-            if (invalidServerIds.length > 0) {
-                console.log("Limpando RDOs inválidos no Supabase:", invalidServerIds);
-                await supabase.from('rdo').delete().in('id', invalidServerIds);
-            }
-            // -- FIM DA LIMPEZA --
-
             const serverRdoIds = rdoData.map(r => r.id);
             const localSyncedRdos = await db.rdo.where('sync_status').equals('SYNCED').toArray();
             const rdosToDelete = localSyncedRdos.filter(lr => lr.server_id && !serverRdoIds.includes(lr.server_id));
@@ -226,16 +218,7 @@ const App: React.FC = () => {
                 await db.rdo.bulkDelete(rdosToDelete.map(r => r.local_id));
             }
 
-            // LIMPEZA LOCAL (Dexie) de registros não sincronizados ou antigos sem nome
-            const localInvalid = await db.rdo.toArray();
-            const localToDelete = localInvalid.filter(r => !r.clientName?.trim() || !r.siteName?.trim());
-            if (localToDelete.length > 0) {
-                console.log("Limpando RDOs inválidos localmente:", localToDelete.length);
-                await db.rdo.bulkDelete(localToDelete.map(r => r.local_id));
-            }
-
-            const activeRdos = rdoData.filter(r => r.client_name?.trim() && r.site_name?.trim());
-            const mappedRdos = await Promise.all(activeRdos.map(async r => {
+            const mappedRdos = await Promise.all(rdoData.map(async r => {
                 const existing = await db.rdo.where('server_id').equals(r.id).first();
                 const local_id = existing?.local_id || uuidv4();
 
