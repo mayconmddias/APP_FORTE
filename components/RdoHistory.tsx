@@ -51,7 +51,8 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
   loading 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     if (mode === 'OPEN') {
@@ -109,8 +110,6 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
       .sig-line { border-top: 1px solid #000; margin-bottom: 5px; }
       .sig-label { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; }
 
-      .weather-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; background: #fff; border: 1px solid #e2e8f0; font-size: 9px; font-weight: 900; }
-
       .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
       .photo-item { break-inside: avoid; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px; text-align: center; }
       .photo-item img { width: 100%; height: auto; border-radius: 4px; }
@@ -138,41 +137,15 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
           <td colspan="2"><span class="label">DESCRIÇÃO DO SERVIÇO</span><span class="value">${record.siteName}</span></td>
         </tr>
         <tr>
-          <td><span class="label">CHEGADA EMPRESA</span><span class="value">${record.arrivalTime}</span></td>
-          <td><span class="label">INÍCIO TRABALHOS</span><span class="value">${record.startTime || '--:--'}</span></td>
           <td><span class="label">HORÁRIO DE FECHAMENTO</span><span class="value">${record.endTime || '--:--'}</span></td>
-        </tr>
-        <tr>
-          <td><span class="label">CLIMA</span><span class="weather-badge">${record.weather}</span></td>
-          <td colspan="2"><span class="label">RESPONSÁVEL</span><span class="value">${record.technicianName}</span></td>
+          <td colspan="3"><span class="label">RESPONSÁVEL</span><span class="value">${record.technicianName}</span></td>
         </tr>
       </table>
 
       <div class="section">
-        <div class="section-title">Equipe Técnica</div>
-        <div style="font-size: 11px; white-space: pre-wrap; padding: 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">${record.teamDescription}</div>
-      </div>
-
-      <div class="section">
         <div class="section-title">Atividades Realizadas</div>
-        <div style="padding: 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">${activitiesHtml}</div>
+        <div style="padding: 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 11px;">${record.activities.join('<br>')}</div>
       </div>
-
-      <div class="section">
-        <div class="section-title">Checklist de Materiais e Equipamentos</div>
-        <table class="data-table">
-          <thead><tr><th>Item</th><th style="width:60px; text-align:center;">Status</th><th>Observações</th></tr></thead>
-          <tbody>
-            ${materialsHtml}
-          </tbody>
-        </table>
-      </div>
-
-      ${record.occurrences ? `
-      <div class="section">
-        <div class="section-title">Ocorrências / Imprevistos</div>
-        <div style="font-size: 11px; white-space: pre-wrap; padding: 10px; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; color: #991b1b;">${record.occurrences}</div>
-      </div>` : ''}
 
       ${record.photos.length > 0 ? `
       <div class="section">
@@ -217,12 +190,25 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
         rec.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rec.technicianName.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesDate = !dateFilter || rec.date === dateFilter;
       const matchesClient = mode === 'OPEN' || !selectedClient || rec.clientName === selectedClient;
+      if (!matchesClient || !matchesSearch) return false;
 
-      return matchesSearch && matchesDate && matchesClient;
+      // Logic for 2-day restriction and period filter
+      if (mode === 'COMPLETED' && selectedClient) {
+        if (startDate && endDate) {
+          return rec.date >= startDate && rec.date <= endDate;
+        } else {
+          // Default: only last 2 days
+          const twoDaysAgo = new Date();
+          twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+          const dateLimit = twoDaysAgo.toISOString().split('T')[0];
+          return rec.date >= dateLimit;
+        }
+      }
+
+      return true;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [records, searchTerm, dateFilter, selectedClient, mode]);
+  }, [records, searchTerm, startDate, endDate, selectedClient, mode]);
 
   // View 1: Client List (only for COMPLETED mode and no client selected)
   if (mode === 'COMPLETED' && !selectedClient) {
@@ -286,7 +272,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
 <div />
 
       {/* Filtros de Busca - HIDE IN OPEN MODE */}
-      {mode !== 'OPEN' && (
+      {mode !== 'OPEN' && selectedClient && (
         <div className="flex flex-col gap-3 bg-white p-3 rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
           <div className="relative w-full">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
@@ -298,15 +284,46 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
               className="w-full h-12 pl-12 pr-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-[10px] uppercase outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all" 
             />
           </div>
-          <div className="relative w-full">
-            <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-            <input 
-              type="date" 
-              value={dateFilter}
-              onChange={e => setDateFilter(e.target.value)}
-              className="w-full h-12 pl-12 pr-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-[10px] outline-none focus:ring-4 focus:ring-[#0066CC]/10 transition-all text-center" 
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
+              <input 
+                type="date" 
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="w-full h-10 pl-10 pr-2 bg-slate-50 rounded-xl border border-slate-100 font-bold text-[9px] outline-none" 
+              />
+            </div>
+            <div className="relative flex-1">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
+              <input 
+                type="date" 
+                value={endDate}
+                onChange={e => {
+                  const val = e.target.value;
+                  if (startDate && val) {
+                    const d1 = new Date(startDate);
+                    const d2 = new Date(val);
+                    const diffDays = Math.ceil(Math.abs(d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+                    if (diffDays > 30) {
+                      alert('O intervalo máximo é de 30 dias!');
+                      return;
+                    }
+                  }
+                  setEndDate(val);
+                }}
+                className="w-full h-10 pl-10 pr-2 bg-slate-50 rounded-xl border border-slate-100 font-bold text-[9px] outline-none" 
+              />
+            </div>
           </div>
+          {(startDate || endDate) && (
+             <button 
+               onClick={() => { setStartDate(''); setEndDate(''); }}
+               className="text-[9px] font-black text-[#0066CC] uppercase tracking-widest text-center py-1"
+             >
+               Limpar Filtro de Datas
+             </button>
+          )}
         </div>
       )}
 

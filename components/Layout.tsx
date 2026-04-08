@@ -49,7 +49,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
     { id: 'history', label: 'HISTÓRICO', icon: <History size={22} /> },
     { id: 'open-orders', label: 'OS EM ABERTAS', icon: <Clock size={22} />, badge: openDraftsCount > 0 ? openDraftsCount : undefined },
     { id: 'rdo', label: 'RELATÓRIO DIÁRIO', icon: <FileText size={22} /> },
-    { id: 'open-rdos', label: 'RELATÓRIOS ABERTOS', icon: <Clock size={22} /> },
     { id: 'sync-pendencies', label: 'SINCRONIZAÇÃO', icon: <RefreshCw size={22} /> },
     ...(currentUser.role === 'ADMIN' ? [
       { id: 'users', label: 'USUÁRIOS', icon: <Users size={22} /> }

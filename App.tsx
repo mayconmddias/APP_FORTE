@@ -690,35 +690,17 @@ const App: React.FC = () => {
             onTitleChange={setDynamicTitle}
           />
         );
-      case 'open-rdos':
-        return (
-          <RdoHistory 
-            mode="OPEN"
-            records={rdos.filter(r => {
-              const isOpen = r.status === 'OPEN';
-              if (!isOpen) return false;
-              if (currentUser?.role === 'ADMIN') return true;
-              return r.technicianId === currentUser?.id;
-            })}
-            userRole={currentUser?.role}
-            onNew={() => { setRdoSourceTab('open-rdos'); setActiveTab('rdo-form'); }}
-            onEdit={(rec) => { setRdoSourceTab('open-rdos'); setEditingRdo(rec); setActiveTab('rdo-form'); }}
-            onDelete={handleDeleteRdo}
-            onGeneratePdf={(rec) => { /* handleGeneratePdf is inside RdoHistory */ }}
-            onTitleChange={setDynamicTitle}
-          />
-        );
       case 'rdo-form':
         return (
           <RdoForm 
             currentUser={currentUser}
             editingRdo={editingRdo}
             nextRdoNumber={nextRdoNumber}
-            allowFinalize={rdoSourceTab === 'open-rdos' && editingRdo !== null}
+            allowFinalize={true}
             onSave={handleSaveRdo}
             onCancel={() => { 
               setEditingRdo(null); 
-              setActiveTab(rdoSourceTab === 'open-rdos' ? 'open-rdos' : 'rdo'); 
+              setActiveTab('rdo'); 
               setDynamicTitle(null); 
             }}
             onTitleChange={setDynamicTitle}
