@@ -679,7 +679,11 @@ const App: React.FC = () => {
         return (
           <RdoHistory 
             mode="COMPLETED"
-            records={rdos.filter(r => r.status === 'COMPLETED')}
+            records={rdos.filter(r => {
+              if (r.status !== 'COMPLETED') return false;
+              if (currentUser?.role === 'ADMIN') return true;
+              return r.technicianId === currentUser?.id;
+            })}
             userRole={currentUser?.role}
             selectedClient={rdoSelectedClient}
             onSelectClient={setRdoSelectedClient}
