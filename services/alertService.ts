@@ -10,7 +10,14 @@ export interface AlertItem {
   status: 'ALERTA' | 'CRITICO';
 }
 
+// Evento customizado para notificar mudanças nos documentos
+export const DOCS_CHANGED_EVENT = 'docs-changed';
+
 export const alertService = {
+  notifyChange() {
+    window.dispatchEvent(new CustomEvent(DOCS_CHANGED_EVENT));
+  },
+
   async getGlobalAlerts() {
     try {
       // Buscar todos os documentos que têm data de vencimento
@@ -36,21 +43,18 @@ export const alertService = {
         const expiryDate = parseISO(doc.data_vencimento);
         const days = differenceInDays(expiryDate, today);
 
+        // Apenas conta documentos que vencem em 40 dias ou já venceram (dias <= 0)
         if (days <= 40) {
           alerts.push({
             funcionarioNome: doc.funcionarios.nome,
             documentoTipo: doc.tipo_documento,
             diasParaVencer: days,
-            status: days <= 30 ? 'CRITICO' : 'ALERTA'
+            status: days <= 0 ? 'CRITICO' : 'ALERTA'
           });
         }
       });
 
-      // Ordenar por gravidade e dias
-      return alerts.sort((a, b) => {
-        if (a.status !== b.status) return a.status === 'CRITICO' ? -1 : 1;
-        return a.diasParaVencer - b.diasParaVencer;
-      });
+      return alerts;
     } catch (error) {
       console.error('Erro no alertService:', error);
       return [];

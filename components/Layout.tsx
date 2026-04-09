@@ -16,9 +16,7 @@ import {
 } from 'lucide-react';
 import { UserProfile } from '../types';
 import SyncStatus from './SyncStatus';
-import NotificationCenter from './NotificationCenter';
-import { db } from '../services/offlineDb';
-import { alertService } from '../services/alertService';
+import { alertService, DOCS_CHANGED_EVENT } from '../services/alertService';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 interface LayoutProps {
@@ -32,7 +30,6 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLogout, currentUser, pageTitle, headerAction }) => {
-  console.log("Layout: Rendering with currentUser:", currentUser?.email, "activeTab:", activeTab);
   const [isExpanded, setIsExpanded] = useState(false);
   const [criticalAlerts, setCriticalAlerts] = useState(0);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -40,12 +37,19 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
   useEffect(() => {
     const fetchAlertCount = async () => {
       const alerts = await alertService.getGlobalAlerts();
-      const critical = alerts.filter(a => a.status === 'CRITICO').length;
-      setCriticalAlerts(critical);
+      setCriticalAlerts(alerts.length);
     };
+
     fetchAlertCount();
+    
+    // Ouvir mudanças nos documentos
+    window.addEventListener(DOCS_CHANGED_EVENT, fetchAlertCount);
+
     const interval = setInterval(fetchAlertCount, 10 * 60 * 1000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(DOCS_CHANGED_EVENT, fetchAlertCount);
+    };
   }, []);
 
   const openDraftsCount = useLiveQuery(
@@ -53,7 +57,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
       try {
         return await db.ordens_servico.where('status').equals('OPEN').count();
       } catch (e) {
-        console.warn("Layout: Failed to query open drafts", e);
         return 0;
       }
     },
@@ -63,18 +66,21 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
   const menuItems = [
     { id: 'assets', label: 'CLIENTES', icon: <Construction size={22} /> },
     { id: 'history', label: 'HISTÓRICO', icon: <History size={22} /> },
-    { id: 'open-orders', label: 'OS EM ABERTAS', icon: <Clock size={22} />, badge: openDraftsCount > 0 ? openDraftsCount : undefined },
+    { id: 'open-orders', label: 'OS EM ABERTAS', icon: <Clock size={22} />, badge: openDraftsCount > 0 ? (
+      <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full">{openDraftsCount}</span>
+    ) : undefined },
     { id: 'rdo', label: 'RELATÓRIO DIÁRIO', icon: <FileText size={22} /> },
-    { id: 'documents', label: 'DOCUMENTOS', icon: <ShieldAlert size={22} />, badge: criticalAlerts > 0 ? criticalAlerts : undefined },
     { id: 'sync-pendencies', label: 'SINCRONIZAÇÃO', icon: <RefreshCw size={22} /> },
     ...(currentUser.role === 'ADMIN' ? [
+      { id: 'documents', label: 'DOCUMENTOS', icon: <ShieldAlert size={22} />, badge: criticalAlerts > 0 ? (
+        <div className="w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white shadow-sm animate-pulse" />
+      ) : undefined },
       { id: 'users', label: 'USUÁRIOS', icon: <Users size={22} /> }
     ] : []),
   ];
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      {/* Overlay - Backdrop */}
       {isExpanded && (
         <div
           className="fixed inset-0 bg-transparent z-[100] transition-opacity duration-300"
@@ -82,7 +88,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
         />
       )}
 
-      {/* Sidebar Retrátil */}
       <aside
         ref={sidebarRef}
         className={`fixed top-0 left-0 h-full bg-white text-[#0066CC] flex flex-col border-r border-slate-200 shadow-xl z-[110] transition-transform duration-300 ease-in-out w-64
@@ -98,7 +103,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
           </div>
         </div>
 
-        <nav className="flex-1 mt-6 px-3 space-y-2 overflow-y-auto">
+        <nav className="flex-1 mt-6 px-3 space-y-2 overflow-y-auto scrollbar-hide">
           {menuItems.map((item) => (
             <button
               key={item.id}
@@ -113,17 +118,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
               </div>
               <div className="ml-4 font-black flex-1 flex items-center justify-between text-xs uppercase tracking-tight">
                 <span>{item.label}</span>
-                {item.badge && (
-                  <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
+                {item.badge}
               </div>
             </button>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/5">
+        <div className="p-4 border-t border-slate-50">
           <button
             onClick={onLogout}
             className="w-full flex items-center px-4 py-4 rounded-2xl bg-slate-50 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all group"
@@ -150,7 +151,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
           </div>
 
           <div className="flex items-center gap-4">
-            <NotificationCenter onOpenDocuments={() => setActiveTab('documents')} />
             <SyncStatus />
             {headerAction}
           </div>

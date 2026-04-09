@@ -712,9 +712,11 @@ const App: React.FC = () => {
           />
         );
       case 'documents':
+        if (role !== 'ADMIN') return <AssetManagement {...commonProps} />;
         return (
           <DocumentManagement 
             onTitleChange={setDynamicTitle}
+            onHeaderActionChange={setHeaderAction}
           />
         );
       default:
