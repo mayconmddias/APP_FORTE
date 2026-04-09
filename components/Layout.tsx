@@ -11,11 +11,14 @@ import {
   X,
   Wrench,
   RefreshCw,
-  FileText
+  FileText,
+  ShieldAlert
 } from 'lucide-react';
 import { UserProfile } from '../types';
 import SyncStatus from './SyncStatus';
+import NotificationCenter from './NotificationCenter';
 import { db } from '../services/offlineDb';
+import { alertService } from '../services/alertService';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 interface LayoutProps {
@@ -31,7 +34,20 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLogout, currentUser, pageTitle, headerAction }) => {
   console.log("Layout: Rendering with currentUser:", currentUser?.email, "activeTab:", activeTab);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [criticalAlerts, setCriticalAlerts] = useState(0);
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchAlertCount = async () => {
+      const alerts = await alertService.getGlobalAlerts();
+      const critical = alerts.filter(a => a.status === 'CRITICO').length;
+      setCriticalAlerts(critical);
+    };
+    fetchAlertCount();
+    const interval = setInterval(fetchAlertCount, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const openDraftsCount = useLiveQuery(
     async () => {
       try {
@@ -49,6 +65,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
     { id: 'history', label: 'HISTÓRICO', icon: <History size={22} /> },
     { id: 'open-orders', label: 'OS EM ABERTAS', icon: <Clock size={22} />, badge: openDraftsCount > 0 ? openDraftsCount : undefined },
     { id: 'rdo', label: 'RELATÓRIO DIÁRIO', icon: <FileText size={22} /> },
+    { id: 'documents', label: 'DOCUMENTOS', icon: <ShieldAlert size={22} />, badge: criticalAlerts > 0 ? criticalAlerts : undefined },
     { id: 'sync-pendencies', label: 'SINCRONIZAÇÃO', icon: <RefreshCw size={22} /> },
     ...(currentUser.role === 'ADMIN' ? [
       { id: 'users', label: 'USUÁRIOS', icon: <Users size={22} /> }
@@ -133,6 +150,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
           </div>
 
           <div className="flex items-center gap-4">
+            <NotificationCenter onOpenDocuments={() => setActiveTab('documents')} />
             <SyncStatus />
             {headerAction}
           </div>

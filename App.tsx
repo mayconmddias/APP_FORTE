@@ -11,6 +11,7 @@ import OpenInspections from './components/OpenInspections';
 import SyncPendencyScreen from './components/SyncPendencyScreen';
 import RdoForm from './components/RdoForm';
 import RdoHistory from './components/RdoHistory';
+import DocumentManagement from './components/DocumentManagement';
 import { MaintenanceRecord, UserProfile, CraneAsset, RdoRecord } from './types';
 import { supabase } from './supabaseClient';
 import { Loader2 } from 'lucide-react';
@@ -707,6 +708,12 @@ const App: React.FC = () => {
               setActiveTab('rdo'); 
               setDynamicTitle(null); 
             }}
+            onTitleChange={setDynamicTitle}
+          />
+        );
+      case 'documents':
+        return (
+          <DocumentManagement 
             onTitleChange={setDynamicTitle}
           />
         );

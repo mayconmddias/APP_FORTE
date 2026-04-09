@@ -110,3 +110,21 @@ export interface RdoRecord {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface Funcionario {
+  id: string;
+  nome: string;
+  funcao?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Documento {
+  id: string;
+  funcionario_id: string;
+  tipo_documento: string;
+  data_vencimento?: string | null;
+  status_permanente?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
