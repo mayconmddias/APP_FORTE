@@ -347,7 +347,16 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
           status_permanente = config.status || 'APTO';
         } else {
           data_vencimento = config.date || null;
-          status_permanente = null;
+          // Calcular status para salvar no banco (para automações externas)
+          if (data_vencimento) {
+            const dataVenc = parseISO(data_vencimento);
+            const dias = differenceInDays(dataVenc, new Date());
+            if (dias <= 0) status_permanente = 'VENCIDO';
+            else if (dias <= 40) status_permanente = 'ALERTA';
+            else status_permanente = 'REGULAR';
+          } else {
+            status_permanente = 'REGULAR';
+          }
         }
 
         const docObj: any = { 
@@ -382,12 +391,21 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
         const config = integracoesConfig[empId];
         const existing = existingInts.find(ei => ei.empresa_id === empId);
         
+        let savedStatus = 'REGULAR';
+        if (config.date) {
+            const dataVenc = parseISO(config.date);
+            const dias = differenceInDays(dataVenc, new Date());
+            if (dias <= 0) savedStatus = 'VENCIDO';
+            else if (dias <= 40) savedStatus = 'ALERTA';
+            else savedStatus = 'REGULAR';
+        }
+        
         const intObj: any = {
           id: (existing && existing.id) ? existing.id : crypto.randomUUID(),
           funcionario_id: funcId,
           empresa_id: empId,
           data_vencimento: config.date || null,
-          status: config.status || 'REGULAR'
+          status: savedStatus
         };
         
         intsToUpsert.push(intObj);
@@ -869,13 +887,6 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                                   value={config.date || ''} 
                                   onChange={e => setIntegracoesConfig(p => ({...p, [emp.id]: {...p[emp.id], date: e.target.value}}))} 
                                   className="bg-white border border-slate-200 px-3 py-2 rounded-xl text-[10px] font-bold outline-none w-32" 
-                                />
-                                <input 
-                                  placeholder="Status/Obs"
-                                  type="text" 
-                                  value={config.status || ''} 
-                                  onChange={e => setIntegracoesConfig(p => ({...p, [emp.id]: {...p[emp.id], status: e.target.value}}))} 
-                                  className="bg-white border border-slate-200 px-3 py-2 rounded-xl text-[10px] font-bold outline-none w-24 uppercase" 
                                 />
                               </div>
                             )}
