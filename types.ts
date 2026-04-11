@@ -127,4 +127,29 @@ export interface Documento {
   status_permanente?: string | null;
   created_at?: string;
   updated_at?: string;
+  // Join com funcionário
+  funcionario?: {
+    nome: string;
+  };
+}
+
+export interface EmpresaMaster {
+  id: string;
+  nome: string;
+  created_at?: string;
+}
+
+export interface FuncionarioIntegracao {
+  id: string;
+  funcionario_id: string;
+  empresa_id: string;
+  data_vencimento: string;
+  status?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  // Join com funcionário e empresa
+  funcionario?: {
+    nome: string;
+  };
+  empresa?: EmpresaMaster;
 }

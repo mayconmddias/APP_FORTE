@@ -15,7 +15,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { UserProfile } from '../types';
-import SyncStatus from './SyncStatus';
+import { db } from '../services/offlineDb';
 import { alertService, DOCS_CHANGED_EVENT } from '../services/alertService';
 import { useLiveQuery } from 'dexie-react-hooks';
 
@@ -63,6 +63,21 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
     []
   ) || 0;
 
+  const pendingSyncCount = useLiveQuery(
+    async () => {
+      try {
+        const assetsCount = await db.ativos.where('sync_status').anyOf(['PENDING', 'ERROR']).count();
+        const recordsCount = await db.ordens_servico.where('sync_status').anyOf(['PENDING', 'ERROR']).count();
+        const rdoCount = await db.rdo.where('sync_status').anyOf(['PENDING', 'ERROR']).count();
+        const anexosCount = await db.anexos.where('sync_status').anyOf(['PENDING', 'ERROR']).count();
+        return assetsCount + recordsCount + rdoCount + anexosCount;
+      } catch (e) {
+        return 0;
+      }
+    },
+    []
+  ) || 0;
+
   const menuItems = [
     { id: 'assets', label: 'CLIENTES', icon: <Construction size={22} /> },
     { id: 'history', label: 'HISTÓRICO', icon: <History size={22} /> },
@@ -70,7 +85,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
       <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full">{openDraftsCount}</span>
     ) : undefined },
     { id: 'rdo', label: 'RELATÓRIO DIÁRIO', icon: <FileText size={22} /> },
-    { id: 'sync-pendencies', label: 'SINCRONIZAÇÃO', icon: <RefreshCw size={22} /> },
+    { id: 'sync-pendencies', label: 'SINCRONIZAÇÃO', icon: <RefreshCw size={22} />, badge: pendingSyncCount > 0 ? (
+      <div className="w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-white shadow-sm animate-pulse" />
+    ) : undefined },
     ...(currentUser.role === 'ADMIN' ? [
       { id: 'documents', label: 'DOCUMENTOS', icon: <ShieldAlert size={22} />, badge: criticalAlerts > 0 ? (
         <div className="w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white shadow-sm animate-pulse" />
@@ -151,7 +168,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
           </div>
 
           <div className="flex items-center gap-4">
-            <SyncStatus />
             {headerAction}
           </div>
         </header>
