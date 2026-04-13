@@ -64,6 +64,18 @@ const App: React.FC = () => {
     } else {
       setNextRdoNumber(1);
     }
+
+    // LOGICA DE NUMERAÇÃO OS: Busca o maior número de OS existente e soma 1
+    if (localHistory.length > 0) {
+      const maxOs = localHistory.reduce((max, rec) => {
+        const num = (rec.inspectionNumber || 0);
+        return num > max ? num : max;
+      }, 0);
+      setNextOsNumber(maxOs + 1);
+    } else {
+      setNextOsNumber(1);
+    }
+
   };
 
   const fetchData = async () => {
