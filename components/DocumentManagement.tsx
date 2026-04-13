@@ -594,9 +594,31 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                 <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center flex-shrink-0">
                   <AlertTriangle size={24} />
                 </div>
-                <div>
+                <div className="flex flex-col">
                   <h2 className="text-sm font-black text-slate-900 uppercase tracking-tight">Visão de Alertas</h2>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Mostrando apenas itens críticos ou em alerta</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">CRÍTICOS</p>
+                    <div className="flex items-center gap-1.5 ml-2">
+                       <span className="flex items-center gap-1">
+                         <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                         <span className="text-[9px] font-black text-yellow-600 uppercase tracking-widest">
+                           {globalAlerts.filter(item => {
+                             const isInteg = 'empresa_id' in item;
+                             return getStatusInfo(item.data_vencimento, isInteg ? (item as any).status : null).label === 'ALERTA';
+                           }).length} ALERTAS
+                         </span>
+                       </span>
+                       <span className="flex items-center gap-1">
+                         <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                         <span className="text-[9px] font-black text-red-500 uppercase tracking-widest">
+                           {globalAlerts.filter(item => {
+                             const isInteg = 'empresa_id' in item;
+                             return getStatusInfo(item.data_vencimento, isInteg ? (item as any).status : null).label === 'VENCIDO';
+                           }).length} VENCIDOS
+                         </span>
+                       </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
