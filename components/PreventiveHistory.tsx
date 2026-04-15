@@ -1,21 +1,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  Search,
-  FileText,
-  ArrowLeft,
-  Hash,
-  ChevronRight,
-  Pencil,
-  Trash2,
-  AlertTriangle,
-  Building2,
-  X,
-  Loader2
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { CraneAsset, MaintenanceRecord, MaintenanceType, UserProfile, Frequency } from '../types';
 import { REPORT_NORMS, REPORT_ATTESTATION } from '../constants';
+import GenericModal from './GenericModal';
 
 
 interface PreventiveHistoryProps {
@@ -67,7 +56,6 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
   const clientGroups = useMemo(() => {
     const groups: Record<string, { name: string; assetCount: number; inspectionCount: number }> = {};
     if (!Array.isArray(assetsWithMeta)) return [];
-
     assetsWithMeta.forEach(asset => {
       if (!asset || !asset.client) return;
       const clientName = asset.client.trim();
@@ -114,14 +102,9 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     let items = [...(record.checklists || [])];
     const type = String(record.type || '').toUpperCase();
     const freq = String(record.frequency || '').toUpperCase();
-    
-    // Filtrar itens com base na periodicidade para inspeções preventivas
     if (type === 'PREVENTIVA') {
-      if (freq === 'MENSAL') {
-        items = items.slice(0, 69); // Itens 1 a 69
-      } else if (freq === 'SEMESTRAL') {
-        items = items.slice(0, 76); // Itens 1 a 76
-      }
+      if (freq === 'MENSAL') items = items.slice(0, 69);
+      else if (freq === 'SEMESTRAL') items = items.slice(0, 76);
     }
     let rowsHtml = '';
     items.forEach((i, index) => {
@@ -138,18 +121,13 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       .os-box { text-align: right; min-width: 80px; }
       .os-label { font-size: 10px; font-weight: 900; color: #475569; display: block; }
       .os-value { font-size: 18px; font-weight: 900; color: #0f172a; }
-      
       .info-grid { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
       .info-grid td { width: 25%; padding: 10px 5px; vertical-align: top; border: none !important; }
       .field-label { font-size: 9px; font-weight: 900; color: #475569; text-transform: uppercase; display: block; margin-bottom: 2px; }
       .field-value { font-size: 13px; font-weight: 900; color: #0f172a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; min-height: 20px; display: block; }
-
       table.results { width: 100%; border-collapse: collapse; margin-top: 20px; }
       table.results th, table.results td { border: 1px solid #e2e8f0; padding: 6px 12px; text-align: left; }
       table.results th { background: #f8fafc; font-size: 10px; text-transform: uppercase; color: #0f172a; border: 1px solid #e2e8f0; }
-      .nok { color: #dc2626; font-weight: 900; }
-      .ok { color: #059669; font-weight: 900; }
-
       .signature-section { width: 100%; margin-top: 80px; border-collapse: collapse; }
       .signature-section td { width: 50%; padding: 0 40px; text-align: center; border: none !important; }
       .signature-name { font-weight: 700; font-size: 11px; text-transform: uppercase; margin-top: 5px; min-height: 15px; }
@@ -157,23 +135,13 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       .signature-label { font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
       .client-signature-img { height: 60px; max-width: 200px; object-fit: contain; margin-bottom: -10px; }
       .tech-signature-text { font-family: 'cursive', 'Brush Script MT', cursive; font-size: 22px; color: #0066CC; margin-bottom: -15px; }
-      @media print {
-        @page { margin: 15mm; }
-        thead { display: table-header-group; }
-
-        tr { page-break-inside: avoid !important; }
-        body { padding: 0; }
-      }
+      @media print { @page { margin: 15mm; } thead { display: table-header-group; } tr { page-break-inside: avoid !important; } body { padding: 0; } }
     </style></head><body onload="window.print()">
       <div class="header-container">
         <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" class="logo-img" alt="Logo" />
         <div class="subtitle">RELATÓRIO TÉCNICO DE INSPEÇÃO ${record.type === MaintenanceType.CORRETIVA ? 'CORRETIVA' : 'PREVENTIVA'}</div>
-        <div class="os-box">
-          <span class="os-label">OS Nº</span>
-          <span class="os-value">#${formattedOs}</span>
-        </div>
+        <div class="os-box"><span class="os-label">OS Nº</span><span class="os-value">#${formattedOs}</span></div>
       </div>
-
       <table class="info-grid">
         <tr>
           <td><span class="field-label">CLIENTE</span><span class="field-value">${selectedAsset.client}</span></td>
@@ -188,18 +156,16 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
           <td><span class="field-label">DATA</span><span class="field-value">${formatDate(record.date)}</span></td>
         </tr>
       </table>
-
       <table class="results">
         <thead><tr><th style="width:65%;">Item</th><th style="width:80px;text-align:center;">Status</th><th style="width:25%;">Observações</th></tr></thead>
         <tbody>${rowsHtml}</tbody>
       </table>
-
       <table class="signature-section">
         <tr>
           <td>
-             <div style="height: 60px; display: flex; align-items: flex-end; justify-content: center;">
-                <span class="tech-signature-text">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</span>
-             </div>
+            <div style="height: 60px; display: flex; align-items: flex-end; justify-content: center;">
+              <span class="tech-signature-text">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</span>
+            </div>
             <div class="signature-line"></div>
             <div class="signature-name">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</div>
             <div class="signature-label">RESPONSÁVEL TÉCNICO</div>
@@ -214,124 +180,179 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
           </td>
         </tr>
       </table>
-
-      <!-- PDF_CONTENT_V2 -->
-      <div style="page-break-inside: avoid; margin-top: 40px; padding: 20px; border-top: 2px solid #f1f5f9; display: block !important;">
-        <div style="font-size: 11px; font-weight: 900; color: #475569; margin-bottom: 12px; text-transform: uppercase; text-align: center; letter-spacing: 1px;">Normas e Regulamentações</div>
-        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.5; text-align: left; display: block !important;">${(REPORT_NORMS || '').trim()}</div>
+      <div style="page-break-inside: avoid; margin-top: 40px; padding: 20px; border-top: 2px solid #f1f5f9;">
+        <div style="font-size: 11px; font-weight: 900; color: #475569; margin-bottom: 12px; text-transform: uppercase; text-align: center;">Normas e Regulamentações</div>
+        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.5;">${(REPORT_NORMS || '').trim()}</div>
       </div>
-
-      <div style="page-break-inside: avoid; margin-top: 10px; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; display: block !important;">
-        <div style="font-size: 11px; font-weight: 900; color: #475569; margin-bottom: 12px; text-transform: uppercase; text-align: center; letter-spacing: 1px;">Atestado de Responsabilidade</div>
-        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.5; text-align: left; display: block !important;">${(REPORT_ATTESTATION || '').trim()}</div>
+      <div style="page-break-inside: avoid; margin-top: 10px; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+        <div style="font-size: 11px; font-weight: 900; color: #475569; margin-bottom: 12px; text-transform: uppercase; text-align: center;">Atestado de Responsabilidade</div>
+        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.5;">${(REPORT_ATTESTATION || '').trim()}</div>
       </div>
-
     </body></html>`;
-
-
 
     const blob = new Blob([reportHtml], { type: 'text/html' });
     window.open(URL.createObjectURL(blob), '_blank');
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto px-1">
+    <div className="space-y-4 max-w-4xl mx-auto px-1 animate-in fade-in duration-500">
+
+      {/* Barra de busca */}
+      <div className="relative">
+        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 select-none notranslate pointer-events-none" style={{ fontSize: '20px' }}>search</span>
+        <input
+          type="text"
+          placeholder="Filtrar por Cliente, Ativo ou OS..."
+          className="w-full h-12 pl-12 pr-5 bg-[#eef2f7] border-none rounded-full font-body text-sm text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* Breadcrumb */}
       {(selectedClient || searchTerm) && (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 px-1">
           {selectedClient && !searchTerm && (
-            <button onClick={() => setSelectedClient(null)} className="p-2 hover:bg-white rounded-xl text-slate-500 border border-slate-200 shadow-sm"><ArrowLeft size={20} /></button>
+            <button
+              onClick={() => setSelectedClient(null)}
+              className="p-2 hover:bg-white rounded-full text-[#004a88] transition-all"
+            >
+              <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '20px' }}>arrow_back</span>
+            </button>
           )}
-          <h2 className="text-xl font-black text-slate-900 uppercase">{searchTerm ? 'Busca' : selectedClient}</h2>
+          <h2 className="font-headline font-bold text-base text-blue-950 uppercase">
+            {searchTerm ? 'Resultado da Busca' : selectedClient}
+          </h2>
         </div>
       )}
 
-      <div className="relative group">
-        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0066CC]" size={20} />
-        <input type="text" placeholder="Filtrar por Cliente, Ativo ou OS..." className="w-full h-14 pl-14 pr-6 bg-white border border-slate-200 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-[#0066CC]/10 focus:border-[#0066CC] font-bold text-slate-800 text-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-      </div>
-
+      {/* Lista */}
       <div className="grid gap-2">
         {displayState.type === 'CLIENTS' ? (
           (displayState.data as any[]).map((client) => (
-            <button key={client.name} onClick={() => setSelectedClient(client.name)} className="group bg-white rounded-2xl border border-slate-200 p-4 hover:border-[#0066CC] hover:shadow-md transition-all flex items-center justify-between text-left">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center group-hover:bg-[#0066CC] group-hover:text-white border border-slate-100"><Building2 size={18} /></div>
+            <button
+              key={client.name}
+              onClick={() => setSelectedClient(client.name)}
+              className="group bg-white rounded-2xl border border-slate-100 p-5 hover:border-[#004a88]/30 hover:shadow-md transition-all shadow-[0_4px_16px_rgb(0,0,0,0.04)] flex items-center justify-between text-left"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#004a88] flex items-center justify-center flex-shrink-0 group-hover:bg-primary transition-colors">
+                  <span className="material-symbols-outlined text-white select-none notranslate" style={{ fontSize: '22px', fontVariationSettings: "'FILL' 1" }}>corporate_fare</span>
+                </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase">{client.name}</h3>
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{client.assetCount} ATIVOS</span>
+                  <h3 className="font-headline font-bold text-base text-blue-950 uppercase">{client.name}</h3>
+                  <p className="font-headline text-[10px] font-bold text-[#004a88] uppercase tracking-widest mt-0.5">
+                    {client.assetCount} {client.assetCount === 1 ? 'ATIVO' : 'ATIVOS'} · {client.inspectionCount} INSPEÇÕES
+                  </p>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-slate-200 group-hover:text-[#0066CC]" />
+              <span className="material-symbols-outlined text-slate-300 group-hover:text-[#004a88] transition-colors select-none notranslate" style={{ fontSize: '22px' }}>chevron_right</span>
             </button>
           ))
         ) : (
           (displayState.data as any[]).map((asset) => (
-            <button key={asset.id} onClick={() => setSelectedAssetId(asset.id)} className="group bg-white rounded-2xl border border-slate-200 p-4 hover:border-[#0066CC] transition-all flex items-center justify-between text-left">
+            <button
+              key={asset.id}
+              onClick={() => setSelectedAssetId(asset.id)}
+              className="group bg-white rounded-2xl border border-slate-100 p-5 hover:border-[#004a88]/30 hover:shadow-md transition-all shadow-[0_4px_16px_rgb(0,0,0,0.04)] flex items-center justify-between text-left"
+            >
               <div className="min-w-0 pr-2">
-                <p className="text-[8px] font-black text-slate-400 uppercase truncate mb-0.5">{asset.client}</p>
-                <h3 className="text-sm font-black text-slate-900 uppercase truncate">{asset.name}</h3>
-                <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 mt-1 inline-block">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate mb-0.5">{asset.client}</p>
+                <h3 className="font-headline font-bold text-base text-blue-950 uppercase truncate">{asset.name}</h3>
+                <span className="font-body text-[9px] font-bold text-[#004a88] uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full mt-1.5 inline-block">
                   {asset.location || 'SEM LOCAL'}
                 </span>
               </div>
-              <ChevronRight size={18} className="text-slate-200 group-hover:text-[#0066CC]" />
+              <span className="material-symbols-outlined text-slate-300 group-hover:text-[#004a88] transition-colors flex-shrink-0 select-none notranslate" style={{ fontSize: '22px' }}>chevron_right</span>
             </button>
           ))
         )}
       </div>
 
+      {/* Modal de detalhe do ativo */}
       {selectedAssetId && selectedAsset && createPortal(
-        <div className="fixed inset-0 top-0 left-0 w-full h-full bg-white z-[9999] flex flex-col animate-in slide-in-from-right-4 duration-300 overflow-hidden">
-          <div className="p-6 md:p-8 bg-slate-50 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
-            <button onClick={() => setSelectedAssetId(null)} className="p-3 hover:bg-slate-200 rounded-full text-slate-500"><ArrowLeft size={32} /></button>
-            <div className="text-center">
-              <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">{selectedAsset.name}</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedAsset.client}</p>
+        <div className="fixed inset-0 z-[9999] bg-background flex flex-col animate-in slide-in-from-right-4 duration-300 overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 bg-background border-b border-slate-100 flex-shrink-0">
+            <button onClick={() => setSelectedAssetId(null)} className="p-2 text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
+              <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '24px' }}>arrow_back</span>
+            </button>
+            <div className="text-center flex-1">
+              <h3 className="font-headline font-bold text-base text-blue-950 uppercase">{selectedAsset.name}</h3>
+              <p className="font-headline text-[10px] font-bold text-[#004a88] uppercase tracking-widest">{selectedAsset.client}</p>
             </div>
-            <div className="w-12"></div>
+            <div className="w-10" />
           </div>
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-3 pb-24">
-            {selectedRecords.map((record) => (
-              <div key={record.local_id || record.id} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+
+          {/* Lista de registros */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-8">
+            {selectedRecords.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-slate-300 select-none notranslate" style={{ fontSize: '32px' }}>description</span>
+                </div>
+                <p className="font-headline font-bold text-sm text-slate-400 uppercase">Nenhum registro encontrado</p>
+              </div>
+            ) : selectedRecords.map((record) => (
+              <div key={record.local_id || record.id} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-[0_4px_16px_rgb(0,0,0,0.04)]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${record.type === MaintenanceType.CORRETIVA ? 'bg-red-50 text-red-600' : 'bg-[#0066CC] text-white'}`}><Hash size={14} /></div>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      record.type === MaintenanceType.CORRETIVA ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-[#004a88]'
+                    }`}>
+                      <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>
+                        {record.type === MaintenanceType.CORRETIVA ? 'build' : 'task_alt'}
+                      </span>
+                    </div>
                     <div>
-                      <p className="text-[8px] text-slate-400 font-black uppercase">{record.type === MaintenanceType.CORRETIVA ? 'CORRETIVA' : 'PREVENTIVA'}</p>
-                      <p className="text-sm font-black text-slate-900">#{String(record.inspectionNumber || 0).padStart(4, '0')}</p>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                        {record.type === MaintenanceType.CORRETIVA ? 'CORRETIVA' : 'PREVENTIVA'}
+                      </p>
+                      <p className="font-headline font-bold text-sm text-blue-950">
+                        #{String(record.inspectionNumber || 0).padStart(4, '0')}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={() => onEdit?.(record)} className="p-2 text-slate-300 hover:text-blue-600"><Pencil size={18} /></button>
-                    <button onClick={() => handleGeneratePdf(record)} className="p-2 text-slate-300 hover:text-blue-600"><FileText size={18} /></button>
-                    {isAdmin && <button onClick={() => setRecordToDelete(record)} className="p-2 text-slate-300 hover:text-red-600"><Trash2 size={18} /></button>}
+                  <div className="flex items-center gap-1">
+                    {onEdit && (
+                      <button onClick={() => onEdit(record)} className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
+                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>edit</span>
+                      </button>
+                    )}
+                    <button onClick={() => handleGeneratePdf(record)} className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
+                      <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>description</span>
+                    </button>
+                    {isAdmin && (
+                      <button onClick={() => setRecordToDelete(record)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all">
+                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>delete</span>
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-50 text-[9px] font-bold text-slate-500 uppercase">
-                  <div>{formatDate(record.date)}</div>
-                  <div>TÉCNICO: {record.technician}</div>
+                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-50 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                  <span>{formatDate(record.date)}</span>
+                  <span>·</span>
+                  <span>{record.technician}</span>
                 </div>
               </div>
             ))}
           </div>
-        </div>, document.body
+        </div>,
+        document.body
       )}
 
-      {recordToDelete && createPortal(
-        <div className="fixed inset-0 bg-white z-[10000] flex items-center justify-center p-4 md:p-6" onClick={() => setRecordToDelete(null)}>
-          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 text-center border border-slate-200 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-            <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><AlertTriangle size={48} /></div>
-            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Excluir OS #{String(recordToDelete?.inspectionNumber || 0).padStart(4, '0')}?</h3>
-            <p className="text-slate-500 text-[10px] font-bold uppercase mt-4 mb-10 leading-relaxed px-4">Esta ação removerá permanentemente a Ordem de Serviço #{String(recordToDelete?.inspectionNumber || 0).padStart(4, '0')}.</p>
-            <div className="flex gap-4">
-              <button onClick={() => setRecordToDelete(null)} className="flex-1 h-14 bg-slate-50 text-slate-500 rounded-[20px] font-black text-[11px] uppercase tracking-widest transition-all">Sair</button>
-              <button onClick={() => { if (recordToDelete && onDelete) onDelete(recordToDelete.local_id || recordToDelete.id); setRecordToDelete(null); }} className="flex-1 h-14 bg-red-600 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-200 flex items-center justify-center gap-2 active:scale-95 transition-all">
-                {String(recordToDelete?.id || '').startsWith('temp-') ? <Loader2 size={18} className="animate-spin" /> : 'CONFIRMAR'}
-              </button>
-            </div>
-          </div>
-        </div>, document.body
-      )}
+      {/* Modal de confirmação de exclusão */}
+      <GenericModal 
+        isOpen={!!recordToDelete}
+        onClose={() => setRecordToDelete(null)}
+        title={`Excluir OS #${String(recordToDelete?.inspectionNumber || 0).padStart(4, '0')}?`}
+        description="Esta ação removerá permanentemente esta Ordem de Serviço."
+        type="DANGER"
+        onConfirm={() => {
+            if (recordToDelete && onDelete) onDelete(recordToDelete.local_id || recordToDelete.id);
+            setRecordToDelete(null);
+        }}
+      />
     </div>
   );
 };

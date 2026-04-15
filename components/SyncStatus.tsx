@@ -1,5 +1,4 @@
 import React from 'react';
-import { Cloud, CloudOff, RefreshCw, AlertCircle } from 'lucide-react';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/offlineDb';
@@ -27,45 +26,44 @@ const SyncStatus: React.FC = () => {
 
     if (!network.online) {
         return (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-500 rounded-full border border-slate-200 shadow-sm animate-pulse">
-                <CloudOff size={14} />
-                <span className="text-[10px] font-black uppercase tracking-wider">Offline</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-500 rounded-full border border-slate-200 animate-pulse">
+                <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '14px' }}>cloud_off</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider">Offline</span>
             </div>
         );
     }
 
-    // NEW: Connection unstable (Online but cannot reach server)
     if (network.quality === 'none') {
         return (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-full border border-amber-100 shadow-sm">
-                <AlertCircle size={14} className="animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-wider">Conexão Instável</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-full border border-amber-100">
+                <span className="material-symbols-outlined select-none notranslate animate-pulse" style={{ fontSize: '14px', fontVariationSettings: "'FILL' 1" }}>warning</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider">Instável</span>
             </div>
         );
     }
 
     if (errorCount && errorCount > 0) {
         return (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 rounded-full border border-red-100 shadow-sm">
-                <AlertCircle size={14} />
-                <span className="text-[10px] font-black uppercase tracking-wider">{errorCount} Erros</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-full border border-red-100">
+                <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '14px', fontVariationSettings: "'FILL' 1" }}>error</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider">{errorCount} Erros</span>
             </div>
         );
     }
 
     if (pendingCount && pendingCount > 0) {
         return (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-[#0066CC] rounded-full border border-blue-100 shadow-sm">
-                <RefreshCw size={14} className="animate-spin" />
-                <span className="text-[10px] font-black uppercase tracking-wider">Sincronizando ({pendingCount})</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-[#004a88] rounded-full border border-blue-100">
+                <span className="material-symbols-outlined select-none notranslate animate-spin" style={{ fontSize: '14px' }}>sync</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider">Sinc. ({pendingCount})</span>
             </div>
         );
     }
 
     return (
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shadow-sm">
-            <Cloud size={14} />
-            <span className="text-[10px] font-black uppercase tracking-wider">Sincronizado</span>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100">
+            <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '14px', fontVariationSettings: "'FILL' 1" }}>cloud_done</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Sincronizado</span>
         </div>
     );
 };

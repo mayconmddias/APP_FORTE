@@ -1,20 +1,7 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
+import GenericModal from './GenericModal';
 import { createPortal } from 'react-dom';
-import {
-  UserPlus,
-  Pencil,
-  Search,
-  X,
-  Save,
-  ShieldCheck,
-  Shield,
-  Trash2,
-  AlertTriangle,
-  Loader2,
-  Plus,
-  Settings
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { UserProfile } from '../types';
 import { supabase } from '../supabaseClient';
 
@@ -43,6 +30,10 @@ const UserManagement: React.FC<UserManagementProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertDesc, setAlertDesc] = useState('');
+
   const [form, setForm] = useState<Partial<UserProfile>>({
     name: '',
     email: '',
@@ -62,8 +53,11 @@ const UserManagement: React.FC<UserManagementProps> = ({
     onTitleChange?.('USUÁRIOS');
     if (isAdmin) {
       onHeaderActionChange?.(
-        <button onClick={handleOpenAdd} className="bg-white border border-slate-200 text-black w-10 h-10 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm">
-          <Plus size={24} />
+        <button
+          onClick={handleOpenAdd}
+          className="text-[#004a88] hover:bg-slate-100 p-2 rounded-full transition-all active:scale-95"
+        >
+          <span className="material-symbols-outlined select-none notranslate font-bold" style={{ fontSize: '24px' }}>add</span>
         </button>
       );
     } else {
@@ -88,9 +82,11 @@ const UserManagement: React.FC<UserManagementProps> = ({
       } as UserProfile;
       await onSave(userToSave);
       setShowModal(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Erro ao salvar.");
+      setAlertTitle('Erro no Cadastro');
+      setAlertDesc(err.message || 'Não foi possível salvar os dados do usuário.');
+      setShowAlert(true);
     }
   };
 
@@ -101,9 +97,11 @@ const UserManagement: React.FC<UserManagementProps> = ({
       await onDelete(editingUser.id);
       setShowConfirmDelete(false);
       setShowModal(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Erro ao excluir.");
+      setAlertTitle('Erro na Exclusão');
+      setAlertDesc(err.message || 'Não foi possível excluir o usuário.');
+      setShowAlert(true);
     } finally {
       setIsDeleting(false);
     }
@@ -118,89 +116,186 @@ const UserManagement: React.FC<UserManagementProps> = ({
     })
     .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-  const inputClasses = "w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#0066CC]/10 focus:border-[#0066CC] outline-none transition-all font-bold text-slate-800 text-sm";
-  const labelClasses = "text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block";
+  const inputClasses = "w-full bg-[#eef2f7] border-none rounded-xl py-4 px-5 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all font-body text-sm outline-none";
+  const labelClasses = "text-[11px] font-bold text-[#004a88] uppercase tracking-widest mb-2 block";
 
   const renderOverlays = () => {
     const overlays = [];
 
     if (showModal) {
       overlays.push(createPortal(
-        <div key="user-form" className="fixed inset-0 top-0 left-0 w-full h-full bg-white z-[9999] flex flex-col animate-in slide-in-from-bottom-5 duration-500 overflow-hidden">
-          <div className="p-6 md:p-8 bg-slate-50 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-4">
+        <div key="user-form" className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/20 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full sm:max-w-md bg-background rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[95dvh] animate-in slide-in-from-bottom-4 duration-300">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-2 flex-shrink-0">
+              <div className="w-8" />
+              <h3 className="font-headline font-bold text-lg text-blue-950 tracking-widest uppercase text-center flex-1">
+                {isNewUser ? 'NOVO PERFIL' : 'EDITAR PERFIL'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
+              >
+                <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '22px' }} aria-hidden="true">close</span>
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSave} className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
               <div>
-                <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">{isNewUser ? 'NOVO PERFIL' : 'EDITAR PERFIL'}</h3>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Controle de Credenciais</p>
+                <label className={labelClasses}>NOME COMPLETO</label>
+                <input
+                  required
+                  type="text"
+                  className={inputClasses}
+                  value={form.name || ''}
+                  onChange={e => setForm({ ...form, name: e.target.value })}
+                  placeholder="Nome completo"
+                />
               </div>
-            </div>
-            <button onClick={() => setShowModal(false)} className="p-3 hover:bg-slate-200 rounded-full text-slate-400 transition-colors"><X size={32} /></button>
-          </div>
-          <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 md:p-12">
-            <div className="max-w-3xl mx-auto space-y-8 pb-32">
-              <div><label className={labelClasses}>Nome Completo</label><input required type="text" className={inputClasses} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-              <div><label className={labelClasses}>E-mail Corporativo</label><input required type="email" className={inputClasses} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-              <div><label className={labelClasses}>Senha</label><input type="password" className={inputClasses} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="••••••••" /></div>
-              <div><label className={labelClasses}>Nível de Acesso</label>
-                <select className={inputClasses} value={form.role} onChange={e => setForm({ ...form, role: e.target.value as 'ADMIN' | 'TECNICO' })} disabled={!isAdmin}>
-                  <option value="TECNICO">Técnico de Campo</option>
-                  <option value="ADMIN">Administrador Geral</option>
-                </select>
+              <div>
+                <label className={labelClasses}>E-MAIL CORPORATIVO</label>
+                <input
+                  required
+                  type="email"
+                  className={inputClasses}
+                  value={form.email || ''}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
+                  placeholder="nome@empresa.com.br"
+                />
               </div>
-            </div>
-            <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 z-10">
-              <div className="max-w-3xl mx-auto flex justify-center gap-4">
-                {!isNewUser && isAdmin && (
-                  <button type="button" onClick={() => setShowConfirmDelete(true)} className="flex-1 h-14 bg-red-50 text-red-600 rounded-[20px] font-black text-xs uppercase flex items-center justify-center gap-2">Excluir</button>
+              <div>
+                <label className={labelClasses}>SENHA</label>
+                <input
+                  type="password"
+                  className={inputClasses}
+                  value={form.password || ''}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  placeholder="••••••••"
+                />
+              </div>
+              <div>
+                <label className={labelClasses}>NÍVEL DE ACESSO</label>
+                <div className="relative">
+                  <select
+                    className={`${inputClasses} appearance-none pr-10 cursor-pointer`}
+                    value={form.role || 'TECNICO'}
+                    onChange={e => setForm({ ...form, role: e.target.value as 'ADMIN' | 'TECNICO' })}
+                    disabled={!isAdmin}
+                  >
+                    <option value="TECNICO">TÉCNICO DE CAMPO</option>
+                    <option value="ADMIN">ADMINISTRADOR GERAL</option>
+                  </select>
+                  <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none select-none notranslate" style={{ fontSize: '20px' }}>expand_more</span>
+                </div>
+              </div>
+              <div className="h-2" />
+            </form>
+
+            {/* Rodapé */}
+            <div className="px-6 pb-8 pt-4 border-t border-slate-100 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                {!isNewUser && isAdmin ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmDelete(true)}
+                    className="font-headline font-bold text-sm text-red-500 uppercase tracking-widest px-4 py-3 rounded-full hover:bg-red-50 active:scale-95 transition-all"
+                  >
+                    EXCLUIR
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="font-headline font-bold text-sm text-[#004a88] uppercase tracking-widest px-4 py-3 rounded-full hover:bg-blue-50 active:scale-95 transition-all"
+                  >
+                    CANCELAR
+                  </button>
                 )}
-                <button type="submit" className={`${!isNewUser && isAdmin ? 'flex-1' : 'w-1/2'} h-14 bg-emerald-600 text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-2`}>SALVAR</button>
+                <button
+                  type="submit"
+                  form="user-form"
+                  onClick={handleSave as any}
+                  className="bg-[#004a88] text-white font-headline font-bold text-sm uppercase tracking-widest px-10 py-4 rounded-full shadow-lg shadow-blue-900/20 hover:bg-primary active:scale-95 transition-all"
+                >
+                  SALVAR
+                </button>
               </div>
             </div>
-          </form>
-        </div>, document.body));
+          </div>
+        </div>,
+        document.body
+      ));
     }
 
     if (showConfirmDelete) {
-      overlays.push(createPortal(
-        <div key="user-del" className="fixed inset-0 bg-white z-[10000] flex items-center justify-center p-6" onClick={() => setShowConfirmDelete(false)}>
-          <div className="bg-white w-full max-w-sm rounded-[48px] p-10 text-center border border-slate-200 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-            <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><AlertTriangle size={48} /></div>
-            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Excluir Perfil?</h3>
-            <p className="text-slate-500 text-[10px] font-bold uppercase mt-4 mb-10 leading-relaxed px-4">Deseja remover o acesso de <span className="font-black text-slate-800">"{editingUser?.name}"</span>?</p>
-            <div className="flex gap-4">
-              <button onClick={() => setShowConfirmDelete(false)} className="flex-1 h-14 bg-slate-50 text-slate-500 rounded-[20px] font-black text-[11px] uppercase tracking-widest transition-all">Sair</button>
-              <button onClick={handleDeleteUser} disabled={isDeleting} className="flex-1 h-14 bg-red-600 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-200 flex items-center justify-center gap-2 active:scale-95 transition-all">
-                {isDeleting ? <Loader2 size={18} className="animate-spin" /> : 'CONFIRMAR'}
-              </button>
-            </div>
-          </div>
-        </div>, document.body));
+        overlays.push(
+          <GenericModal 
+            key="user-del"
+            isOpen={showConfirmDelete}
+            onClose={() => setShowConfirmDelete(false)}
+            title="Excluir Perfil?"
+            description={`Deseja remover o acesso de "${editingUser?.name}"?`}
+            type="DANGER"
+            onConfirm={handleDeleteUser}
+          />
+        );
     }
 
     return overlays;
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-500 px-1">
-      <div className="bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-sm">
-        <div className="p-6 border-b border-slate-100">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-            <input type="text" placeholder="Buscar por nome ou e-mail..." className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-[#0066CC]/5 focus:border-[#0066CC] font-bold text-slate-800 text-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
-        </div>
-        <div className="overflow-x-auto">
+    <div className="space-y-4 max-w-4xl mx-auto animate-in fade-in duration-500 px-1">
+
+      {/* Barra de busca */}
+      <div className="relative">
+        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 select-none notranslate pointer-events-none" style={{ fontSize: '20px' }}>search</span>
+        <input
+          type="text"
+          placeholder="Buscar por nome ou e-mail..."
+          className="w-full h-12 pl-12 pr-5 bg-[#eef2f7] border-none rounded-full font-body text-sm text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* Tabela de Usuários */}
+      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        <div>
           <table className="w-full text-left">
-            <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest">
-              <tr><th className="px-5 py-5">Usuário</th><th className="px-5 py-5 w-24 text-center">Ações</th><th className="px-5 py-5 text-right">Permissão</th></tr>
+            <thead>
+              <tr className="border-b border-slate-50">
+                <th className="px-3 sm:px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">USUÁRIO</th>
+                <th className="px-3 sm:px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-20 text-center">AÇÕES</th>
+                <th className="px-3 sm:px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">PERMISSÃO</th>
+              </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-5 py-5"><div className="font-black text-slate-800 text-sm">{user.name}</div><div className="text-[10px] text-slate-400 font-medium">{user.email}</div></td>
-                  <td className="px-5 py-5 text-center"><button onClick={() => handleOpenEdit(user)} className="p-2 text-slate-300 hover:text-[#0066CC] transition-all"><Pencil size={18} /></button></td>
-                  <td className="px-5 py-5 text-right">
-                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase border ${user.role === 'ADMIN' ? 'bg-blue-50 text-[#0066CC] border-blue-100' : 'bg-slate-50 text-slate-600 border-slate-100'}`}>{user.role}</span>
+                <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-3 sm:px-5 py-4">
+                    <div className="font-headline font-bold text-sm text-blue-950 uppercase">{user.name}</div>
+                    <div className="font-body text-[10px] text-slate-400 mt-0.5">{user.email}</div>
+                  </td>
+                  <td className="px-3 sm:px-5 py-4 text-center">
+                    <button
+                      onClick={() => handleOpenEdit(user)}
+                      className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all"
+                    >
+                      <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>edit</span>
+                    </button>
+                  </td>
+                  <td className="px-3 sm:px-5 py-4 text-right">
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
+                      user.role === 'ADMIN'
+                        ? 'bg-blue-50 text-[#004a88]'
+                        : 'bg-slate-50 text-slate-500'
+                    }`}>
+                      {user.role === 'ADMIN' ? 'ADMIN' : 'TÉCNICO'}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -208,7 +303,16 @@ const UserManagement: React.FC<UserManagementProps> = ({
           </table>
         </div>
       </div>
+
       {renderOverlays()}
+
+      <GenericModal 
+        isOpen={showAlert}
+        onClose={() => setShowAlert(false)}
+        title={alertTitle}
+        description={alertDesc}
+        type="WARNING"
+      />
     </div>
   );
 };

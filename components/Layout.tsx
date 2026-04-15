@@ -79,95 +79,94 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
   ) || 0;
 
   const menuItems = [
-    { id: 'assets', label: 'CLIENTES', icon: <Construction size={22} /> },
-    { id: 'history', label: 'HISTÓRICO', icon: <History size={22} /> },
-    { id: 'open-orders', label: 'OS EM ABERTAS', icon: <Clock size={22} />, badge: openDraftsCount > 0 ? (
-      <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full">{openDraftsCount}</span>
+    { id: 'assets', label: 'CLIENTES', icon: 'group' },
+    { id: 'history', label: 'HISTÓRICO', icon: 'history' },
+    { id: 'open-orders', label: 'ORDENS EM ABERTO', icon: 'engineering', badge: openDraftsCount > 0 ? (
+      <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold ml-auto">{openDraftsCount}</span>
     ) : undefined },
-    { id: 'rdo', label: 'RELATÓRIO DIÁRIO', icon: <FileText size={22} /> },
-    { id: 'sync-pendencies', label: 'SINCRONIZAÇÃO', icon: <RefreshCw size={22} />, badge: pendingSyncCount > 0 ? (
-      <div className="w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-white shadow-sm animate-pulse" />
+    { id: 'rdo', label: 'RELATÓRIOS DIÁRIOS', icon: 'event_note' },
+    { id: 'sync-pendencies', label: 'SINCRONIZAÇÃO', icon: 'sync', badge: pendingSyncCount > 0 ? (
+      <div className="w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-white shadow-sm animate-pulse ml-auto" />
     ) : undefined },
     ...(currentUser.role === 'ADMIN' ? [
-      { id: 'documents', label: 'DOCUMENTOS', icon: <ShieldAlert size={22} />, badge: criticalAlerts > 0 ? (
-        <div className="w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white shadow-sm animate-pulse" />
+      { id: 'documents', label: 'DOCUMENTOS', icon: 'description', badge: criticalAlerts > 0 ? (
+        <div className="w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white shadow-sm animate-pulse ml-auto" />
       ) : undefined },
-      { id: 'users', label: 'USUÁRIOS', icon: <Users size={22} /> }
+      { id: 'users', label: 'USUÁRIOS', icon: 'manage_accounts' }
     ] : []),
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
+    <div className="flex h-screen bg-surface overflow-hidden font-body">
       {isExpanded && (
         <div
-          className="fixed inset-0 bg-transparent z-[100] transition-opacity duration-300"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] transition-opacity duration-300 lg:hidden"
           onClick={() => setIsExpanded(false)}
         />
       )}
 
+      {/* Sidebar / NavigationDrawer */}
       <aside
         ref={sidebarRef}
-        className={`fixed top-0 left-0 h-full bg-white text-[#0066CC] flex flex-col border-r border-slate-200 shadow-xl z-[110] transition-transform duration-300 ease-in-out w-64
-          ${isExpanded ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed lg:relative top-0 left-0 h-full z-[110] flex flex-col py-8 bg-white w-72 rounded-r-2xl shadow-2xl shadow-blue-900/5 transition-all duration-300 ease-in-out
+          ${isExpanded ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
-        <div className="p-6 flex items-center justify-between border-b border-white/5">
-          <div className="flex items-center justify-center w-full">
-            <img
-              src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png"
-              alt="Logo Forte"
-              className="h-16 w-auto object-contain transition-all"
-            />
+        {/* Header: Profile Section */}
+        <div className="px-6 mb-10">
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold text-primary tracking-tighter font-headline">FORTE - PRO 4.0</h1>
+            <span className="text-[10px] font-bold tracking-wide uppercase text-slate-400 font-label mt-1">
+              {currentUser.name || 'Engenheiro Responsável'}
+            </span>
           </div>
         </div>
 
-        <nav className="flex-1 mt-6 px-3 space-y-2 overflow-y-auto scrollbar-hide">
+        {/* Navigation Links */}
+        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => { setActiveTab(item.id); setIsExpanded(false); }}
-              className={`w-full flex items-center px-4 py-4 rounded-2xl transition-all relative group 
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ease-in-out hover:translate-x-1 active:scale-95
                 ${activeTab === item.id
-                  ? 'bg-blue-50 text-[#0066CC] font-bold shadow-sm'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-[#0066CC]'}`}
+                  ? 'bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] nav-item-active text-[#0062B1]'
+                  : 'text-slate-400 border-transparent hover:bg-slate-50'}`}
             >
-              <div className="flex-shrink-0 relative">
-                {item.icon}
-              </div>
-              <div className="ml-4 font-black flex-1 flex items-center justify-between text-xs uppercase tracking-tight">
-                <span>{item.label}</span>
-                {item.badge}
-              </div>
+              <span className="material-symbols-outlined text-xl" style={{ fontSize: '24px' }}>{item.icon}</span>
+              <span className="font-bold tracking-wide uppercase text-[11px] font-label text-left flex-1">{item.label}</span>
+              {item.badge}
             </button>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-50">
-          <button
+        {/* Footer: Logout */}
+        <div className="px-6 mt-auto">
+          <button 
             onClick={onLogout}
-            className="w-full flex items-center px-4 py-4 rounded-2xl bg-slate-50 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all group"
+            className="w-full py-4 flex items-center justify-center space-x-2 rounded-xl bg-[#e9eff6] text-slate-600 border border-transparent hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all duration-200"
           >
-            <LogOut size={22} />
-            <span className="ml-4 text-xs font-black uppercase">Sair</span>
+            <span className="material-symbols-outlined text-sm">logout</span>
+            <span className="font-headline font-bold tracking-widest text-xs uppercase pt-0.5">SAIR</span>
           </button>
         </div>
       </aside>
 
       <main className="flex-1 flex flex-col overflow-hidden w-full">
-        <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sticky top-0 z-40">
-          <div className="flex items-center gap-3">
+        <header className="w-full top-0 sticky z-40 bg-background flex justify-between items-center px-6 py-4">
+          <div className="w-12">
             <button
               onClick={() => setIsExpanded(true)}
-              className="p-1 hover:bg-slate-50 rounded-lg text-slate-600 transition-colors mr-1"
+              className="text-primary hover:bg-surface-container transition-colors p-2 rounded-full active:scale-95 duration-200"
             >
-              <Menu size={26} strokeWidth={2.5} />
+              <span className="material-symbols-outlined">menu</span>
             </button>
-
-            <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.15em] ml-1">
-              {pageTitle || 'GESTÃO DE CLIENTES'}
-            </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <h1 className="font-headline font-bold uppercase tracking-widest text-lg text-blue-950 text-center flex-1">
+            {pageTitle || 'CLIENTES'}
+          </h1>
+
+          <div className="flex items-center gap-1 w-12 justify-end">
             {headerAction}
           </div>
         </header>

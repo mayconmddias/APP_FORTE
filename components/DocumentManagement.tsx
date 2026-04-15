@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import GenericModal from './GenericModal';
 import { supabase } from '../supabaseClient';
 import { Funcionario, Documento, EmpresaMaster, FuncionarioIntegracao } from '../types';
 import { 
@@ -20,6 +22,7 @@ import {
 } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { alertService } from '../services/alertService';
+import { v4 as uuidv4 } from 'uuid';
 
 const DATE_DOCS = [
   'ASO', 
@@ -39,6 +42,19 @@ const STATUS_DOCS = [
 ];
 
 const DOCUMENT_OPTIONS = [...DATE_DOCS, ...STATUS_DOCS];
+
+const formatName = (fullName: string) => {
+  if (!fullName) return '';
+  const parts = fullName.split(' ');
+  if (parts.length <= 2) return fullName;
+  
+  const connectives = ['DE', 'DA', 'DO', 'DAS', 'DOS'];
+  if (connectives.includes(parts[1].toUpperCase()) && parts.length >= 3) {
+    return `${parts[0]} ${parts[1]} ${parts[2]}`;
+  }
+  
+  return `${parts[0]} ${parts[1]}`;
+};
 
 interface DocumentManagementProps {
   onTitleChange: (title: string | null) => void;
@@ -60,6 +76,7 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
   const [funcName, setFuncName] = useState('');
   const [funcRole, setFuncRole] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
 
   // Config for docs in the modal
   const [docsConfig, setDocsConfig] = useState<Record<string, { 
@@ -79,6 +96,21 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
   const [isAddingEmpresa, setIsAddingEmpresa] = useState(false);
   const [newEmpresaNome, setNewEmpresaNome] = useState('');
   const [newEmpresaData, setNewEmpresaData] = useState('');
+  
+  // Custom Modal States
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [promptTitle, setPromptTitle] = useState('');
+  const [promptValue, setPromptValue] = useState('');
+  const [onPromptConfirm, setOnPromptConfirm] = useState<(val: string) => void>(() => {});
+
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('');
+  const [confirmDesc, setConfirmDesc] = useState('');
+  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => {});
+
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertDesc, setAlertDesc] = useState('');
 
   const selectedFunc = useMemo(() => 
     funcionarios.find(f => f.id === selectedFuncId), 
@@ -273,18 +305,25 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
 
   useEffect(() => {
     onHeaderActionChange?.(
-      <div className="flex gap-2">
+      <div className="flex gap-1 items-center">
+        <button
+          onClick={() => fetchFuncionarios()}
+          className="text-[#004a88] hover:bg-slate-100 p-2 rounded-full active:scale-95 transition-all"
+          title="Atualizar lista"
+        >
+          <span className="material-symbols-outlined font-bold" style={{ fontSize: '22px' }}>refresh</span>
+        </button>
         <button
           onClick={() => setSelectedFuncId('ALERTS')}
-          className={`md:hidden w-10 h-10 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm ${selectedFuncId === 'ALERTS' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-white border border-slate-200 text-slate-400'}`}
+          className={`md:hidden p-2 rounded-full active:scale-95 transition-all ${selectedFuncId === 'ALERTS' ? 'text-red-500 bg-red-50' : 'text-[#004a88] hover:bg-slate-100'}`}
         >
-          <AlertTriangle size={20} />
+          <span className="material-symbols-outlined font-bold" style={{ fontSize: '22px' }}>warning</span>
         </button>
         <button
           onClick={handleOpenAddModal}
-          className="bg-white border border-slate-200 text-black w-10 h-10 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm"
+          className="text-[#004a88] hover:bg-slate-100 p-2 rounded-full active:scale-95 transition-all"
         >
-          <Plus size={24} />
+          <span className="material-symbols-outlined font-bold" style={{ fontSize: '24px' }}>add</span>
         </button>
       </div>
     );
@@ -360,7 +399,7 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
         }
 
         const docObj: any = { 
-          id: (existing && existing.id) ? existing.id : crypto.randomUUID(),
+          id: (existing && existing.id) ? existing.id : uuidv4(),
           funcionario_id: funcId, 
           tipo_documento: tipo, 
           data_vencimento, 
@@ -401,7 +440,7 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
         }
         
         const intObj: any = {
-          id: (existing && existing.id) ? existing.id : crypto.randomUUID(),
+          id: (existing && existing.id) ? existing.id : uuidv4(),
           funcionario_id: funcId,
           empresa_id: empId,
           data_vencimento: config.date || null,
@@ -428,7 +467,9 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
       alertService.notifyChange();
 
     } catch (err: any) {
-      alert(`Erro ao salvar: ${err.message}`);
+      setAlertTitle('Erro no Cadastro');
+      setAlertDesc(err.message);
+      setShowAlert(true);
     } finally {
       setIsSaving(false);
     }
@@ -448,7 +489,7 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
       const { data, error } = await supabase
         .from('empresas_master')
         .insert([{ 
-           id: crypto.randomUUID(), 
+           id: uuidv4(), 
            nome: upperNome 
         }])
         .select();
@@ -468,34 +509,41 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
 
   const handleDeleteMasterEmpresa = async (empId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm('Excluir esta empresa permanentemente? Isso removerá os vínculos de todos os funcionários.')) return;
-    
-    try {
-      const { error } = await supabase.from('empresas_master').delete().eq('id', empId);
-      if (error) throw error;
-      
-      setEmpresasMaster(prev => prev.filter(emp => emp.id !== empId));
-      setIntegracoesConfig(prev => {
-        const newConfig = { ...prev };
-        delete newConfig[empId];
-        return newConfig;
-      });
-      // Refresh integrations if needed
-      if (selectedFuncId) fetchIntegracoes(selectedFuncId);
-    } catch (err: any) {
-      alert(`Erro ao excluir empresa: ${err.message}`);
-    }
+    setConfirmTitle('Excluir Empresa?');
+    setConfirmDesc('Isso removerá os vínculos de todos os funcionários permanentemente.');
+    setOnConfirmAction(() => async () => {
+        try {
+            const { error } = await supabase.from('empresas_master').delete().eq('id', empId);
+            if (error) throw error;
+            
+            setEmpresasMaster(prev => prev.filter(emp => emp.id !== empId));
+            setIntegracoesConfig(prev => {
+                const newConfig = { ...prev };
+                delete newConfig[empId];
+                return newConfig;
+            });
+            if (selectedFuncId) fetchIntegracoes(selectedFuncId);
+            setShowConfirm(false);
+        } catch (err: any) {
+            alert(`Erro ao excluir empresa: ${err.message}`);
+        }
+    });
+    setShowConfirm(true);
   };
 
   const handleAddCustomDoc = () => {
-    const name = prompt('Nome do novo documento:');
-    if (!name || name.trim() === '') return;
-    const upperName = name.trim().toUpperCase();
-    if (docsConfig[upperName]) return;
-    setDocsConfig(prev => ({
-      ...prev,
-      [upperName]: { selected: true, otherType: 'DATE', isCustom: true, status: 'APTO' }
-    }));
+    setPromptTitle('Novo Documento');
+    setPromptValue('');
+    setOnPromptConfirm(() => (val: string) => {
+        const upperName = val.trim().toUpperCase();
+        if (docsConfig[upperName]) return;
+        setDocsConfig(prev => ({
+            ...prev,
+            [upperName]: { selected: true, otherType: 'DATE', isCustom: true, status: 'APTO' }
+        }));
+        setShowPrompt(false);
+    });
+    setShowPrompt(true);
   };
 
   const getStatusInfo = (docOrDate: Documento | string | undefined | null, statusManual?: string | null) => {
@@ -553,7 +601,7 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
            funcionarios.length === 0 ? <div className="p-8 text-center text-slate-400 text-[10px] font-bold uppercase">Nenhum funcionário cadastrado</div> : (
             funcionarios.map(f => (
               <button key={f.id} onClick={() => setSelectedFuncId(f.id)} className={`w-full text-left p-4 rounded-2xl transition-all group flex items-center justify-between ${selectedFuncId === f.id ? 'bg-blue-50 text-[#0066CC]' : 'hover:bg-slate-50 text-slate-600'}`}>
-                <div><div className="text-[11px] font-black uppercase tracking-tight">{f.nome.split(' ').slice(0, 2).join(' ')}</div><div className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{f.funcao || 'Sem função'}</div></div>
+                <div><div className="text-[11px] font-black uppercase tracking-tight">{formatName(f.nome)}</div><div className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{f.funcao || 'Sem função'}</div></div>
                 <ChevronRight size={16} className={`transition-transform ${selectedFuncId === f.id ? 'translate-x-1' : 'opacity-0'}`} />
               </button>
             ))
@@ -563,29 +611,25 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
 
       {/* Main Area */}
       <div className="flex-1 bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm flex flex-col">
-        {/* Mobile Selector - Visível apenas no Mobile */}
+        {/* Mobile Selector - Custom Implementation */}
         <div className="md:hidden p-4 border-b border-slate-50 bg-white">
           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Selecionar Funcionário</label>
-          <div className="relative">
-            <select 
-              value={selectedFuncId || ''} 
-              onChange={(e) => setSelectedFuncId(e.target.value || null)}
-              className="w-full h-12 pl-4 pr-10 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-black uppercase appearance-none outline-none focus:border-blue-200 transition-colors"
-            >
-              <optgroup label="Visão Geral">
-                <option value="ALERTS">VISÃO DE ALERTAS</option>
-              </optgroup>
-              <optgroup label="Funcionários">
-                <option value="">Selecione na lista...</option>
-                {funcionarios.map(f => (
-                  <option key={f.id} value={f.id}>{f.nome.toUpperCase()}</option>
-                ))}
-              </optgroup>
-            </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+          <button 
+            onClick={() => setIsSelectModalOpen(true)}
+            className="w-full h-14 px-5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between group active:scale-[0.98] transition-all"
+          >
+            <div className="flex flex-col text-left">
+              <span className="text-[11px] font-black text-slate-900 uppercase">
+                {selectedFuncId === 'ALERTS' ? 'VISÃO DE ALERTAS' : (formatName(selectedFunc?.nome || '') || 'Selecionar na lista...')}
+              </span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+                {selectedFuncId === 'ALERTS' ? 'GERENCIAMENTO DE PRAZOS' : (selectedFunc?.funcao || 'Clique para escolher')}
+              </span>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-[#004a88] shadow-sm">
               <ListFilter size={16} />
             </div>
-          </div>
+          </button>
         </div>
         {selectedFuncId === 'ALERTS' ? (
           <>
@@ -652,7 +696,7 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                       return (
                         <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
                           <td className="p-6">
-                            <span className="text-[11px] font-black text-slate-900 uppercase">{(item as any).funcionario?.nome || '---'}</span>
+                            <span className="text-[11px] font-black text-slate-900 uppercase">{(item as any).funcionario?.nome ? formatName((item as any).funcionario.nome) : '---'}</span>
                           </td>
                           <td className="p-6">
                             <div className="flex items-center gap-2">
@@ -709,28 +753,48 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
 
               <div className="flex items-center gap-2 self-end md:self-center">
                 <button onClick={() => handleOpenEditModal(selectedFunc)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 rounded-xl transition-all"><Edit2 size={18} /></button>
-                <button onClick={() => { if(confirm('Excluir funcionário?')) supabase.from('funcionarios').delete().eq('id', selectedFuncId).then(() => fetchFuncionarios()) }} className="w-10 h-10 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
+                <button 
+                  onClick={() => { 
+                    setConfirmTitle('Excluir Funcionário?');
+                    setConfirmDesc(`Deseja remover permanentemente os dados de ${selectedFunc.nome}?`);
+                    setOnConfirmAction(() => async () => {
+                        try {
+                            const { error } = await supabase.from('funcionarios').delete().eq('id', selectedFuncId);
+                            if (error) throw error;
+                            await fetchFuncionarios();
+                            setSelectedFuncId(null);
+                            setShowConfirm(false);
+                        } catch (err: any) {
+                            alert(`Erro ao excluir: ${err.message}`);
+                        }
+                    });
+                    setShowConfirm(true);
+                  }} 
+                  className="w-10 h-10 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
             </div>
             <div className="flex-1 overflow-auto scrollbar-hide text-left">
               {activeTab === 'DOC' ? (
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0 bg-white z-10 shadow-sm text-left">
-                    <tr><th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Documento</th><th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 text-left">Vencimento</th><th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Status</th></tr>
+                    <tr><th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Documento</th><th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 text-left">Vencimento</th><th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Status</th></tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {[...documentos].sort((a,b) => a.tipo_documento.localeCompare(b.tipo_documento)).map(doc => {
                       const status = getStatusInfo(doc);
                       return (<tr key={doc.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="p-6">
+                        <td className="px-3 sm:px-6 py-4">
                           <span className="text-[11px] font-black text-slate-700 uppercase">{doc.tipo_documento}</span>
                         </td>
-                        <td className="p-6 text-left">
+                        <td className="px-3 sm:px-6 py-4 text-left">
                           <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500">
                             {doc.data_vencimento ? format(parseISO(doc.data_vencimento), 'dd/MM/yyyy') : (doc.status_permanente || '---')}
                           </div>
                         </td>
-                        <td className="p-6">
+                        <td className="px-3 sm:px-6 py-4">
                           <div className={`inline-flex items-center px-3 py-1.5 rounded-full ${status.bg} ${status.color} ring-1 ring-inset ring-current/10`}>
                             <span className="text-[9px] font-black tracking-widest uppercase">{status.label}</span>
                           </div>
@@ -743,9 +807,9 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0 bg-white z-10 shadow-sm text-left">
                     <tr>
-                      <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Empresa</th>
-                      <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 text-left">Vencimento</th>
-                      <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Status</th>
+                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Empresa</th>
+                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 text-left">Vencimento</th>
+                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
@@ -753,15 +817,15 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                       const status = getStatusInfo(integ.data_vencimento, integ.status);
                       return (
                         <tr key={integ.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="p-6">
+                          <td className="px-3 sm:px-6 py-4">
                             <span className="text-[11px] font-black text-slate-700 uppercase">{integ.empresa?.nome || 'EMPRESA NÃO ENCONTRADA'}</span>
                           </td>
-                          <td className="p-6 text-left">
+                          <td className="px-3 sm:px-6 py-4 text-left">
                             <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500">
                               {integ.data_vencimento ? format(parseISO(integ.data_vencimento), 'dd/MM/yyyy') : '---'}
                             </div>
                           </td>
-                          <td className="p-6">
+                          <td className="px-3 sm:px-6 py-4">
                             <div className={`inline-flex items-center px-3 py-1.5 rounded-full ${status.bg} ${status.color} ring-1 ring-inset ring-current/10`}>
                               <span className="text-[9px] font-black tracking-widest uppercase">{status.label}</span>
                             </div>
@@ -781,21 +845,39 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
 
       {/* Modal - Unificado */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300 flex flex-col max-h-[95vh]">
-            <div className="p-8 bg-white border-b border-slate-50 flex justify-between items-center"><div><h3 className="text-xl font-black uppercase tracking-tight text-slate-900">{modalMode === 'ADD' ? 'Novo Funcionário' : 'Dados do Funcionário'}</h3><p className="text-slate-400 text-[10px] font-bold uppercase mt-1">Configuração de documentos técnicos</p></div><button onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-xl transition-all"><X size={24}/></button></div>
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-hide">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left"><div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Completo</label><input autoFocus type="text" value={funcName} onChange={e => setFuncName(e.target.value)} className="w-full h-14 px-6 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase outline-none" /></div><div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Função</label><input type="text" value={funcRole} onChange={e => setFuncRole(e.target.value)} className="w-full h-14 px-6 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase outline-none" /></div></div>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[95vh]">
+            <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center">
+              <div className="w-8" />
+              <div className="text-center flex-1">
+                <h3 className="font-headline font-bold text-lg text-blue-950 uppercase tracking-widest">{modalMode === 'ADD' ? 'Novo Funcionário' : 'Dados do Funcionário'}</h3>
+                <p className="font-body text-[10px] font-bold text-[#004a88] uppercase tracking-widest mt-0.5">Configuração de documentos técnicos</p>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-blue-950 transition-colors">
+                <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '22px' }}>close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-[#004a88] uppercase tracking-widest">Nome Completo</label>
+                  <input autoFocus type="text" value={funcName} onChange={e => setFuncName(e.target.value)} className="w-full h-12 px-5 bg-[#eef2f7] border-none rounded-xl font-body text-sm text-blue-950 uppercase outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-[#004a88] uppercase tracking-widest">Função</label>
+                  <input type="text" value={funcRole} onChange={e => setFuncRole(e.target.value)} className="w-full h-12 px-5 bg-[#eef2f7] border-none rounded-xl font-body text-sm text-blue-950 uppercase outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+                </div>
+              </div>
               <div className="space-y-4 text-left">
                 <div className="flex items-center justify-between border-b border-slate-50 pb-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  <label className="text-[11px] font-bold text-[#004a88] uppercase tracking-widest">
                     {activeTab === 'DOC' ? 'Documentação Técnica' : 'Integrações com Empresas'}
                   </label>
                   <button 
                     onClick={activeTab === 'DOC' ? handleAddCustomDoc : handleAddMasterEmpresa} 
-                    className="w-8 h-8 bg-[#0066CC] text-white rounded-lg flex items-center justify-center active:scale-90 shadow-lg shadow-blue-100"
+                    className="w-10 h-10 text-[#004a88] hover:bg-slate-100 rounded-full flex items-center justify-center active:scale-90 transition-all"
                   >
-                    <Plus size={20}/>
+                    <span className="material-symbols-outlined font-bold select-none notranslate" style={{ fontSize: '24px' }}>add</span>
                   </button>
                 </div>
 
@@ -875,7 +957,7 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                                />
                                <button 
                                  onClick={handleConfirmAddMasterEmpresa}
-                                 className="h-10 px-4 bg-[#0066CC] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 active:scale-95"
+                                 className="h-10 px-4 text-[#004a88] hover:bg-slate-100 rounded-full text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
                                >
                                  Add
                                </button>
@@ -920,9 +1002,114 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                 </div>
               </div>
             </div>
-            <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4"><button onClick={() => setIsModalOpen(false)} className="flex-1 h-16 rounded-2xl text-slate-500 font-black text-[11px] uppercase tracking-widest hover:bg-slate-200">Cancelar</button><button onClick={handleSave} disabled={!funcName.trim() || isSaving} className="flex-1 h-16 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white bg-[#0066CC] shadow-xl shadow-blue-100 disabled:opacity-50 flex items-center justify-center gap-3">{isSaving ? <Loader2 className="animate-spin" size={20} /> : 'SALVAR'}</button></div>
+            <div className="px-6 pb-8 pt-4 border-t border-slate-100 flex items-center justify-between flex-shrink-0 bg-white">
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="font-headline font-bold text-sm text-[#004a88] uppercase tracking-widest px-4 py-3 rounded-full hover:bg-blue-50 active:scale-95 transition-all"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleSave} 
+                disabled={!funcName.trim() || isSaving} 
+                className="bg-[#004a88] text-white font-headline font-bold text-sm uppercase tracking-widest px-10 py-4 rounded-full shadow-lg shadow-blue-900/20 hover:bg-primary active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-60"
+              >
+                {isSaving ? <Loader2 className="animate-spin" size={20} /> : 'SALVAR'}
+              </button>
+            </div>
           </div>
         </div>
+      )}
+      <GenericModal 
+        isOpen={showPrompt}
+        onClose={() => setShowPrompt(false)}
+        title={promptTitle}
+        type="INPUT"
+        inputValue={promptValue}
+        onInputChange={setPromptValue}
+        onInputConfirm={onPromptConfirm}
+      />
+
+      <GenericModal 
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        title={confirmTitle}
+        description={confirmDesc}
+        type="DANGER"
+        onConfirm={onConfirmAction}
+      />
+
+      <GenericModal 
+        isOpen={showAlert}
+        onClose={() => setShowAlert(false)}
+        title={alertTitle}
+        description={alertDesc}
+        type="WARNING"
+      />
+
+      {/* Select Modal Mobile */}
+      {isSelectModalOpen && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-end md:hidden bg-black/20 backdrop-blur-sm animate-in fade-in duration-300">
+          <div 
+            className="bg-white w-full rounded-t-[2.5rem] shadow-2xl flex flex-col p-6 pt-2 animate-in slide-in-from-bottom duration-300 max-h-[85vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-12 h-1 bg-slate-200 rounded-full mx-auto mt-2 mb-6" />
+            
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Selecionar Funcionário</h3>
+              <button 
+                onClick={() => setIsSelectModalOpen(false)}
+                className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-2 pb-10 scrollbar-hide">
+              <button
+                onClick={() => { setSelectedFuncId('ALERTS'); setIsSelectModalOpen(false); }}
+                className={`w-full text-left p-5 rounded-3xl transition-all flex items-center gap-4 ${selectedFuncId === 'ALERTS' ? 'bg-red-50 text-red-600 ring-2 ring-red-100' : 'bg-slate-50 text-slate-600'}`}
+              >
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${selectedFuncId === 'ALERTS' ? 'bg-red-100' : 'bg-white shadow-sm'}`}>
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <div className="text-[11px] font-black uppercase tracking-tight">Visão de Alertas</div>
+                  <div className="text-[9px] font-bold opacity-60 uppercase mt-0.5">Gerenciamento de Prazos</div>
+                </div>
+              </button>
+
+              <div className="pt-4 pb-2">
+                <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Lista de Funcionários</h4>
+              </div>
+
+              {funcionarios.length === 0 ? (
+                <div className="p-10 text-center text-slate-400 text-[10px] font-bold uppercase ring-1 ring-slate-100 rounded-3xl">Nenhum funcionário encontrado</div>
+              ) : (
+                funcionarios.map(f => (
+                  <button
+                    key={f.id}
+                    onClick={() => { setSelectedFuncId(f.id); setIsSelectModalOpen(false); }}
+                    className={`w-full text-left p-5 rounded-3xl transition-all flex items-center justify-between ${selectedFuncId === f.id ? 'bg-blue-50 text-[#0066CC] ring-2 ring-blue-100' : 'bg-slate-50 text-slate-500 hover:bg-white'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${selectedFuncId === f.id ? 'bg-blue-100' : 'bg-white shadow-sm'}`}>
+                        <User size={20} />
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-black uppercase tracking-tight">{formatName(f.nome)}</div>
+                        <div className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{f.funcao || 'Sem função'}</div>
+                      </div>
+                    </div>
+                    {selectedFuncId === f.id && <div className="w-2 h-2 rounded-full bg-[#0066CC]" />}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -12,6 +12,7 @@ import SyncPendencyScreen from './components/SyncPendencyScreen';
 import RdoForm from './components/RdoForm';
 import RdoHistory from './components/RdoHistory';
 import DocumentManagement from './components/DocumentManagement';
+import GenericModal from './components/GenericModal';
 import { MaintenanceRecord, UserProfile, CraneAsset, RdoRecord } from './types';
 import { supabase } from './supabaseClient';
 import { Loader2 } from 'lucide-react';
@@ -42,6 +43,23 @@ const App: React.FC = () => {
 
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [selectedAssetIdForAction, setSelectedAssetIdForAction] = useState<string | null>(null);
+
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    type: 'INFO' | 'WARNING' | 'DANGER' | 'INPUT';
+    onConfirm?: (val?: string) => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    type: 'INFO'
+  });
+
+  const showModal = (title: string, description: string, type: 'INFO' | 'WARNING' | 'DANGER' | 'INPUT' = 'INFO', onConfirm?: (val?: string) => void) => {
+    setModalState({ isOpen: true, title, description, type, onConfirm });
+  };
 
   const loadLocalData = async () => {
     const localAssets = await db.ativos.toArray();
@@ -344,7 +362,7 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error("Erro ao salvar inspeção localmente:", error);
-      alert("Erro ao salvar localmente. Seus dados estão protegidos.");
+      showModal("Ops!", "Erro ao salvar localmente. Seus dados estão protegidos.", "WARNING");
     }
 
     setEditingRecord(null);
@@ -384,7 +402,7 @@ const App: React.FC = () => {
       syncEngine.triggerSync();
     } catch (error) {
       console.error("Erro ao excluir OS:", error);
-      alert("Erro ao excluir. O registro será removido da nuvem na próxima sincronização.");
+      showModal("Atenção", "Erro ao excluir. O registro será removido da nuvem na próxima sincronização.", "WARNING");
     }
   };
 
@@ -412,22 +430,29 @@ const App: React.FC = () => {
   };
 
   const handleDeleteRdo = async (recordId: string) => {
-    if (!confirm("Tem certeza que deseja excluir este RDO?")) return;
-    try {
-      const record = await db.rdo.get(recordId);
-      if (record?.server_id) {
-         await db.exclusoes_pendentes.add({
-           server_id: record.server_id,
-           table_name: 'rdo',
-           timestamp: new Date().toISOString()
-         });
-      }
-      await db.rdo.delete(recordId);
-      await loadLocalData();
-      syncEngine.triggerSync();
-    } catch (error) {
-      console.error("Erro ao excluir RDO:", error);
-    }
+    showModal(
+        "Excluir RD?",
+        "Tem certeza que deseja excluir este RD permanentemente?",
+        "DANGER",
+        async () => {
+            try {
+                const record = await db.rdo.get(recordId);
+                if (record?.server_id) {
+                    await db.exclusoes_pendentes.add({
+                        server_id: record.server_id,
+                        table_name: 'rdo',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+                await db.rdo.delete(recordId);
+                await loadLocalData();
+                syncEngine.triggerSync();
+                setModalState(prev => ({ ...prev, isOpen: false }));
+            } catch (error) {
+                console.error("Erro ao excluir RDO:", error);
+            }
+        }
+    );
   };
 
   /**
@@ -436,18 +461,21 @@ const App: React.FC = () => {
    * Esta função reinicia a contagem das OS a partir de 0001.
    */
   const handleResetOsSequence = async () => {
-    if (!confirm("Deseja REINICIAR a contagem de OS a partir de 0001? Isso requer limpar o histórico atual.")) return;
-
-    try {
-      // 1. Opcional: Limpar tudo (se o usuário quiser começar do zero absoluto)
-      // Se apenas resetar o contador, o maxOs + 1 no loadLocalData vai puxar o antigo.
-      // Então precisamos limpar ou o app ou as tabelas.
-      await db.ordens_servico.clear();
-      setNextOsNumber(1);
-      alert("Sequência resetada! Próxima OS será 0001.");
-    } catch (e) {
-      console.error(e);
-    }
+    showModal(
+        "Resetar Sequência?",
+        "Deseja REINICIAR a contagem de OS a partir de 0001? Isso requer limpar o histórico atual.",
+        "DANGER",
+        async () => {
+            try {
+                await db.ordens_servico.clear();
+                setNextOsNumber(1);
+                setModalState(prev => ({ ...prev, isOpen: false }));
+                showModal("Sucesso", "Sequência resetada! Próxima OS será 0001.", "INFO");
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    );
   };
 
   const handleSaveAsset = async (asset: CraneAsset) => {
@@ -714,6 +742,7 @@ const App: React.FC = () => {
             editingRdo={editingRdo}
             nextRdoNumber={nextRdoNumber}
             allowFinalize={true}
+            rdos={rdos}
             onSave={handleSaveRdo}
             onCancel={() => { 
               setEditingRdo(null); 
@@ -783,6 +812,15 @@ const App: React.FC = () => {
       headerAction={headerAction}
     >
       {renderContentWithGuard()}
+
+      <GenericModal 
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+        title={modalState.title}
+        description={modalState.description}
+        type={modalState.type}
+        onConfirm={modalState.onConfirm}
+      />
     </Layout>
   );
 };

@@ -1,15 +1,6 @@
 
 import React, { useState } from 'react';
-import {
-  FileDown,
-  FileText,
-  BarChart3,
-  CheckCircle,
-  Loader2,
-  Download,
-  Calendar,
-  AlertCircle
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const Reports: React.FC = () => {
   const [loadingMtbf, setLoadingMtbf] = useState(false);
@@ -36,30 +27,21 @@ const Reports: React.FC = () => {
 
   const handleDownloadFile = async () => {
     if (!lastExport) return;
-
-    const content = "Relatório Gerado por Forte Engenharia Pro\nData: " + new Date().toLocaleString() + "\nStatus: Concluído e Assinado.";
+    const content = 'Relatório Gerado por Forte Engenharia Pro\nData: ' + new Date().toLocaleString() + '\nStatus: Concluído e Assinado.';
     const mimeType = lastExport.endsWith('.pdf') ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     const blob = new Blob([content], { type: mimeType });
-
     if ('showSaveFilePicker' in window) {
       try {
         const handle = await (window as any).showSaveFilePicker({
           suggestedName: lastExport,
-          types: [{
-            description: lastExport.endsWith('.pdf') ? 'Arquivo PDF' : 'Planilha Excel',
-            accept: { [mimeType]: [lastExport.endsWith('.pdf') ? '.pdf' : '.xlsx'] },
-          }],
+          types: [{ description: lastExport.endsWith('.pdf') ? 'Arquivo PDF' : 'Planilha Excel', accept: { [mimeType]: [lastExport.endsWith('.pdf') ? '.pdf' : '.xlsx'] } }],
         });
-
         const writable = await handle.createWritable();
         await writable.write(blob);
         await writable.close();
         setLastExport(null);
       } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          console.error("Erro ao salvar:", err);
-          fallbackDownload(blob, lastExport);
-        }
+        if ((err as Error).name !== 'AbortError') fallbackDownload(blob, lastExport);
       }
     } else {
       fallbackDownload(blob, lastExport);
@@ -67,7 +49,6 @@ const Reports: React.FC = () => {
   };
 
   const fallbackDownload = (blob: Blob, filename: string) => {
-    const url = URL.revokeObjectURL(URL.createObjectURL(blob));
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = filename;
@@ -78,73 +59,98 @@ const Reports: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold text-slate-800">Relatórios Estratégicos</h2>
-        <p className="text-slate-500">Gere documentos técnicos e indicadores de performance para auditorias e controle operacional.</p>
+    <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-500">
+
+      {/* Cabeçalho */}
+      <div>
+        <h2 className="font-headline font-bold text-xl text-blue-950 uppercase tracking-widest">Relatórios Estratégicos</h2>
+        <p className="font-body text-sm text-slate-400 mt-1">Gere documentos técnicos e indicadores de performance para auditorias e controle operacional.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-6">
-          <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-            <BarChart3 size={28} />
+      {/* Cards de ação */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* MTBF/MTTR */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 space-y-5 hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center">
+            <span className="material-symbols-outlined text-[#004a88] select-none notranslate" style={{ fontSize: '24px', fontVariationSettings: "'FILL' 1" }}>bar_chart_4_bars</span>
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-800">Indicadores de Manutenção</h3>
-            <p className="text-slate-500 text-sm mt-1">Exportação completa de MTBF, MTTR e Disponibilidade por ativo em formato Excel.</p>
+            <h3 className="font-headline font-bold text-base text-blue-950 uppercase">Indicadores de Manutenção</h3>
+            <p className="font-body text-sm text-slate-400 mt-1 leading-relaxed">
+              Exportação completa de MTBF, MTTR e Disponibilidade por ativo em formato Excel.
+            </p>
           </div>
           <button
             onClick={handleExportMtbf}
             disabled={loadingMtbf || loadingChecklist}
-            className="w-full h-14 bg-[#0066CC] text-white px-6 rounded-[20px] font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3 shadow-lg shadow-slate-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+            className="w-full h-12 bg-[#004a88] text-white rounded-full font-headline font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-md shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
           >
-            {loadingMtbf ? <><Loader2 size={18} className="animate-spin" /> PROCESSANDO...</> : <><FileDown size={20} /> EXPORTAR MTBF/MTTR</>}
+            {loadingMtbf ? (
+              <><Loader2 size={16} className="animate-spin" /> PROCESSANDO...</>
+            ) : (
+              <><span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>download</span> EXPORTAR MTBF/MTTR</>
+            )}
           </button>
         </div>
 
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-6">
-          <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center">
-            <Calendar size={28} />
+        {/* Checklist */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 space-y-5 hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center">
+            <span className="material-symbols-outlined text-amber-500 select-none notranslate" style={{ fontSize: '24px', fontVariationSettings: "'FILL' 1" }}>calendar_month</span>
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-800">Checklist Consolidado</h3>
-            <p className="text-slate-500 text-sm mt-1">Compilado de todas as inspeções preventivas mensais assinadas digitalmente em PDF.</p>
+            <h3 className="font-headline font-bold text-base text-blue-950 uppercase">Checklist Consolidado</h3>
+            <p className="font-body text-sm text-slate-400 mt-1 leading-relaxed">
+              Compilado de todas as inspeções preventivas mensais assinadas digitalmente em PDF.
+            </p>
           </div>
           <button
             onClick={handleExportChecklist}
             disabled={loadingMtbf || loadingChecklist}
-            className="w-full h-14 bg-white border-2 border-slate-200 text-slate-700 px-6 rounded-[20px] font-black uppercase text-xs tracking-widest hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98]"
+            className="w-full h-12 bg-white border-2 border-[#004a88] text-[#004a88] rounded-full font-headline font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all hover:bg-blue-50"
           >
-            {loadingChecklist ? <><Loader2 size={18} className="animate-spin text-slate-400" /> GERANDO PDF...</> : <><FileText size={20} /> CHECKLIST MENSAL</>}
+            {loadingChecklist ? (
+              <><Loader2 size={16} className="animate-spin text-slate-400" /> GERANDO PDF...</>
+            ) : (
+              <><span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>description</span> CHECKLIST MENSAL</>
+            )}
           </button>
         </div>
       </div>
 
+      {/* Banner de sucesso */}
       {lastExport && (
-        <div className="bg-green-600 text-white p-4 rounded-xl shadow-lg flex items-center justify-between animate-in slide-in-from-bottom-4 duration-300">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <CheckCircle size={20} />
+        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 flex items-center justify-between animate-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <span className="material-symbols-outlined text-emerald-600 select-none notranslate" style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>task_alt</span>
             </div>
             <div>
-              <p className="font-bold">Relatório Pronto!</p>
-              <p className="text-xs text-green-100 opacity-90">{lastExport}</p>
+              <p className="font-headline font-bold text-sm text-emerald-900 uppercase">Relatório Pronto!</p>
+              <p className="font-body text-[11px] text-emerald-700 mt-0.5">{lastExport}</p>
             </div>
           </div>
           <button
             onClick={handleDownloadFile}
-            className="px-4 py-2 bg-white text-green-700 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-green-50 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-700 rounded-full font-headline font-bold text-[11px] uppercase tracking-widest hover:bg-emerald-50 transition-all shadow-sm border border-emerald-100 active:scale-95"
           >
-            <Download size={16} /> Baixar Arquivo
+            <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '16px' }}>download</span>
+            Baixar
           </button>
         </div>
       )}
 
-      <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl flex items-start gap-4">
-        <AlertCircle className="text-slate-400 flex-shrink-0" size={24} />
-        <div className="text-sm text-slate-600 space-y-1">
-          <p className="font-bold text-slate-700">Nota sobre rastreabilidade:</p>
-          <p>Todos os relatórios gerados contêm carimbo de tempo (Timestamp) e são vinculados à assinatura digital do engenheiro responsável, em conformidade com a NR-12.</p>
+      {/* Nota de rastreabilidade */}
+      <div className="bg-white border border-slate-100 rounded-2xl p-5 flex items-start gap-4 shadow-[0_4px_16px_rgb(0,0,0,0.04)]">
+        <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0">
+          <span className="material-symbols-outlined text-slate-400 select-none notranslate" style={{ fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>info</span>
+        </div>
+        <div>
+          <p className="font-headline font-bold text-sm text-blue-950 uppercase">Nota sobre rastreabilidade</p>
+          <p className="font-body text-sm text-slate-400 mt-1 leading-relaxed">
+            Todos os relatórios contêm carimbo de tempo (Timestamp) e são vinculados à assinatura digital do engenheiro responsável, em conformidade com a NR-12.
+          </p>
         </div>
       </div>
     </div>

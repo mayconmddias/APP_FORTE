@@ -1,5 +1,4 @@
 import React from 'react';
-import { CheckCircle, Pencil, Trash2, Settings, Wrench } from 'lucide-react';
 import { CraneAsset } from '../types';
 
 interface AssetListProps {
@@ -26,58 +25,94 @@ const AssetList: React.FC<AssetListProps> = ({
     onCorrective
 }) => {
     return (
-        <div className="animate-in slide-in-from-right-4 duration-300 space-y-3 pb-24">
-            {assets.map((asset) => (
-                <div
-                    key={asset.id}
-                    onClick={() => onSelect(asset.id === selectedId ? null : asset.id)}
-                    className={`cursor-pointer transition-all p-5 rounded-[24px] border flex items-center justify-between gap-4 group ${selectedId === asset.id ? 'bg-blue-50/50 border-[#0066CC] shadow-md ring-1 ring-[#0066CC]/20' : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'}`}
-                >
-                    <div className="flex items-center gap-4 min-w-0">
-                        <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${selectedId === asset.id ? 'bg-[#0066CC] border-[#0066CC] text-white' : 'border-slate-200 group-hover:border-slate-300'}`}>
-                            {selectedId === asset.id && <CheckCircle size={16} strokeWidth={4} />}
-                        </div>
-                        <div className="min-w-0">
-                            <div className="flex items-center gap-3">
-                                <h3 className="font-black text-slate-900 text-sm uppercase truncate leading-none">{asset.name}</h3>
-                                {recentOsAssetIds?.has(asset.id) && (
-                                    <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" title="OS Recente" />
+        <div className="animate-in slide-in-from-right-4 duration-300 space-y-3 pb-48">
+            {assets.map((asset) => {
+                const isSelected = selectedId === asset.id;
+                return (
+                    <div
+                        key={asset.id}
+                        onClick={() => onSelect(asset.id === selectedId ? null : asset.id)}
+                        className={`cursor-pointer transition-all rounded-2xl p-5 flex items-center justify-between gap-4 group bg-white border ${
+                            isSelected
+                                ? 'border-[#004a88] shadow-[0_8px_30px_rgba(0,74,136,0.15)] ring-1 ring-[#004a88]/20'
+                                : 'border-slate-100 shadow-[0_4px_16px_rgb(0,0,0,0.04)] hover:shadow-md hover:border-slate-200'
+                        }`}
+                    >
+                        {/* Checkbox / Seleção */}
+                        <div className="flex items-center gap-4 min-w-0">
+                            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                                isSelected ? 'bg-[#004a88] border-[#004a88]' : 'border-slate-200'
+                            }`}>
+                                {isSelected && (
+                                    <span className="material-symbols-outlined text-white select-none notranslate" style={{ fontSize: '14px', fontVariationSettings: "'FILL' 1, 'wght' 700" }}>check</span>
                                 )}
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 mt-2">
-                                <span className="font-black text-slate-400 text-[8px] uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded border border-slate-100">SN: {asset.serialNumber || 'N/A'}</span>
-                                <span className="font-black text-blue-600 text-[8px] uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
-                                    {asset.location || 'SEM LOCAL'}
-                                </span>
+
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-headline font-bold text-sm text-blue-950 uppercase truncate">{asset.name}</h3>
+                                    {recentOsAssetIds?.has(asset.id) && (
+                                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse flex-shrink-0" title="OS Recente" />
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                                    <span className="font-body text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
+                                        SN: {asset.serialNumber || 'N/A'}
+                                    </span>
+                                    <span className="font-body text-[9px] font-bold text-[#004a88] uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                                        {asset.location || 'SEM LOCAL'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+
+                        {/* Ações (admin) */}
                         {isAdmin && (
-                            <>
-                                <button onClick={() => onEdit(asset)} className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><Pencil size={18} /></button>
-                                <button onClick={() => onDelete(asset)} className="p-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
-                            </>
+                            <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                                <button
+                                    onClick={() => onEdit(asset)}
+                                    className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all"
+                                >
+                                    <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>edit</span>
+                                </button>
+                                <button
+                                    onClick={() => onDelete(asset)}
+                                    className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                                >
+                                    <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>delete</span>
+                                </button>
+                            </div>
                         )}
                     </div>
-                </div>
-            ))}
+                );
+            })}
 
-            <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-xl border-t border-slate-200 z-[100] animate-in slide-in-from-bottom-5">
-                <div className="max-w-4xl mx-auto flex gap-4">
+            {/* Rodapé fixo com ações */}
+            <div className="fixed bottom-0 left-0 right-0 px-6 pb-8 pt-4 bg-background border-t border-slate-100 z-[100] animate-in slide-in-from-bottom-5">
+                <div className="max-w-4xl mx-auto flex gap-3">
                     <button
                         disabled={!selectedId}
                         onClick={() => selectedId && onCorrective(selectedId)}
-                        className={`flex-1 h-14 rounded-[20px] font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3 border ${selectedId ? 'bg-white border-slate-900 text-slate-900 shadow-lg' : 'bg-slate-100 text-slate-400 border-transparent opacity-60'}`}
+                        className={`flex-1 h-14 rounded-full font-headline font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                            selectedId
+                                ? 'bg-white text-[#004a88] border-2 border-[#004a88] shadow-md active:scale-95'
+                                : 'bg-slate-100 text-slate-300 border-2 border-transparent cursor-not-allowed'
+                        }`}
                     >
-                        <Wrench size={20} /> CORRETIVA
+                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>build</span>
+                        CORRETIVA
                     </button>
                     <button
                         disabled={!selectedId}
                         onClick={() => selectedId && onInspect(selectedId)}
-                        className={`flex-1 h-14 rounded-[20px] font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3 border ${selectedId ? 'bg-white border-slate-900 text-slate-900 shadow-lg' : 'bg-slate-100 text-slate-400 border-transparent opacity-60'}`}
+                        className={`flex-1 h-14 rounded-full font-headline font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                            selectedId
+                                ? 'bg-[#004a88] text-white shadow-lg shadow-blue-900/20 active:scale-95'
+                                : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                        }`}
                     >
-                        <Settings size={20} className={selectedId ? "text-slate-900" : "text-slate-400"} /> PREVENTIVA
+                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>handyman</span>
+                        PREVENTIVA
                     </button>
                 </div>
             </div>

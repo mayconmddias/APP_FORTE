@@ -18,24 +18,28 @@ const ClientList: React.FC<ClientListProps> = ({ clients, searchTerm, onSelectCl
     );
 
     return (
-        <div className="grid gap-3">
+        <div className="flex flex-col gap-4">
             {filteredClients.map((client) => (
-                <button
+                <div
                     key={client.name}
                     onClick={() => onSelectClient(client.name)}
-                    className="group flex items-center justify-between p-5 bg-white border border-slate-200 rounded-[24px] hover:border-[#0066CC] hover:shadow-xl hover:-translate-y-0.5 transition-all text-left"
+                    className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-xl transition-all cursor-pointer group flex items-center justify-between border border-slate-50"
                 >
                     <div className="flex items-center gap-5">
-                        <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center group-hover:bg-[#0066CC] group-hover:text-white transition-all shadow-inner border border-slate-100">
-                            <Factory size={22} />
+                        <div className="rounded-xl flex items-center justify-center bg-[#004a88] w-12 h-12 transition-all group-hover:bg-primary shadow-sm">
+                            <span className="material-symbols-outlined text-white text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>corporate_fare</span>
                         </div>
                         <div>
-                            <h3 className="text-base font-black text-slate-900 group-hover:text-[#0055AA] transition-colors tracking-tight uppercase">{client.name}</h3>
-                            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mt-1">{client.count} ATIVOS CADASTRADOS</p>
+                            <h3 className="font-headline font-bold text-lg tracking-tight text-blue-950 uppercase">{client.name}</h3>
+                            <p className="font-headline text-[10px] font-bold uppercase tracking-widest text-[#004a88] mt-1 inline-block">
+                                {client.count} {client.count === 1 ? 'ATIVO CADASTRADO' : 'ATIVOS CADASTRADOS'}
+                            </p>
                         </div>
                     </div>
-                    <ChevronRight size={22} className="text-slate-200 group-hover:text-[#0066CC] transition-all" />
-                </button>
+                    <div className="text-slate-300 group-hover:text-primary transition-colors">
+                        <span className="material-symbols-outlined text-xl">chevron_right</span>
+                    </div>
+                </div>
             ))}
         </div>
     );

@@ -11,14 +11,6 @@ import {
   LineChart,
   Line
 } from 'recharts';
-import {
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  TrendingUp,
-  Activity,
-  History
-} from 'lucide-react';
 import { MaintenanceRecord } from '../types';
 
 const mockChartData = [
@@ -34,96 +26,119 @@ interface DashboardProps {
   history: MaintenanceRecord[];
 }
 
+const StatCard: React.FC<{
+  icon: string;
+  iconBg: string;
+  iconColor: string;
+  label: string;
+  value: string;
+  badge?: string;
+  badgeColor?: string;
+}> = ({ icon, iconBg, iconColor, label, value, badge, badgeColor }) => (
+  <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5 flex flex-col gap-4">
+    <div className="flex items-start justify-between">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
+        <span className={`material-symbols-outlined select-none notranslate ${iconColor}`} style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+      </div>
+      {badge && (
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
+      )}
+    </div>
+    <div>
+      <p className="font-body text-[11px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+      <p className="font-headline font-bold text-2xl text-blue-950 mt-1">{value}</p>
+    </div>
+  </div>
+);
+
 const Dashboard: React.FC<DashboardProps> = ({ history }) => {
   const totalInspections = history.length;
   const totalDowntime = history.reduce((acc, curr) => acc + (curr.downtimeHours || 0), 0);
-  const avgMttr = totalInspections > 0 ? (totalDowntime / totalInspections).toFixed(1) : "0.0";
-  const availability = totalDowntime > 0 ? (100 - (totalDowntime / (720 * 2) * 100)).toFixed(1) : "99.2";
+  const avgMttr = totalInspections > 0 ? (totalDowntime / totalInspections).toFixed(1) : '0.0';
+  const availability = totalDowntime > 0 ? (100 - (totalDowntime / (720 * 2) * 100)).toFixed(1) : '99.2';
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-blue-50 text-[#0066CC] rounded-lg">
-              <Activity size={24} />
-            </div>
-            <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">+4%</span>
-          </div>
-          <p className="text-sm text-slate-500 font-medium">MTBF (Média Falhas)</p>
-          <p className="text-2xl font-bold text-slate-800">482 hrs</p>
-        </div>
+    <div className="space-y-6 animate-in fade-in duration-500">
 
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-orange-50 rounded-lg text-orange-600">
-              <Clock size={24} />
-            </div>
-            <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">-5%</span>
-          </div>
-          <p className="text-sm text-slate-500 font-medium">MTTR (Média Reparo)</p>
-          <p className="text-2xl font-bold text-slate-800">{avgMttr} hrs</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-green-50 rounded-lg text-green-600">
-              <CheckCircle2 size={24} />
-            </div>
-          </div>
-          <p className="text-sm text-slate-500 font-medium">Disponibilidade</p>
-          <p className="text-2xl font-bold text-slate-800">{availability}%</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-red-50 rounded-lg text-red-600">
-              <AlertCircle size={24} />
-            </div>
-          </div>
-          <p className="text-sm text-slate-500 font-medium">Total de Inspeções</p>
-          <p className="text-2xl font-bold text-slate-800">{totalInspections}</p>
-        </div>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard
+          icon="trending_up"
+          iconBg="bg-blue-50"
+          iconColor="text-[#004a88]"
+          label="MTBF (Média Falhas)"
+          value="482 hrs"
+          badge="+4%"
+          badgeColor="bg-emerald-50 text-emerald-600"
+        />
+        <StatCard
+          icon="schedule"
+          iconBg="bg-amber-50"
+          iconColor="text-amber-500"
+          label="MTTR (Média Reparo)"
+          value={`${avgMttr} hrs`}
+          badge="-5%"
+          badgeColor="bg-emerald-50 text-emerald-600"
+        />
+        <StatCard
+          icon="verified"
+          iconBg="bg-emerald-50"
+          iconColor="text-emerald-500"
+          label="Disponibilidade"
+          value={`${availability}%`}
+        />
+        <StatCard
+          icon="assignment"
+          iconBg="bg-purple-50"
+          iconColor="text-purple-500"
+          label="Total de Inspeções"
+          value={String(totalInspections)}
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <TrendingUp size={20} className="text-[#0066CC]" />
-            Tendência de Confiabilidade
-          </h3>
-          <div className="h-64 w-full">
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center">
+              <span className="material-symbols-outlined text-[#004a88] select-none notranslate" style={{ fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>show_chart</span>
+            </div>
+            <h3 className="font-headline font-bold text-sm text-blue-950 uppercase tracking-widest">Tendência de Confiabilidade</h3>
+          </div>
+          <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={mockChartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="month" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
+                <XAxis dataKey="month" stroke="#94a3b8" tick={{ fontSize: 10, fontWeight: 700 }} />
+                <YAxis stroke="#94a3b8" tick={{ fontSize: 10 }} />
                 <Tooltip
-                  labelFormatter={(value) => `Mês: ${value}`}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}
+                  labelFormatter={(v) => `Mês: ${v}`}
+                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', fontSize: 11 }}
                 />
-                <Line type="monotone" name="MTBF (hrs)" dataKey="mtbf" stroke="#0066CC" strokeWidth={4} dot={{ r: 6, fill: '#0066CC', strokeWidth: 2, stroke: '#fff' }} />
+                <Line type="monotone" name="MTBF (hrs)" dataKey="mtbf" stroke="#004a88" strokeWidth={3} dot={{ r: 4, fill: '#004a88', strokeWidth: 2, stroke: '#fff' }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <History size={20} className="text-orange-600" />
-            Performance de Reparo (MTTR)
-          </h3>
-          <div className="h-64 w-full">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center">
+              <span className="material-symbols-outlined text-amber-500 select-none notranslate" style={{ fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>bar_chart</span>
+            </div>
+            <h3 className="font-headline font-bold text-sm text-blue-950 uppercase tracking-widest">Performance de Reparo (MTTR)</h3>
+          </div>
+          <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={mockChartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="month" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
+                <XAxis dataKey="month" stroke="#94a3b8" tick={{ fontSize: 10, fontWeight: 700 }} />
+                <YAxis stroke="#94a3b8" tick={{ fontSize: 10 }} />
                 <Tooltip
-                  labelFormatter={(value) => `Mês: ${value}`}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}
+                  labelFormatter={(v) => `Mês: ${v}`}
+                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', fontSize: 11 }}
                 />
-                <Bar name="MTTR (hrs)" dataKey="mttr" fill="#f97316" radius={[6, 6, 0, 0]} />
+                <Bar name="MTTR (hrs)" dataKey="mttr" fill="#004a88" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
