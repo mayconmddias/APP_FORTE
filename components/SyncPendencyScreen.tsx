@@ -11,7 +11,7 @@ interface SyncPendencyScreenProps {
 
 const SyncPendencyScreen: React.FC<SyncPendencyScreenProps> = ({ onTitleChange, onForceSync }) => {
     React.useEffect(() => {
-        onTitleChange('PENDÊNCIAS DE SINCRONIZAÇÃO');
+        onTitleChange('SINCRONIZAÇÃO');
         return () => onTitleChange(null);
     }, [onTitleChange]);
 
@@ -49,19 +49,13 @@ const SyncPendencyScreen: React.FC<SyncPendencyScreenProps> = ({ onTitleChange, 
 
             {/* Card de Status da Fila */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
-                <div className="flex items-start justify-between mb-6">
-                    <div>
-                        <h3 className="font-headline font-bold text-base text-blue-950 uppercase tracking-widest">Status da Fila</h3>
-                        <p className="font-body text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                            {total === 0 ? 'Todos os dados estão seguros na nuvem' : `${total} registros aguardando conexão`}
-                        </p>
-                    </div>
+                <div className="flex justify-center mb-6">
                     <button
                         onClick={handleForceSync}
                         disabled={total === 0}
-                        className="flex items-center gap-2 px-5 py-3 bg-[#004a88] text-white rounded-full font-headline font-bold text-[11px] uppercase tracking-widest shadow-md shadow-blue-900/20 hover:bg-primary disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
+                        className="flex items-center gap-2 px-8 py-4 bg-[#004a88] text-white rounded-full font-headline font-bold text-[12px] uppercase tracking-widest shadow-md shadow-blue-900/20 hover:bg-primary disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
                     >
-                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '16px' }}>sync</span>
+                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>sync</span>
                         Forçar Sinc.
                     </button>
                 </div>

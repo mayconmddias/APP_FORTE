@@ -77,7 +77,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   };
 
   useEffect(() => {
-    let pageTitle = 'MANUTENÇÃO PREVENTIVA';
+    let pageTitle = 'INSPEÇÃO PREVENTIVA';
     if (editingRecord) {
       pageTitle = editingRecord.type === MaintenanceType.CORRETIVA ? 'EDIÇÃO DE CORRETIVA' : 'EDIÇÃO DE PREVENTIVA';
     }

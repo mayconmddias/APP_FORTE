@@ -80,7 +80,7 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
 
   useEffect(() => {
     if (selectedClient) {
-      onTitleChange?.(`GESTÃO DE ATIVOS | ${selectedClient}`);
+      onTitleChange?.(`ATIVOS | ${selectedClient}`);
     } else {
       onTitleChange?.('CLIENTES');
       setSelectedAssetIdForAction(null);

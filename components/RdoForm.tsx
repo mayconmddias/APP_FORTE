@@ -135,7 +135,7 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
         </button>
         <div className="text-center flex-1">
           <div className="flex items-center justify-center gap-2">
-            <h2 className="font-headline font-bold text-base text-blue-950 uppercase tracking-widest">NOVO RD</h2>
+            <h2 className="font-headline font-bold text-lg text-blue-950 uppercase tracking-widest">NOVO RD</h2>
             <span className="bg-blue-50 text-[#004a88] px-2 py-0.5 rounded-full font-headline font-bold text-[10px] tracking-widest">#{rdoNumber}</span>
           </div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Relatório Diário</p>

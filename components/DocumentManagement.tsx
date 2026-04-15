@@ -307,13 +307,6 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
     onHeaderActionChange?.(
       <div className="flex gap-1 items-center">
         <button
-          onClick={() => fetchFuncionarios()}
-          className="text-[#004a88] hover:bg-slate-100 p-2 rounded-full active:scale-95 transition-all"
-          title="Atualizar lista"
-        >
-          <span className="material-symbols-outlined font-bold" style={{ fontSize: '22px' }}>refresh</span>
-        </button>
-        <button
           onClick={() => setSelectedFuncId('ALERTS')}
           className={`md:hidden p-2 rounded-full active:scale-95 transition-all ${selectedFuncId === 'ALERTS' ? 'text-red-500 bg-red-50' : 'text-[#004a88] hover:bg-slate-100'}`}
         >
@@ -724,57 +717,59 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
           </>
         ) : selectedFuncId && selectedFunc ? (
           <>
-            <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between bg-white sticky top-0 z-10 gap-4">
-              <div className="flex items-center gap-3 text-left">
-                <div className="w-12 h-12 bg-blue-50 text-[#0066CC] rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <User size={24} />
+            <div className="p-6 border-b border-slate-50 flex flex-wrap items-center justify-between bg-white sticky top-0 z-10 gap-x-8 gap-y-4">
+              
+              <div className="flex items-center gap-4">
+                {/* TABS */}
+                <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
+                  <button 
+                    onClick={() => setActiveTab('DOC')}
+                    className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'DOC' ? 'bg-white text-[#0066CC] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    DOC
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('INTEGRACAO')}
+                    className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'INTEGRACAO' ? 'bg-white text-[#0066CC] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    INTEGRAÇÃO
+                  </button>
                 </div>
-                <div>
-                  <h2 className="text-sm font-black text-slate-900 uppercase tracking-tight">{selectedFunc.nome}</h2>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{selectedFunc.funcao || 'FUNÇÃO NÃO DEFINIDA'}</p>
+
+                {/* ACTIONS */}
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => handleOpenEditModal(selectedFunc)} 
+                    className="w-9 h-9 flex items-center justify-center text-[#004a88] hover:bg-blue-50 rounded-xl transition-all"
+                    title="Editar Funcionário"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                  <button 
+                    onClick={() => { 
+                      setConfirmTitle('Excluir Funcionário?');
+                      setConfirmDesc(`Deseja remover permanentemente os dados de ${selectedFunc.nome}?`);
+                      setOnConfirmAction(() => async () => {
+                          try {
+                              const { error } = await supabase.from('funcionarios').delete().eq('id', selectedFuncId);
+                              if (error) throw error;
+                              await fetchFuncionarios();
+                              setSelectedFuncId(null);
+                              setShowConfirm(false);
+                          } catch (err: any) {
+                              alert(`Erro ao excluir: ${err.message}`);
+                          }
+                      });
+                      setShowConfirm(true);
+                    }} 
+                    className="w-9 h-9 flex items-center justify-center text-[#004a88] hover:bg-blue-50 rounded-xl transition-all"
+                    title="Excluir Funcionário"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               </div>
 
-              {/* TABS */}
-              <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100 self-start md:self-center">
-                <button 
-                  onClick={() => setActiveTab('DOC')}
-                  className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'DOC' ? 'bg-white text-[#0066CC] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                  DOC
-                </button>
-                <button 
-                  onClick={() => setActiveTab('INTEGRACAO')}
-                  className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'INTEGRACAO' ? 'bg-white text-[#0066CC] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                  INTEGRAÇÃO
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2 self-end md:self-center">
-                <button onClick={() => handleOpenEditModal(selectedFunc)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 rounded-xl transition-all"><Edit2 size={18} /></button>
-                <button 
-                  onClick={() => { 
-                    setConfirmTitle('Excluir Funcionário?');
-                    setConfirmDesc(`Deseja remover permanentemente os dados de ${selectedFunc.nome}?`);
-                    setOnConfirmAction(() => async () => {
-                        try {
-                            const { error } = await supabase.from('funcionarios').delete().eq('id', selectedFuncId);
-                            if (error) throw error;
-                            await fetchFuncionarios();
-                            setSelectedFuncId(null);
-                            setShowConfirm(false);
-                        } catch (err: any) {
-                            alert(`Erro ao excluir: ${err.message}`);
-                        }
-                    });
-                    setShowConfirm(true);
-                  }} 
-                  className="w-10 h-10 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
             </div>
             <div className="flex-1 overflow-auto scrollbar-hide text-left">
               {activeTab === 'DOC' ? (

@@ -47,7 +47,7 @@ const ChecklistReview: React.FC<ChecklistReviewProps> = ({
                 <button onClick={onBack} className="p-2 text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
                     <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '24px' }}>arrow_back</span>
                 </button>
-                <h3 className="font-headline font-bold text-base text-blue-950 uppercase tracking-widest text-center flex-1">
+                <h3 className="font-headline font-bold text-lg text-blue-950 uppercase tracking-widest text-center flex-1">
                     REVISÃO FINAL
                 </h3>
                 <div className="w-10" />

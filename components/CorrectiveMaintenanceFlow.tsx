@@ -86,7 +86,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   }, [initialAssetId, assets, selectedAsset, editingRecord]);
 
   useEffect(() => {
-    if (step === FlowStep.SELECT_CLIENT || step === FlowStep.FILL_CHECKLIST) onTitleChange?.('MANUTENÇÃO CORRETIVA');
+    if (step === FlowStep.SELECT_CLIENT || step === FlowStep.FILL_CHECKLIST) onTitleChange?.('INSPEÇÃO CORRETIVA');
   }, [step, onTitleChange]);
 
   const clientGroups = useMemo(() => {
