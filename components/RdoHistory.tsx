@@ -55,76 +55,139 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
   }, [mode, selectedClient, onTitleChange]);
 
   const handleGeneratePdf = (record: RdoRecord) => {
-    let activitiesHtml = '';
-    record.activities.forEach((act, idx) => {
-      activitiesHtml += `<div style="margin-bottom: 5px; font-size: 11px;"><strong>${idx + 1}.</strong> ${act}</div>`;
-    });
-
     const [day, month, year] = (record.date || '').split('-').reverse();
-    const formattedDate = `${day}-${month}-${year?.slice(-2)}`;
-    const pdfTitle = `Relatorio Diario - RD ${record.rdoNumber} - ${formattedDate}`;
+    const formattedDate = `${day}/${month}/${year}`;
+    const pdfTitle = `Relatório Diário - RD #${record.rdoNumber} - ${formattedDate}`;
 
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${pdfTitle}</title><style>
-      body { font-family: 'Inter', sans-serif; padding: 30px; color: #1e293b; line-height: 1.4; text-transform: uppercase; }
-      .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #004a88; padding-bottom: 20px; }
-      .logo { height: 50px; }
-      .title-box { text-align: center; flex: 1; }
-      .title { font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0; color: #004a88; }
-      .doc-type { font-size: 10px; font-weight: 900; color: #64748b; letter-spacing: 2px; }
-      .info-grid { width: 100%; border-collapse: collapse; margin-bottom: 25px; background: #f8fafc; border-radius: 12px; }
-      .info-grid td { padding: 12px 15px; border: 1px solid #e2e8f0; }
-      .label { font-size: 8px; font-weight: 900; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px; }
-      .value { font-size: 11px; font-weight: 700; color: #0f172a; text-transform: uppercase; }
-      .section { margin-bottom: 25px; break-inside: avoid; }
-      .section-title { font-size: 11px; font-weight: 900; color: #004a88; text-transform: uppercase; border-left: 4px solid #004a88; padding-left: 10px; margin-bottom: 12px; }
-      .signature-box { margin-top: 50px; width: 100%; border-collapse: collapse; }
-      .signature-box td { width: 50%; text-align: center; padding: 20px; }
-      .sig-line { border-top: 1px solid #000; margin-bottom: 5px; }
-      .sig-label { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-      .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-      .photo-item { break-inside: avoid; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px; text-align: center; }
-      .photo-item img { width: 100%; height: auto; border-radius: 4px; }
-      @media print { body { padding: 0; } }
-    </style></head><body onload="window.print()">
-      <div class="header">
-        <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" class="logo" />
-        <div class="title-box">
-          <h1 class="title">Relatório Diário</h1>
-          <span class="doc-type">RD #${record.rdoNumber} - CONTROLE DE CAMPO</span>
+    let photosHtml = '';
+    if (record.photos && record.photos.length > 0) {
+      photosHtml = `
+        <section class="mt-8 page-break-inside-avoid">
+          <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-4 border-l-4 border-brandBlue pl-3">Registro Fotográfico</h4>
+          <div class="grid grid-cols-2 gap-4">
+            ${record.photos.map(photo => `
+              <div class="border border-gray-100 rounded-xl p-1 bg-white shadow-sm overflow-hidden">
+                <img src="${photo}" class="w-full h-auto rounded-lg object-contain" />
+              </div>
+            `).join('')}
+          </div>
+        </section>`;
+    }
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>${pdfTitle}</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandBlue: '#004a88',
+            brandLightGrey: '#f8fafc',
+            brandDarkGrey: '#334155',
+            brandLabel: '#64748b',
+          },
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif'],
+            heading: ['Space Grotesk', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    @page {
+      margin: 15mm;
+    }
+    @media print {
+      body { background-color: white !important; }
+      .no-print { display: none !important; }
+      .page-break { page-break-after: always; }
+      .content-container { 
+        width: 100% !important; 
+        max-width: 100% !important; 
+        margin: 0 !important; 
+        padding: 5mm !important; 
+        box-shadow: none !important; 
+      }
+      tr { page-break-inside: avoid; }
+    }
+    body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans text-brandDarkGrey antialiased" onload="window.print()">
+  <main class="content-container mx-auto max-w-[1000px] bg-white min-h-screen shadow-2xl my-8 p-10">
+    <header class="grid grid-cols-[1fr_auto_1fr] items-center border-b-2 border-brandBlue pb-4 mb-5">
+      <div class="flex justify-start">
+        <div class="w-[130px] h-[65px] flex items-center justify-center">
+          <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" class="w-full h-full object-contain" alt="Forte Logo" />
         </div>
-        <div style="text-align: right"><span class="label">DATA</span><span class="value">${formatDate(record.date)}</span></div>
       </div>
-      <table class="info-grid">
-        <tr>
-          <td colspan="2"><span class="label">CLIENTE</span><span class="value">${record.clientName}</span></td>
-          <td colspan="2"><span class="label">DESCRIÇÃO DO SERVIÇO</span><span class="value">${record.siteName}</span></td>
-        </tr>
-        <tr>
-          <td><span class="label">HORÁRIO DE FECHAMENTO</span><span class="value">${record.endTime || '--:--'}</span></td>
-          <td colspan="3"><span class="label">RESPONSÁVEL</span><span class="value">${record.technicianName}</span></td>
-        </tr>
-      </table>
-      <div class="section">
-        <div class="section-title">Atividades Realizadas</div>
-        <div style="padding: 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 11px;">${record.activities.join('<br>')}</div>
+      <div class="text-center flex flex-col items-center">
+        <span class="text-[19px] font-heading text-brandBlue tracking-tight uppercase">Forte <span class="font-normal opacity-70">Engenharia</span></span>
+        <h1 class="text-[16px] font-heading text-brandBlue uppercase tracking-wide mt-1">Relatório Diário</h1>
       </div>
-      ${record.photos.length > 0 ? `
-      <div class="section">
-        <div class="section-title">Registro Fotográfico</div>
-        <div class="photo-grid">
-          ${record.photos.map(photo => `<div class="photo-item"><img src="${photo}" /></div>`).join('')}
+      <div class="text-right flex flex-col items-end">
+        <p class="text-brandLabel text-[9px] font-semibold uppercase tracking-widest">RD Nº</p>
+        <p class="text-[22px] font-heading text-brandBlue">#${String(record.rdoNumber).padStart(4, '0')}</p>
+        <p class="text-[10px] font-bold text-brandLabel uppercase mt-1">${formattedDate}</p>
+      </div>
+    </header>
+
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-4 mb-10 border-b border-gray-100 pb-8">
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Cliente</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${record.clientName}</span>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Descrição do Serviço</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${record.siteName}</span>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Horário de Fechamento</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${record.endTime || '--:--'}</span>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Responsável</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${record.technicianName}</span>
+      </div>
+    </section>
+
+    <section class="mb-10 page-break-inside-avoid">
+      <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-4 border-l-4 border-brandBlue pl-3">Atividades Realizadas</h4>
+      <div class="p-5 bg-brandLightGrey rounded-2xl border border-gray-100 min-h-[100px]">
+        <div class="text-[11px] text-brandDarkGrey leading-relaxed uppercase whitespace-pre-wrap">${record.activities.join('\n')}</div>
+      </div>
+    </section>
+
+    ${photosHtml}
+
+    <section class="mt-16 pt-10 border-t border-gray-100">
+      <div class="flex justify-center">
+        <div class="flex flex-col items-center max-w-xs w-full">
+          <div class="h-12 flex items-end justify-center mb-2">
+            <span style="font-family: 'Manrope', sans-serif; font-size: 16px; color: #004a88; font-weight: 500; font-style: italic; letter-spacing: 1px;">${record.technicianName}</span>
+          </div>
+          <div class="w-full border-b border-brandDarkGrey"></div>
+          <p class="text-[10px] text-center text-brandLabel uppercase font-bold mt-2">Responsável Técnico / Finalização RD</p>
+          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1">${record.technicianName}</p>
         </div>
-      </div>` : ''}
-      <table class="signature-box">
-        <tr>
-          <td style="width: 100%;">
-            <div style="margin-bottom: 2px;">${record.technicianName}</div>
-            <div class="sig-line"></div>
-            <div class="sig-label">Responsável Técnico / Finalização RD</div>
-          </td>
-        </tr>
-      </table>
-    </body></html>`;
+      </div>
+    </section>
+
+    <footer class="mt-20 pt-8 border-t border-gray-100 text-center">
+      <p class="text-[9px] text-brandLabel uppercase tracking-widest font-bold">Forte Engenharia - Controle de Campo</p>
+    </footer>
+  </main>
+</body>
+</html>`;
 
     const blob = new Blob([html], { type: 'text/html' });
     window.open(URL.createObjectURL(blob), '_blank');

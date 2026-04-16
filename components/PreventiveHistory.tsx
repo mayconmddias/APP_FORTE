@@ -102,93 +102,226 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     let items = [...(record.checklists || [])];
     const type = String(record.type || '').toUpperCase();
     const freq = String(record.frequency || '').toUpperCase();
+    
     if (type === 'PREVENTIVA') {
       if (freq === 'MENSAL') items = items.slice(0, 69);
       else if (freq === 'SEMESTRAL') items = items.slice(0, 76);
     }
-    let rowsHtml = '';
+
+    let rowsTableHtml = '';
     items.forEach((i, index) => {
-      let photosHtml = '';
-      if (i.photos) i.photos.forEach(photo => { photosHtml += `<div style="margin-top:10px;"><img src="${photo}" style="width:120px;height:120px;object-fit:cover;border-radius:12px;border:2px solid #f1f5f9;display:block;"></div>`; });
-      rowsHtml += `<tr><td><div style="display:flex;align-items:flex-start;"><span style="color:#000;font-weight:900;margin-right:12px;">${String(index + 1).padStart(2, '0')}</span><div><strong style="font-size:11px;">${i.label}</strong><br/><small style="color:#475569;font-size:8px;font-weight:700;">${i.category}</small></div></div></td><td style="text-align:center;color:${i.isOk ? '#059669' : '#dc2626'};font-weight:900;">${i.isOk ? 'OK' : 'NOK'}</td><td>${i.observation || '-'}${photosHtml}</td></tr>`;
+      const isLast = index === items.length - 1;
+      const borderBottom = isLast ? 'border-bottom: 1px solid #e2e8f0;' : '';
+      
+      rowsTableHtml += `
+        <tr class="inspection-row">
+          <td class="col-item pl-4 pr-1 py-3 align-middle border-l border-gray-200" style="width: auto; ${borderBottom}">
+            <div class="flex items-center gap-2">
+              <span class="text-base font-heading text-brandBlue">${String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <p class="font-bold text-[11px] leading-tight uppercase">${i.label}</p>
+                <p class="text-[9px] text-brandLabel uppercase mt-1">${i.category}</p>
+              </div>
+            </div>
+          </td>
+          <td class="col-status text-center px-0 py-3 align-middle border-gray-200" style="width: 45px; ${borderBottom}">
+            <span class="${i.isOk ? 'text-successGreen' : 'text-red-600'} text-[10px] font-bold">${i.isOk ? 'OK' : 'NOK'}</span>
+          </td>
+          <td class="col-obs px-1 py-3 align-middle border-gray-200" style="width: 80px; ${borderBottom}">
+            <span class="text-[10px] font-mono text-gray-600 uppercase break-words">${i.observation || '-'}</span>
+          </td>
+          <td class="col-anexo pl-1 pr-4 py-3 align-middle border-r border-gray-200 text-center" style="width: 100px; ${borderBottom}">
+            <div class="flex justify-center">
+              ${(i.photos && i.photos[0]) 
+                ? `<img alt="Anexo" class="object-cover rounded shadow-sm border border-gray-200" src="${i.photos[0]}" style="width: 84px; height: 84px;" />` 
+                : '<span class="text-brandLabel text-[10px]">-</span>'}
+            </div>
+          </td>
+        </tr>`;
     });
 
-    const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-      body { font-family: sans-serif; padding: 20px; color: #1e293b; line-height: 1.5; }
-      .header-container { position: relative; margin-bottom: 40px; display: flex; align-items: center; justify-content: space-between; }
-      .logo-img { height: 60px; width: auto; }
-      .subtitle { font-size: 14px; font-weight: 700; color: #0f172a; text-transform: uppercase; text-align: center; flex: 1; margin: 0 20px; }
-      .os-box { text-align: right; min-width: 80px; }
-      .os-label { font-size: 10px; font-weight: 900; color: #475569; display: block; }
-      .os-value { font-size: 18px; font-weight: 900; color: #0f172a; }
-      .info-grid { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-      .info-grid td { width: 25%; padding: 10px 5px; vertical-align: top; border: none !important; }
-      .field-label { font-size: 9px; font-weight: 900; color: #475569; text-transform: uppercase; display: block; margin-bottom: 2px; }
-      .field-value { font-size: 13px; font-weight: 900; color: #0f172a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; min-height: 20px; display: block; }
-      table.results { width: 100%; border-collapse: collapse; margin-top: 20px; }
-      table.results th, table.results td { border: 1px solid #e2e8f0; padding: 6px 12px; text-align: left; }
-      table.results th { background: #f8fafc; font-size: 10px; text-transform: uppercase; color: #0f172a; border: 1px solid #e2e8f0; }
-      .signature-section { width: 100%; margin-top: 80px; border-collapse: collapse; }
-      .signature-section td { width: 50%; padding: 0 40px; text-align: center; border: none !important; }
-      .signature-name { font-weight: 700; font-size: 11px; text-transform: uppercase; margin-top: 5px; min-height: 15px; }
-      .signature-line { border-top: 1.5px solid #000; width: 100%; margin-top: 5px; }
-      .signature-label { font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
-      .client-signature-img { height: 60px; max-width: 200px; object-fit: contain; margin-bottom: -10px; }
-      .tech-signature-text { font-family: 'cursive', 'Brush Script MT', cursive; font-size: 22px; color: #0066CC; margin-bottom: -15px; }
-      @media print { @page { margin: 15mm; } thead { display: table-header-group; } tr { page-break-inside: avoid !important; } body { padding: 0; } }
-    </style></head><body onload="window.print()">
-      <div class="header-container">
-        <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" class="logo-img" alt="Logo" />
-        <div class="subtitle">RELATÓRIO TÉCNICO DE INSPEÇÃO ${record.type === MaintenanceType.CORRETIVA ? 'CORRETIVA' : 'PREVENTIVA'}</div>
-        <div class="os-box"><span class="os-label">OS Nº</span><span class="os-value">#${formattedOs}</span></div>
+    const reportHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Relatório Técnico de Inspeção ${type === MaintenanceType.CORRETIVA ? 'Corretiva' : 'Preventiva'} - Forte Engenharia</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandBlue: '#004a88',
+            brandLightGrey: '#f8fafc',
+            brandDarkGrey: '#334155',
+            brandLabel: '#64748b',
+            successGreen: '#16a34a',
+          },
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif'],
+            heading: ['Space Grotesk', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    @page {
+      margin: 15mm;
+    }
+    @media print {
+      body { background-color: white !important; }
+      .no-print { display: none !important; }
+      .page-break { page-break-after: always; }
+      .content-container { 
+        width: 100% !important; 
+        max-width: 100% !important; 
+        margin: 0 !important; 
+        padding: 5mm !important; 
+        box-shadow: none !important; 
+      }
+      thead { display: table-header-group; }
+      tfoot { display: table-footer-group; }
+      tr { page-break-inside: avoid; }
+      .metadata-grid { grid-template-columns: repeat(4, 1fr) !important; }
+    }
+    
+    .inspection-row:nth-child(even) { background-color: #f8fafc; }
+    .col-item { width: 78%; }
+    .col-status { width: 4%; }
+    .col-obs { width: 8%; }
+    .col-anexo { width: 10%; }
+    
+    .inspection-row:last-child { border-bottom: 1px solid #e2e8f0; }
+    
+    @media print {
+      .avoid-break { break-inside: avoid !important; }
+      .footer-item { margin-top: 2rem; }
+    }
+    
+    body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    table { width: 100%; border-spacing: 0; }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans text-brandDarkGrey antialiased" onload="window.print()">
+  <main class="content-container mx-auto max-w-[1000px] bg-white min-h-screen shadow-2xl my-8 p-10">
+    <header class="grid grid-cols-[1fr_auto_1fr] items-center border-b-2 border-brandBlue pb-4 mb-5">
+      <div class="flex justify-start">
+        <div class="w-[130px] h-[65px] flex items-center justify-center">
+          <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" class="w-full h-full object-contain" alt="Forte Logo" />
+        </div>
       </div>
-      <table class="info-grid">
-        <tr>
-          <td><span class="field-label">CLIENTE</span><span class="field-value">${selectedAsset.client}</span></td>
-          <td><span class="field-label">EQUIPAMENTO</span><span class="field-value">${selectedAsset.name}</span></td>
-          <td><span class="field-label">Nº SÉRIE</span><span class="field-value">${selectedAsset.serialNumber}</span></td>
-          <td><span class="field-label">CAPACIDADE</span><span class="field-value">${selectedAsset.capacity}</span></td>
-        </tr>
-        <tr>
-          <td><span class="field-label">VÃO (M)</span><span class="field-value">${selectedAsset.span}</span></td>
-          <td><span class="field-label">LOCALIZAÇÃO</span><span class="field-value">${selectedAsset.location}</span></td>
-          <td><span class="field-label">FABRICANTE</span><span class="field-value">${selectedAsset.manufacturer}</span></td>
-          <td><span class="field-label">DATA</span><span class="field-value">${formatDate(record.date)}</span></td>
-        </tr>
-      </table>
-      <table class="results">
-        <thead><tr><th style="width:65%;">Item</th><th style="width:80px;text-align:center;">Status</th><th style="width:25%;">Observações</th></tr></thead>
-        <tbody>${rowsHtml}</tbody>
-      </table>
-      <table class="signature-section">
-        <tr>
-          <td>
-            <div style="height: 60px; display: flex; align-items: flex-end; justify-content: center;">
-              <span class="tech-signature-text">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</span>
-            </div>
-            <div class="signature-line"></div>
-            <div class="signature-name">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</div>
-            <div class="signature-label">RESPONSÁVEL TÉCNICO</div>
-          </td>
-          <td>
-            <div style="height: 60px; display: flex; align-items: flex-end; justify-content: center;">
-              ${record.clientSignature ? `<img src="${record.clientSignature}" class="client-signature-img" />` : ''}
-            </div>
-            <div class="signature-line"></div>
-            <div class="signature-name">${record.clientRepresentative || '---'}</div>
-            <div class="signature-label">RESPONSÁVEL CLIENTE</div>
-          </td>
-        </tr>
-      </table>
-      <div style="page-break-inside: avoid; margin-top: 40px; padding: 20px; border-top: 2px solid #f1f5f9;">
-        <div style="font-size: 11px; font-weight: 900; color: #475569; margin-bottom: 12px; text-transform: uppercase; text-align: center;">Normas e Regulamentações</div>
-        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.5;">${(REPORT_NORMS || '').trim()}</div>
+      <div class="text-center flex flex-col items-center">
+        <span class="text-[19px] font-heading text-brandBlue tracking-tight uppercase">Forte <span class="font-normal opacity-70">Engenharia</span></span>
+        <h1 class="text-[16px] font-heading text-brandBlue uppercase tracking-wide mt-1">Relatório Técnico de Inspeção ${type === MaintenanceType.CORRETIVA ? 'Corretiva' : 'Preventiva'}</h1>
       </div>
-      <div style="page-break-inside: avoid; margin-top: 10px; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-        <div style="font-size: 11px; font-weight: 900; color: #475569; margin-bottom: 12px; text-transform: uppercase; text-align: center;">Atestado de Responsabilidade</div>
-        <div style="font-size: 9px; color: #1e293b; white-space: pre-wrap; line-height: 1.5;">${(REPORT_ATTESTATION || '').trim()}</div>
+      <div class="text-right flex flex-col items-end">
+        <p class="text-brandLabel text-[9px] font-semibold uppercase tracking-widest">OS Nº</p>
+        <p class="text-[22px] font-heading text-brandBlue">#${formattedOs}</p>
       </div>
-    </body></html>`;
+    </header>
+
+    <section class="metadata-grid grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-4 mb-10 border-b border-gray-100 pb-8">
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Cliente</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.client}</span>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Equipamento</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.name}</span>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Nº Série</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.serialNumber}</span>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Capacidade</label>
+        <span class="font-bold text-sm text-brandBlue uppercase">${selectedAsset.capacity}</span>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Vão (M)</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.span}</span>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Localização</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.location}</span>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Fabricante</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.manufacturer}</span>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Data</label>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase">${formatDate(record.date)}</span>
+      </div>
+    </section>
+
+    <section class="overflow-x-auto lg:overflow-x-visible">
+      <table class="w-full border-collapse border-x border-gray-200" style="table-layout: fixed; min-width: 600px;">
+        <thead>
+          <!-- Espaçador para margem superior em páginas repetidas -->
+          <tr class="header-spacer h-4 no-print-border">
+            <th colspan="4" class="p-0 border-none"></th>
+          </tr>
+          <tr class="bg-brandBlue text-white text-[10px] font-bold uppercase tracking-widest">
+            <th class="col-item pl-4 pr-1 py-3 text-left" style="width: auto;">Item / Descrição</th>
+            <th class="col-status px-0 py-3 text-center" style="width: 45px;">Status</th>
+            <th class="col-obs px-1 py-3 text-left" style="width: 80px;">Observações</th>
+            <th class="col-anexo pl-1 pr-4 py-3 text-center" style="width: 100px;">Anexo</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          ${rowsTableHtml}
+        </tbody>
+        <tfoot>
+          <!-- Espaçador para margem inferior em páginas repetidas -->
+          <tr class="footer-spacer h-6 no-print-border">
+            <td colspan="4" class="p-0 border-none"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+    
+    <div class="avoid-break mt-12">
+      <section class="grid grid-cols-2 gap-20">
+        <div class="flex flex-col items-center">
+          <div class="h-16 flex items-end justify-center mb-2">
+             <span style="font-family: 'Manrope', sans-serif; font-size: 16px; color: #004a88; font-weight: 500; font-style: italic; letter-spacing: 1px;">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</span>
+          </div>
+          <div class="w-full border-b border-brandDarkGrey"></div>
+          <p class="text-[10px] text-center text-brandLabel uppercase font-bold mt-2">Responsável Técnico</p>
+          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</p>
+        </div>
+        <div class="flex flex-col items-center">
+          <div class="h-16 flex items-end justify-center mb-2">
+            ${record.clientSignature ? `<img src="${record.clientSignature}" class="h-full object-contain" />` : ''}
+          </div>
+          <div class="w-full border-b border-brandDarkGrey"></div>
+          <p class="text-[10px] text-center text-brandLabel uppercase font-bold mt-2">Responsável Cliente</p>
+          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1">${record.clientRepresentative || '---'}</p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="mt-12 pt-8 border-t border-gray-100">
+      <div class="space-y-6">
+        <div class="avoid-break">
+          <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-2 text-center border-b border-gray-100 pb-2">Normas e Regulamentações</h4>
+          <p class="text-[9px] text-brandDarkGrey leading-relaxed whitespace-pre-wrap">${(REPORT_NORMS || '').trim()}</p>
+        </div>
+        <div class="avoid-break p-4 bg-brandLightGrey rounded-xl border border-gray-100">
+          <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-2 text-center border-b border-gray-100 pb-2">Atestado de Responsabilidade</h4>
+          <p class="text-[9px] text-brandDarkGrey leading-relaxed whitespace-pre-wrap">${(REPORT_ATTESTATION || '').trim()}</p>
+        </div>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>`;
 
     const blob = new Blob([reportHtml], { type: 'text/html' });
     window.open(URL.createObjectURL(blob), '_blank');

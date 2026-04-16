@@ -434,17 +434,18 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
                     </button>
                   </div>
                 </div>
-                <input type="text" placeholder="Observações do defeito ou reparo..." value={item.observation} onChange={e => updateItem(item.id, { observation: e.target.value })} className="w-full h-10 px-4 bg-[#eef2f7] border-none rounded-xl text-[10px] font-body font-bold text-slate-600 uppercase placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+                {/* Thumbnails (Restrito a uma foto) */}
                 {item.photos && item.photos.length > 0 && (
-                  <div className="flex gap-2 mt-3">
-                    {item.photos.map((photo, i) => (
-                      <div key={i} className="relative group">
-                        <img src={photo} className="w-14 h-14 object-cover rounded-xl border-2 border-white shadow-sm" />
-                        <button onClick={() => updateItem(item.id, { photos: [] })} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
-                          <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '12px' }}>close</span>
-                        </button>
-                      </div>
-                    ))}
+                  <div className="mt-2 mb-3">
+                    <div className="relative inline-block">
+                      <img src={item.photos[0]} className="w-16 h-16 object-cover rounded-xl border-2 border-white shadow-sm" />
+                      <button 
+                        onClick={() => updateItem(item.id, { photos: [] })} 
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
+                      >
+                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '14px' }}>close</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
