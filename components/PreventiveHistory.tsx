@@ -141,7 +141,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="width=1024" name="viewport"/>
   <title>Relatório Técnico de Inspeção ${type === MaintenanceType.CORRETIVA ? 'Corretiva' : 'Preventiva'} - Forte Engenharia</title>
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -273,7 +273,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
           </div>
           <div class="w-full border-b border-brandDarkGrey"></div>
           <p class="text-[10px] text-center text-brandLabel uppercase font-bold mt-2">Responsável Técnico</p>
-          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</p>
+          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1 font-sans">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</p>
         </div>
         <div class="flex flex-col items-center">
           <div class="h-16 flex items-end justify-center mb-2">
@@ -281,7 +281,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
           </div>
           <div class="w-full border-b border-brandDarkGrey"></div>
           <p class="text-[10px] text-center text-brandLabel uppercase font-bold mt-2">Responsável Cliente</p>
-          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1">${record.clientRepresentative || '---'}</p>
+          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1 font-sans">${record.clientRepresentative || '---'}</p>
         </div>
       </section>
     </div>
@@ -302,8 +302,38 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
 </body>
 </html>`;
 
-    const blob = new Blob([reportHtml], { type: 'text/html' });
-    window.open(URL.createObjectURL(blob), '_blank');
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+    if (isMobile) {
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(reportHtml);
+        win.document.close();
+        // No mobile, o onload="window.print()" no body cuidará do disparo
+      }
+    } else {
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow?.document || iframe.contentDocument;
+      if (doc) {
+        doc.open();
+        doc.write(reportHtml);
+        doc.close();
+
+        setTimeout(() => {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+          setTimeout(() => document.body.removeChild(iframe), 1000);
+        }, 1000);
+      }
+    }
   };
 
   return (

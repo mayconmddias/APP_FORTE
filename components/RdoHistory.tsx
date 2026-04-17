@@ -78,7 +78,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="width=1024" name="viewport"/>
   <title>${pdfTitle}</title>
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -186,8 +186,37 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
 </body>
 </html>`;
 
-    const blob = new Blob([html], { type: 'text/html' });
-    window.open(URL.createObjectURL(blob), '_blank');
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+    if (isMobile) {
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+      }
+    } else {
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow?.document || iframe.contentDocument;
+      if (doc) {
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+        setTimeout(() => {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+          setTimeout(() => document.body.removeChild(iframe), 1000);
+        }, 1000);
+      }
+    }
   };
 
   const clientsWithCompletedRdos = useMemo(() => {
