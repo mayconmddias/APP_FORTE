@@ -189,9 +189,18 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
 
     if (isMobile) {
+      // Estilos específicos para forçar repetição de cabeçalho no mobile (iOS/Android)
+      const mobileHtml = html.replace('</head>', `
+  <style>
+    @page { margin: 10mm 5mm !important; }
+    .content-container { min-height: auto !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+    body { background-color: white !important; }
+  </style>
+</head>`);
+      
       const win = window.open('', '_blank');
       if (win) {
-        win.document.write(html);
+        win.document.write(mobileHtml);
         win.document.close();
       }
     } else {

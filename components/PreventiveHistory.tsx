@@ -305,11 +305,26 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
 
     if (isMobile) {
+      // Injeta estilos específicos para mobile para forçar a repetição do cabeçalho e margens
+      const mobileHtml = reportHtml.replace('</head>', `
+  <style>
+    @page { 
+      margin: 10mm 5mm !important; 
+    }
+    .content-container { 
+      min-height: auto !important; 
+      box-shadow: none !important; 
+      margin: 0 !important; 
+      padding: 0 !important;
+    }
+    body { background-color: white !important; }
+  </style>
+</head>`);
+      
       const win = window.open('', '_blank');
       if (win) {
-        win.document.write(reportHtml);
+        win.document.write(mobileHtml);
         win.document.close();
-        // No mobile, o onload="window.print()" no body cuidará do disparo
       }
     } else {
       const iframe = document.createElement('iframe');
