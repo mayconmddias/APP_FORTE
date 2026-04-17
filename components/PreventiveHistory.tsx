@@ -110,30 +110,27 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
 
     let rowsTableHtml = '';
     items.forEach((i, index) => {
-      const isLast = index === items.length - 1;
-      const borderBottom = isLast ? 'border-bottom: 1px solid #e2e8f0;' : '';
-      
       rowsTableHtml += `
         <tr class="inspection-row">
-          <td class="col-item pl-4 pr-1 py-3 align-middle border-l border-gray-200" style="width: auto; ${borderBottom}">
-            <div class="flex items-center gap-2">
-              <span class="text-base font-heading text-brandBlue">${String(index + 1).padStart(2, '0')}</span>
+          <td class="col-item pl-4 pr-1 py-3 border-l border-gray-200">
+            <div class="flex items-start gap-3">
+              <span class="text-lg font-heading text-brandBlue">${String(index + 1).padStart(2, '0')}</span>
               <div>
-                <p class="font-bold text-[11px] leading-tight uppercase">${i.label}</p>
-                <p class="text-[9px] text-brandLabel uppercase mt-1">${i.category}</p>
+                <p class="font-bold text-xs leading-tight uppercase font-sans">${i.label}</p>
+                <p class="text-[9px] text-brandLabel uppercase mt-1 font-sans">${i.category}</p>
               </div>
             </div>
           </td>
-          <td class="col-status text-center px-0 py-3 align-middle border-gray-200" style="width: 45px; ${borderBottom}">
-            <span class="${i.isOk ? 'text-successGreen' : 'text-red-600'} text-[10px] font-bold">${i.isOk ? 'OK' : 'NOK'}</span>
+          <td class="col-status text-center px-0 py-3 border-gray-200">
+            <span class="${i.isOk ? 'text-successGreen' : 'text-red-600'} text-xs font-bold font-sans">${i.isOk ? 'OK' : 'NOK'}</span>
           </td>
-          <td class="col-obs px-1 py-3 align-middle border-gray-200" style="width: 80px; ${borderBottom}">
-            <span class="text-[10px] font-mono text-gray-600 uppercase break-words">${i.observation || '-'}</span>
+          <td class="col-obs px-1 py-3 border-gray-200">
+            <span class="text-xs font-mono text-gray-600 uppercase break-words font-sans">${i.observation || '-'}</span>
           </td>
-          <td class="col-anexo pl-1 pr-4 py-3 align-middle border-r border-gray-200 text-center" style="width: 100px; ${borderBottom}">
+          <td class="col-anexo pl-1 pr-4 py-3 border-r border-gray-200 text-center">
             <div class="flex justify-center">
               ${(i.photos && i.photos[0]) 
-                ? `<img alt="Anexo" class="object-cover rounded shadow-sm border border-gray-200" src="${i.photos[0]}" style="width: 84px; height: 84px;" />` 
+                ? `<img alt="Anexo" class="h-14 w-14 object-cover rounded shadow-sm border border-gray-200" src="${i.photos[0]}" />` 
                 : '<span class="text-brandLabel text-[10px]">-</span>'}
             </div>
           </td>
@@ -170,9 +167,6 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     }
   </script>
   <style>
-    @page {
-      margin: 15mm;
-    }
     @media print {
       body { background-color: white !important; }
       .no-print { display: none !important; }
@@ -187,102 +181,87 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       thead { display: table-header-group; }
       tfoot { display: table-footer-group; }
       tr { page-break-inside: avoid; }
-      .metadata-grid { grid-template-columns: repeat(4, 1fr) !important; }
     }
     
     .inspection-row:nth-child(even) { background-color: #f8fafc; }
-    .col-item { width: 78%; }
-    .col-status { width: 4%; }
-    .col-obs { width: 8%; }
-    .col-anexo { width: 10%; }
+    .col-item { width: 40%; }
+    .col-status { width: 15%; }
+    .col-obs { width: 30%; }
+    .col-anexo { width: 15%; }
     
-    .inspection-row:last-child { border-bottom: 1px solid #e2e8f0; }
+    table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+    th, td { text-align: left; vertical-align: middle; border: 1px solid #e2e8f0; }
     
-    @media print {
-      .avoid-break { break-inside: avoid !important; }
-      .footer-item { margin-top: 2rem; }
-    }
-    
+    .avoid-break { break-inside: avoid !important; }
     body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    table { width: 100%; border-spacing: 0; }
   </style>
 </head>
 <body class="bg-gray-100 font-sans text-brandDarkGrey antialiased" onload="window.print()">
   <main class="content-container mx-auto max-w-[1000px] bg-white min-h-screen shadow-2xl my-8 p-10">
-    <header class="grid grid-cols-[1fr_auto_1fr] items-center border-b-2 border-brandBlue pb-4 mb-5">
-      <div class="flex justify-start">
+    <header class="grid grid-cols-[1fr_auto_1fr] items-center border-b-2 border-brandBlue pb-6 mb-8">
+      <div class="flex items-center gap-3">
         <div class="w-[130px] h-[65px] flex items-center justify-center">
           <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" class="w-full h-full object-contain" alt="Forte Logo" />
         </div>
       </div>
-      <div class="text-center flex flex-col items-center">
-        <span class="text-[19px] font-heading text-brandBlue tracking-tight uppercase">Forte <span class="font-normal opacity-70">Engenharia</span></span>
-        <h1 class="text-[16px] font-heading text-brandBlue uppercase tracking-wide mt-1">Relatório Técnico de Inspeção ${type === MaintenanceType.CORRETIVA ? 'Corretiva' : 'Preventiva'}</h1>
+      <div class="flex flex-col gap-1 text-center">
+        <span class="text-2xl font-heading text-brandBlue tracking-tight uppercase font-bold leading-none">FORTE <span class="font-normal opacity-70">ENGENHARIA</span></span>
+        <h1 class="text-[14px] font-heading text-brandBlue uppercase tracking-wide leading-tight whitespace-nowrap">Relatório Técnico de Inspeção ${type === MaintenanceType.CORRETIVA ? 'Corretiva' : 'Preventiva'}</h1>
       </div>
-      <div class="text-right flex flex-col items-end">
-        <p class="text-brandLabel text-[9px] font-semibold uppercase tracking-widest">OS Nº</p>
-        <p class="text-[22px] font-heading text-brandBlue">#${formattedOs}</p>
+      <div class="flex flex-col items-end gap-0">
+        <p class="text-brandLabel text-[9px] font-semibold uppercase tracking-widest leading-none">OS Nº</p>
+        <p class="text-lg font-heading text-brandBlue leading-tight">#${formattedOs}</p>
       </div>
     </header>
 
-    <section class="metadata-grid grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-4 mb-10 border-b border-gray-100 pb-8">
+    <section class="grid grid-cols-4 gap-y-6 gap-x-4 mb-10 border-b border-gray-100 pb-8">
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Cliente</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.client}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.client}</span>
       </div>
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Equipamento</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.name}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.name}</span>
       </div>
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Nº Série</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.serialNumber}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.serialNumber}</span>
       </div>
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Capacidade</label>
-        <span class="font-bold text-sm text-brandBlue uppercase">${selectedAsset.capacity}</span>
+        <span class="font-bold text-sm text-brandBlue uppercase font-sans">${selectedAsset.capacity}</span>
       </div>
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Vão (M)</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.span}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.span}</span>
       </div>
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Localização</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.location}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.location}</span>
       </div>
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Fabricante</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${selectedAsset.manufacturer}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.manufacturer}</span>
       </div>
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Data</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${formatDate(record.date)}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${formatDate(record.date)}</span>
       </div>
     </section>
 
-    <section class="overflow-x-auto lg:overflow-x-visible">
-      <table class="w-full border-collapse border-x border-gray-200" style="table-layout: fixed; min-width: 600px;">
+    <section>
+      <table class="w-full">
         <thead>
-          <!-- Espaçador para margem superior em páginas repetidas -->
-          <tr class="header-spacer h-4 no-print-border">
-            <th colspan="4" class="p-0 border-none"></th>
-          </tr>
           <tr class="bg-brandBlue text-white text-[10px] font-bold uppercase tracking-widest">
-            <th class="col-item pl-4 pr-1 py-3 text-left" style="width: auto;">Item / Descrição</th>
-            <th class="col-status px-0 py-3 text-center" style="width: 45px;">Status</th>
-            <th class="col-obs px-1 py-3 text-left" style="width: 80px;">Observações</th>
-            <th class="col-anexo pl-1 pr-4 py-3 text-center" style="width: 100px;">Anexo</th>
+            <th class="col-item px-4 py-3 border-brandBlue">Item / Descrição</th>
+            <th class="col-status text-center border-brandBlue">Status</th>
+            <th class="col-obs px-1 py-3 border-brandBlue">Observações</th>
+            <th class="col-anexo text-center border-brandBlue">Anexo</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200">
+        <tbody class="divide-y divide-gray-200 border-x border-b border-gray-200">
           ${rowsTableHtml}
         </tbody>
-        <tfoot>
-          <!-- Espaçador para margem inferior em páginas repetidas -->
-          <tr class="footer-spacer h-6 no-print-border">
-            <td colspan="4" class="p-0 border-none"></td>
-          </tr>
-        </tfoot>
       </table>
     </section>
     
@@ -311,11 +290,11 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       <div class="space-y-6">
         <div class="avoid-break">
           <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-2 text-center border-b border-gray-100 pb-2">Normas e Regulamentações</h4>
-          <p class="text-[9px] text-brandDarkGrey leading-relaxed whitespace-pre-wrap">${(REPORT_NORMS || '').trim()}</p>
+          <p class="text-[9px] text-brandDarkGrey leading-relaxed whitespace-pre-wrap font-sans">${(REPORT_NORMS || '').trim()}</p>
         </div>
         <div class="avoid-break p-4 bg-brandLightGrey rounded-xl border border-gray-100">
           <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-2 text-center border-b border-gray-100 pb-2">Atestado de Responsabilidade</h4>
-          <p class="text-[9px] text-brandDarkGrey leading-relaxed whitespace-pre-wrap">${(REPORT_ATTESTATION || '').trim()}</p>
+          <p class="text-[9px] text-brandDarkGrey leading-relaxed whitespace-pre-wrap font-sans">${(REPORT_ATTESTATION || '').trim()}</p>
         </div>
       </div>
     </footer>

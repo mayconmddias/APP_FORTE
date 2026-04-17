@@ -62,7 +62,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
     let photosHtml = '';
     if (record.photos && record.photos.length > 0) {
       photosHtml = `
-        <section class="mt-8 page-break-inside-avoid">
+        <section class="mt-8 avoid-break">
           <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-4 border-l-4 border-brandBlue pl-3">Registro Fotográfico</h4>
           <div class="grid grid-cols-2 gap-4">
             ${record.photos.map(photo => `
@@ -103,9 +103,6 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
     }
   </script>
   <style>
-    @page {
-      margin: 15mm;
-    }
     @media print {
       body { background-color: white !important; }
       .no-print { display: none !important; }
@@ -117,59 +114,59 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
         padding: 5mm !important; 
         box-shadow: none !important; 
       }
-      tr { page-break-inside: avoid; }
     }
+    .avoid-break { break-inside: avoid !important; }
     body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   </style>
 </head>
 <body class="bg-gray-100 font-sans text-brandDarkGrey antialiased" onload="window.print()">
   <main class="content-container mx-auto max-w-[1000px] bg-white min-h-screen shadow-2xl my-8 p-10">
-    <header class="grid grid-cols-[1fr_auto_1fr] items-center border-b-2 border-brandBlue pb-4 mb-5">
-      <div class="flex justify-start">
+    <header class="grid grid-cols-[1fr_auto_1fr] items-center border-b-2 border-brandBlue pb-6 mb-8">
+      <div class="flex items-center gap-3">
         <div class="w-[130px] h-[65px] flex items-center justify-center">
           <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" class="w-full h-full object-contain" alt="Forte Logo" />
         </div>
       </div>
-      <div class="text-center flex flex-col items-center">
-        <span class="text-[19px] font-heading text-brandBlue tracking-tight uppercase">Forte <span class="font-normal opacity-70">Engenharia</span></span>
-        <h1 class="text-[16px] font-heading text-brandBlue uppercase tracking-wide mt-1">Relatório Diário</h1>
+      <div class="flex flex-col gap-1 text-center">
+        <span class="text-2xl font-heading text-brandBlue tracking-tight uppercase font-bold leading-none">FORTE <span class="font-normal opacity-70">ENGENHARIA</span></span>
+        <h1 class="text-[16px] font-heading text-brandBlue uppercase tracking-wide leading-tight">Relatório Diário de Obra</h1>
       </div>
-      <div class="text-right flex flex-col items-end">
-        <p class="text-brandLabel text-[9px] font-semibold uppercase tracking-widest">RD Nº</p>
-        <p class="text-[22px] font-heading text-brandBlue">#${String(record.rdoNumber).padStart(4, '0')}</p>
-        <p class="text-[10px] font-bold text-brandLabel uppercase mt-1">${formattedDate}</p>
+      <div class="flex flex-col items-end gap-0">
+        <p class="text-brandLabel text-[9px] font-semibold uppercase tracking-widest leading-none">RD Nº</p>
+        <p class="text-lg font-heading text-brandBlue leading-tight">#${String(record.rdoNumber).padStart(4, '0')}</p>
+        <p class="text-[10px] font-bold text-brandLabel uppercase mt-1 font-sans">${formattedDate}</p>
       </div>
     </header>
 
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-4 mb-10 border-b border-gray-100 pb-8">
+    <section class="grid grid-cols-4 gap-y-6 gap-x-4 mb-10 border-b border-gray-100 pb-8">
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Cliente</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${record.clientName}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${record.clientName}</span>
       </div>
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Descrição do Serviço</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${record.siteName}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${record.siteName}</span>
       </div>
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Horário de Fechamento</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${record.endTime || '--:--'}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${record.endTime || '--:--'}</span>
       </div>
       <div class="flex flex-col">
         <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Responsável</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase">${record.technicianName}</span>
+        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${record.technicianName}</span>
       </div>
     </section>
 
-    <section class="mb-10 page-break-inside-avoid">
+    <section class="mb-10 avoid-break">
       <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-4 border-l-4 border-brandBlue pl-3">Atividades Realizadas</h4>
-      <div class="p-5 bg-brandLightGrey rounded-2xl border border-gray-100 min-h-[100px]">
-        <div class="text-[11px] text-brandDarkGrey leading-relaxed uppercase whitespace-pre-wrap">${record.activities.join('\n')}</div>
+      <div class="p-6 bg-brandLightGrey rounded-2xl border border-gray-100 min-h-[120px]">
+        <div class="text-[11px] text-brandDarkGrey leading-relaxed uppercase whitespace-pre-wrap font-sans">${record.activities.join('\n')}</div>
       </div>
     </section>
 
     ${photosHtml}
 
-    <section class="mt-16 pt-10 border-t border-gray-100">
+    <section class="mt-16 pt-10 border-t border-gray-100 avoid-break">
       <div class="flex justify-center">
         <div class="flex flex-col items-center max-w-xs w-full">
           <div class="h-12 flex items-end justify-center mb-2">
@@ -177,13 +174,13 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
           </div>
           <div class="w-full border-b border-brandDarkGrey"></div>
           <p class="text-[10px] text-center text-brandLabel uppercase font-bold mt-2">Responsável Técnico / Finalização RD</p>
-          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1">${record.technicianName}</p>
+          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1 font-sans">${record.technicianName}</p>
         </div>
       </div>
     </section>
 
     <footer class="mt-20 pt-8 border-t border-gray-100 text-center">
-      <p class="text-[9px] text-brandLabel uppercase tracking-widest font-bold">Forte Engenharia - Controle de Campo</p>
+      <p class="text-[9px] text-brandLabel uppercase tracking-widest font-bold font-sans">Forte Engenharia - Controle de Campo - Em conformidade com Normas de Segurança</p>
     </footer>
   </main>
 </body>
