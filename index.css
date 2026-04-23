@@ -22,11 +22,24 @@
 }
 
 @layer base {
+    html, body {
+        overflow-x: hidden;
+        position: relative;
+        width: 100%;
+    }
+
     body {
         background-color: var(--color-background);
         color: var(--color-on-background);
         font-family: var(--font-body);
         min-height: max(884px, 100dvh);
+    }
+
+    /* Prevenir zoom automático no iOS ao focar em inputs */
+    @media screen and (max-width: 768px) {
+        input, select, textarea {
+            font-size: 16px !important;
+        }
     }
 }
 

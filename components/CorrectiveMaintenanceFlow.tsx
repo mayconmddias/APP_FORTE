@@ -153,7 +153,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
     if (!isDraft) setStep(FlowStep.SUCCESS); else onCancel();
   };
 
-  const inputClasses = "w-full bg-[#eef2f7] border-none rounded-xl py-4 px-5 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all font-body text-sm outline-none";
+  const inputClasses = "w-full bg-[#eef2f7] border-none rounded-xl py-4 px-5 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all font-body text-base outline-none";
   const labelClasses = "text-[11px] font-bold text-[#004a88] uppercase tracking-widest mb-2 block";
 
   /* --- SUCCESS --- */
@@ -195,7 +195,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
           <div className="w-10" />
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 max-w-4xl mx-auto w-full pb-32">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 max-w-4xl mx-auto w-full pb-32">
           {/* Busca */}
           {step !== FlowStep.BUILD_CHECKLIST && (
             <div className="relative mb-4">
@@ -407,7 +407,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
           }
         }} />
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-40">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-3 pb-40">
           <div className="max-w-4xl mx-auto space-y-3">
             {/* Items do checklist */}
             {selectedItemsTemplate.map((item, index) => (
@@ -448,6 +448,15 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
                     </div>
                   </div>
                 )}
+
+                {/* Campo de observação */}
+                <input
+                  type="text"
+                  placeholder="OBSERVAÇÕES"
+                  value={item.observation || ''}
+                  onChange={(e) => updateItem(item.id, { observation: e.target.value })}
+                  className="w-full h-10 px-4 bg-[#eef2f7] border-none rounded-xl text-[10px] font-body font-bold text-slate-600 uppercase placeholder:text-[8px] placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                />
               </div>
             ))}
 

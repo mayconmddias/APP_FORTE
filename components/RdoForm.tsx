@@ -121,7 +121,7 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
 
   const isFormValid = clientName.trim() && siteName.trim() && activities.trim();
 
-  const inputClasses = "w-full bg-[#eef2f7] border-none rounded-xl py-4 px-5 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all font-body text-sm outline-none";
+  const inputClasses = "w-full bg-[#eef2f7] border-none rounded-xl py-4 px-5 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all font-body text-base outline-none";
   const labelClasses = "text-[11px] font-bold text-[#004a88] uppercase tracking-widest mb-2 block";
 
   return createPortal(
@@ -144,7 +144,7 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
       </header>
 
       {/* Conteúdo */}
-      <main className="flex-1 overflow-y-auto px-4 py-6 pb-40">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 pb-40">
         <div className="max-w-2xl mx-auto space-y-6">
 
           {/* Informações do Local */}

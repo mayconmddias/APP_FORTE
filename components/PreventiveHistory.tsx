@@ -315,7 +315,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       min-height: auto !important; 
       box-shadow: none !important; 
       margin: 0 !important; 
-      padding: 0 !important;
+      padding: 8mm 4mm !important; 
     }
     body { background-color: white !important; }
   </style>

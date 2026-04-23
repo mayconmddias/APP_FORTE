@@ -325,7 +325,7 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
           <input
             type="text"
             placeholder={selectedClient ? "Filtrar ativos deste cliente..." : "Filtrar clientes..."}
-            className="w-full bg-surface-container-low border-none rounded-full py-4 pl-12 pr-6 text-on-surface focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all placeholder:text-outline font-medium text-sm"
+            className="w-full bg-surface-container-low border-none rounded-full py-4 pl-12 pr-6 text-on-surface focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all placeholder:text-outline font-medium text-base"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />

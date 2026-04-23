@@ -193,7 +193,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
       const mobileHtml = html.replace('</head>', `
   <style>
     @page { margin: 10mm 5mm !important; }
-    .content-container { min-height: auto !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+    .content-container { min-height: auto !important; box-shadow: none !important; margin: 0 !important; padding: 8mm 4mm !important; }
     body { background-color: white !important; }
   </style>
 </head>`);

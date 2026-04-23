@@ -26,13 +26,13 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
-    const inputClasses = "w-full bg-[#eef2f7] border-none rounded-xl py-4 px-5 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all font-body text-sm outline-none";
+    const inputClasses = "w-full bg-[#eef2f7] border-none rounded-xl py-4 px-5 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all font-body text-base outline-none";
     const labelClasses = "text-[11px] font-bold text-[#004a88] uppercase tracking-widest mb-2 block";
     const title = editingAsset ? 'EDITAR ATIVO' : (selectedClient ? 'NOVO ATIVO' : 'NOVO CLIENTE');
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/20 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full sm:max-w-md bg-background rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[95dvh] animate-in slide-in-from-bottom-4 duration-300">
+            <div className="w-full sm:max-w-md bg-background rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[95dvh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 pt-6 pb-2 flex-shrink-0">
@@ -50,7 +50,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                 </div>
 
                 {/* Form */}
-                <form onSubmit={onSave} className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+                <form onSubmit={onSave} className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-6 space-y-5">
 
                     {/* Cliente */}
                     <div>

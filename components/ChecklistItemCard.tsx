@@ -101,10 +101,10 @@ const ChecklistItemCard: React.FC<ChecklistItemCardProps> = ({
                 {/* Campo de observação */}
                 <input
                     type="text"
-                    placeholder="Observações técnicas..."
+                    placeholder="OBSERVAÇÕES"
                     value={item.observation}
                     onChange={(e) => onUpdate(item.id, { observation: e.target.value })}
-                    className="w-full h-10 px-4 bg-[#eef2f7] border-none rounded-xl text-[10px] font-body font-bold text-slate-600 uppercase placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full h-10 px-4 bg-[#eef2f7] border-none rounded-xl text-[10px] font-body font-bold text-slate-600 uppercase placeholder:text-[8px] placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
             </div>
         </div>

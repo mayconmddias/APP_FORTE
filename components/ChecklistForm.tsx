@@ -254,7 +254,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       }} />
 
       {/* Lista de itens */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-32">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-3 pb-32">
 
         {/* Seleção de periodicidade */}
         {editingRecord?.type !== MaintenanceType.CORRETIVA && !['Monovia', 'Talha'].includes(selectedAsset?.equipmentType || '') && (
@@ -407,7 +407,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
                 <input
                   type="text"
                   placeholder="Filtrar por item ou categoria..."
-                  className="w-full h-11 pl-11 pr-5 bg-[#eef2f7] border-none rounded-full font-body text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all"
+                  className="w-full h-11 pl-11 pr-5 bg-[#eef2f7] border-none rounded-full font-body text-base placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all"
                   value={selectorSearch}
                   onChange={e => setSelectorSearch(e.target.value)}
                 />
