@@ -659,7 +659,7 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                 </div>
               </div>
             </div>
-            <div className="flex-1 overflow-auto scrollbar-hide text-left">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide text-left">
               {loading ? (
                 <div className="flex flex-col items-center justify-center p-20 text-slate-300">
                   <Loader2 className="animate-spin mb-4" size={40} />
@@ -674,10 +674,9 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0 bg-white z-10 shadow-sm text-left">
                     <tr>
-                      <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Funcionário</th>
-                      <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Documento / Empresa</th>
-                      <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 text-left">Vencimento</th>
-                      <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Status</th>
+                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-50">Funcionário</th>
+                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-50">Documento / Empresa</th>
+                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-50 text-left">Vencimento</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
@@ -688,23 +687,20 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                       
                       return (
                         <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="p-6">
+                          <td className="px-3 sm:px-6 py-4">
                             <span className="text-[11px] font-black text-slate-900 uppercase">{(item as any).funcionario?.nome ? formatName((item as any).funcionario.nome) : '---'}</span>
                           </td>
-                          <td className="p-6">
+                          <td className="px-3 sm:px-6 py-4">
                             <div className="flex items-center gap-2">
                               {isInteg ? <FileText size={12} className="text-blue-400"/> : <User size={12} className="text-purple-400"/>}
                               <span className="text-[11px] font-bold text-slate-600 uppercase">{label}</span>
                             </div>
                           </td>
-                          <td className="p-6 text-left">
-                            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500">
-                              {item.data_vencimento ? format(parseISO(item.data_vencimento), 'dd/MM/yyyy') : '---'}
-                            </div>
-                          </td>
-                          <td className="p-6">
-                            <div className={`inline-flex items-center px-3 py-1.5 rounded-full ${status.bg} ${status.color} ring-1 ring-inset ring-current/10`}>
-                              <span className="text-[9px] font-black tracking-widest uppercase">{status.label}</span>
+                          <td className="px-3 sm:px-6 py-4 text-left">
+                            <div className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full ${status.bg} ${status.color} ring-1 ring-inset ring-current/10`}>
+                              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-tight">
+                                {item.data_vencimento ? format(parseISO(item.data_vencimento), 'dd/MM/yyyy') : '---'}
+                              </span>
                             </div>
                           </td>
                         </tr>
@@ -771,11 +767,11 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
               </div>
 
             </div>
-            <div className="flex-1 overflow-auto scrollbar-hide text-left">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide text-left">
               {activeTab === 'DOC' ? (
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0 bg-white z-10 shadow-sm text-left">
-                    <tr><th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Documento</th><th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 text-left">Vencimento</th><th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Status</th></tr>
+                    <tr><th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-50">Documento</th><th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-50 text-left">Vencimento</th></tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {[...documentos].sort((a,b) => a.tipo_documento.localeCompare(b.tipo_documento)).map(doc => {
@@ -785,13 +781,10 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                           <span className="text-[11px] font-black text-slate-700 uppercase">{doc.tipo_documento}</span>
                         </td>
                         <td className="px-3 sm:px-6 py-4 text-left">
-                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500">
-                            {doc.data_vencimento ? format(parseISO(doc.data_vencimento), 'dd/MM/yyyy') : (doc.status_permanente || '---')}
-                          </div>
-                        </td>
-                        <td className="px-3 sm:px-6 py-4">
-                          <div className={`inline-flex items-center px-3 py-1.5 rounded-full ${status.bg} ${status.color} ring-1 ring-inset ring-current/10`}>
-                            <span className="text-[9px] font-black tracking-widest uppercase">{status.label}</span>
+                          <div className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full ${status.bg} ${status.color} ring-1 ring-inset ring-current/10`}>
+                            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-tight">
+                              {doc.data_vencimento ? format(parseISO(doc.data_vencimento), 'dd/MM/yyyy') : (doc.status_permanente || '---')}
+                            </span>
                           </div>
                         </td>
                       </tr>);
@@ -802,9 +795,8 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0 bg-white z-10 shadow-sm text-left">
                     <tr>
-                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Empresa</th>
-                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 text-left">Vencimento</th>
-                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">Status</th>
+                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-50">Empresa</th>
+                      <th className="px-3 sm:px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-50 text-left">Vencimento</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
@@ -816,13 +808,10 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onTitleChange, 
                             <span className="text-[11px] font-black text-slate-700 uppercase">{integ.empresa?.nome || 'EMPRESA NÃO ENCONTRADA'}</span>
                           </td>
                           <td className="px-3 sm:px-6 py-4 text-left">
-                            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500">
-                              {integ.data_vencimento ? format(parseISO(integ.data_vencimento), 'dd/MM/yyyy') : '---'}
-                            </div>
-                          </td>
-                          <td className="px-3 sm:px-6 py-4">
-                            <div className={`inline-flex items-center px-3 py-1.5 rounded-full ${status.bg} ${status.color} ring-1 ring-inset ring-current/10`}>
-                              <span className="text-[9px] font-black tracking-widest uppercase">{status.label}</span>
+                            <div className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full ${status.bg} ${status.color} ring-1 ring-inset ring-current/10`}>
+                              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-tight">
+                                {integ.data_vencimento ? format(parseISO(integ.data_vencimento), 'dd/MM/yyyy') : '---'}
+                              </span>
                             </div>
                           </td>
                         </tr>

@@ -70,7 +70,6 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     const term = searchTerm.toLowerCase().trim();
     if (term) {
       const matchedAssets = assetsWithMeta.filter(asset =>
-        (asset.client || '').toLowerCase().includes(term) ||
         (asset.name || '').toLowerCase().includes(term) ||
         (asset.serialNumber || '').toLowerCase().includes(term) ||
         asset.osList.some(os => os.raw.includes(term) || os.padded.includes(term))
@@ -359,7 +358,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
         <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 select-none notranslate pointer-events-none" style={{ fontSize: '20px' }}>search</span>
         <input
           type="text"
-          placeholder="Filtrar por Cliente, Ativo ou OS..."
+          placeholder="Filtrar por Ativo ou OS..."
           className="w-full h-12 pl-12 pr-5 bg-[#eef2f7] border-none rounded-full font-body text-sm text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
