@@ -41,15 +41,48 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
   const clientSuggestions = Array.from(new Set(rdos.map(r => r.clientName))).sort();
   const siteSuggestions = Array.from(new Set(rdos.map(r => r.siteName))).sort();
 
+  const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+    });
+  };
+
   const handleReplacePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && selectedPhotoIndex !== null) {
+    if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        const newPhotos = [...photos];
-        newPhotos[selectedPhotoIndex] = reader.result as string;
-        setPhotos(newPhotos);
-        setSelectedPhotoIndex(null);
+      reader.onloadend = async () => {
+        const compressed = await compressImage(reader.result as string);
+        if (selectedPhotoIndex !== null) {
+          const newPhotos = [...photos];
+          newPhotos[selectedPhotoIndex] = compressed;
+          setPhotos(newPhotos);
+          setSelectedPhotoIndex(null);
+        } else {
+          setPhotos([...photos, compressed]);
+        }
         setReplaceMode(null);
       };
       reader.readAsDataURL(file);
@@ -73,16 +106,6 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
     setSelectedPhotoIndex(null);
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotos([...photos, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleSave = async () => {
     if (!currentUser) return;
@@ -238,7 +261,6 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
                 <span className="font-bold text-[9px] uppercase tracking-widest">Adicionar</span>
               </button>
             </div>
-            <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
             <input type="file" ref={replaceInputRef} onChange={handleReplacePhoto} className="hidden" accept="image/*" />
           </section>
 

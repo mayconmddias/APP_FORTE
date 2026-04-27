@@ -64,10 +64,10 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
       photosHtml = `
         <section class="mt-8 avoid-break">
           <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-4 border-l-4 border-brandBlue pl-3">Registro Fotográfico</h4>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-6">
             ${record.photos.map(photo => `
-              <div class="border border-gray-100 rounded-xl p-1 bg-white shadow-sm overflow-hidden">
-                <img src="${photo}" class="w-full h-auto rounded-lg object-contain" />
+              <div class="border border-gray-100 rounded-xl p-2 bg-white shadow-sm overflow-hidden h-[220px] flex items-center justify-center">
+                <img src="${photo}" class="max-w-full max-h-full rounded-lg object-contain" />
               </div>
             `).join('')}
           </div>
