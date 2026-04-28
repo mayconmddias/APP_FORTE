@@ -31,6 +31,7 @@ export interface UserProfile {
   email: string;
   role: 'ADMIN' | 'TECNICO';
   password?: string;
+  funcao?: string;
 }
 
 export interface CraneAsset {

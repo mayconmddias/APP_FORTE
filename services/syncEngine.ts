@@ -42,6 +42,7 @@ class SyncEngine {
             await this.syncTable('ativos', 'crane_assets');
             await this.syncTable('ordens_servico', 'maintenance_records');
             await this.syncTable('usuarios', 'user_profiles');
+            // 'documentos' and 'funcionario_integracoes' are now online-direct
             await this.syncTable('rdo', 'rdo');
 
             // 4. Process Pending Deletions
@@ -58,7 +59,7 @@ class SyncEngine {
         this.lastAttempt = {};
     }
 
-    private async syncTable(localTableName: 'ativos' | 'ordens_servico' | 'usuarios' | 'rdo', serverTableName: string) {
+    private async syncTable(localTableName: 'ativos' | 'ordens_servico' | 'usuarios' | 'rdo' | 'documentos' | 'funcionario_integracoes', serverTableName: string) {
         const pending = await db[localTableName]
             .where('sync_status')
             .anyOf(['PENDING', 'ERROR'])
@@ -113,12 +114,13 @@ class SyncEngine {
         }
     }
 
-    private async processBatch(localTable: 'ativos' | 'ordens_servico' | 'usuarios' | 'rdo', serverTable: string, batch: any[]) {
+    private async processBatch(localTable: 'ativos' | 'ordens_servico' | 'usuarios' | 'rdo' | 'documentos' | 'funcionario_integracoes', serverTable: string, batch: any[]) {
         try {
             // 1. Fetch current versions from server to detect conflicts
+            const hasVersion = !['documentos', 'funcionario_integracoes', 'usuarios'].includes(localTable);
             const { data: serverRecords, error: fetchError } = await supabase
                 .from(serverTable)
-                .select('id, version')
+                .select(`id${hasVersion ? ', version' : ''}`)
                 .in('id', batch.map(r => r.server_id || r.local_id));
 
             if (fetchError) throw fetchError;
@@ -134,22 +136,26 @@ class SyncEngine {
                     continue;
                 }
 
+                const hasVersion = !['documentos', 'funcionario_integracoes', 'usuarios'].includes(localTable);
                 const serverRecord = serverRecords?.find(r => r.id === (localRecord.server_id || localRecord.local_id));
 
                 // CONFLICT DETECTION: 
                 // If server has a higher version than what we last knew about, it's a conflict.
-                if (serverRecord && localRecord.last_server_version !== undefined && serverRecord.version > localRecord.last_server_version) {
+                if (hasVersion && serverRecord && localRecord.last_server_version !== undefined && serverRecord.version > localRecord.last_server_version) {
                     conflictedRecords.push(localRecord);
                     continue;
                 }
 
                 const { local_id, sync_status, server_id, last_server_version, ...data } = localRecord;
-                const newVersion = (serverRecord?.version || 0) + 1;
+                const newVersion = hasVersion ? (serverRecord?.version || 0) + 1 : undefined;
 
                 let mapped: any = {
-                    id: server_id || data.id || local_id,
-                    version: newVersion
+                    id: server_id || data.id || local_id
                 };
+                
+                if (hasVersion) {
+                    mapped.version = newVersion;
+                }
 
                 if (localTable === 'ativos') {
                     Object.assign(mapped, {
@@ -209,7 +215,20 @@ class SyncEngine {
                         signature: data.signature,
                         status: data.status,
                         end_time: data.endTime,
-                        rdo_number: data.rdoNumber
+                    });
+                } else if (localTable === 'documentos') {
+                    Object.assign(mapped, {
+                        funcionario_id: data.funcionario_id,
+                        tipo_documento: data.tipo_documento,
+                        data_vencimento: data.data_vencimento,
+                        status_permanente: data.status_permanente
+                    });
+                } else if (localTable === 'funcionario_integracoes') {
+                    Object.assign(mapped, {
+                        funcionario_id: data.funcionario_id,
+                        empresa_id: data.empresa_id,
+                        data_vencimento: data.data_vencimento,
+                        status: data.status
                     });
                 }
                 recordsToUpsert.push(mapped);

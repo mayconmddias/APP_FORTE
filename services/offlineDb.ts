@@ -37,6 +37,8 @@ export class OfflineDatabase extends Dexie {
   ativos!: Table<LocalAsset>;
   ordens_servico!: Table<LocalMaintenanceRecord>;
   usuarios!: Table<LocalUserProfile>;
+  documentos!: Table<Documento & LocalMetadata>;
+  funcionario_integracoes!: Table<FuncionarioIntegracao & LocalMetadata>;
   anexos!: Table<{ local_id: string; metadata: any } & LocalMetadata>;
   exclusoes_pendentes!: Table<PendingDeletion>;
   logs_sincronizacao!: Table<SyncLog>;
@@ -44,10 +46,12 @@ export class OfflineDatabase extends Dexie {
 
   constructor() {
     super('ForteOfflineDB');
-    this.version(6).stores({
+    this.version(8).stores({
       ativos: 'local_id, server_id, client, sync_status, updated_at',
       ordens_servico: 'local_id, server_id, assetId, signature, clientSignature, status, sync_status, updated_at',
-      usuarios: 'local_id, server_id, email, sync_status, updated_at',
+      usuarios: 'local_id, server_id, name, email, sync_status, updated_at',
+      documentos: 'local_id, server_id, funcionario_id, tipo_documento, sync_status, updated_at',
+      funcionario_integracoes: 'local_id, server_id, funcionario_id, empresa_id, sync_status, updated_at',
       anexos: 'local_id, server_id, sync_status',
       exclusoes_pendentes: '++id, server_id, table_name',
       logs_sincronizacao: '++id, timestamp, level',

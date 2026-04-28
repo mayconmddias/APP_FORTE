@@ -157,22 +157,61 @@ const App: React.FC = () => {
             await db.usuarios.bulkDelete(usersToDelete.map(u => u.local_id));
           }
 
-          const mappedUsers = await Promise.all(usersData.map(async u => {
-            const existing = await db.usuarios.where('server_id').equals(u.id).first();
-            const local_id = existing?.local_id || uuidv4();
-            userServerToLocalMap[u.id] = local_id;
+          const mappedUsers = usersData.map(u => {
+            userServerToLocalMap[u.id] = u.id;
             return {
               ...u,
-              id: local_id,
-              local_id: local_id,
+              id: u.id, // logical ID (FE-001)
+              local_id: u.id,
               server_id: u.id,
-              sync_status: 'SYNCED',
+              sync_status: 'SYNCED' as const,
               updated_at: new Date().toISOString(),
               version: 1
             };
-          }));
+          });
           await db.usuarios.bulkPut(mappedUsers as any);
         }
+
+        // -- REPAIR: Deduplicate and cleanup statuses (REGULAR -> APTO) --
+        const repairServerData = async () => {
+          try {
+            // 1. Deduplicate Documents
+            const { data: allDocs } = await supabase.from('documentos').select('id, funcionario_id, tipo_documento, created_at');
+            if (allDocs) {
+              const groups: Record<string, any[]> = {};
+              allDocs.forEach(d => {
+                const key = `${d.funcionario_id}-${d.tipo_documento}`;
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(d);
+              });
+
+              const toDelete: string[] = [];
+              Object.values(groups).forEach(group => {
+                if (group.length > 1) {
+                  group.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                  group.slice(1).forEach(dup => toDelete.push(dup.id));
+                }
+              });
+
+              if (toDelete.length > 0) {
+                await supabase.from('documentos').delete().in('id', toDelete);
+              }
+            }
+
+            // 2. Migrate REGULAR to APTO
+            await supabase.from('documentos').update({ status_permanente: 'APTO' }).eq('status_permanente', 'REGULAR');
+            await supabase.from('funcionario_integracoes').update({ status: 'APTO' }).eq('status', 'REGULAR');
+            
+          } catch (err) {
+            console.error('Erro no reparo de dados:', err);
+          }
+        };
+
+        await repairServerData();
+
+        // Clear local cache for docs/integrations to ensure 100% online accuracy
+        await db.documentos.clear();
+        await db.funcionario_integracoes.clear();
 
         // History (Moved after Users to have mapping)
         const { data: historyData } = await supabase.from('maintenance_records').select('*');
@@ -531,10 +570,10 @@ const App: React.FC = () => {
 
   const handleSaveUser = async (user: UserProfile) => {
     try {
-      const userId = user.id || uuidv4();
+      // Use logical ID (FE-XXX) as the primary key
+      const userId = user.id; 
       const localUser = {
         ...user,
-        id: userId,
         local_id: userId,
         sync_status: 'PENDING',
         updated_at: new Date().toISOString(),
@@ -542,10 +581,9 @@ const App: React.FC = () => {
       };
 
       await db.usuarios.put(localUser as any);
-      await loadLocalData();
-      syncEngine.triggerSync();
-    } catch (error) {
-      console.error("Erro ao salvar usuário:", error);
+      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, ...user } : u));
+    } catch (err) {
+      console.error('Erro ao salvar usuário:', err);
     }
   };
 
@@ -556,6 +594,14 @@ const App: React.FC = () => {
         await supabase.from('user_profiles').delete().eq('id', user.server_id);
       }
       await db.usuarios.delete(userId);
+      
+      // Clean up associated docs and integrations
+      const userDocs = await db.documentos.where('funcionario_id').equals(userId).toArray();
+      const userInts = await db.funcionario_integracoes.where('funcionario_id').equals(userId).toArray();
+      
+      if (userDocs.length > 0) await db.documentos.bulkDelete(userDocs.map(d => d.local_id));
+      if (userInts.length > 0) await db.funcionario_integracoes.bulkDelete(userInts.map(i => i.local_id));
+
       await loadLocalData();
       syncEngine.triggerSync();
     } catch (error) {
