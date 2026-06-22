@@ -37,6 +37,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   editingRecord
 }) => {
   const [step, setStep] = useState<FlowStep>(editingRecord ? FlowStep.FILL_CHECKLIST : FlowStep.SELECT_CLIENT);
+  const hasSubmitted = useRef(false);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<CraneAsset | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,8 +54,8 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [showSignaturePad, setShowSignaturePad] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inspectionDate, setInspectionDate] = useState(editingRecord?.date || new Date().toISOString().split('T')[0]);
-  const [recordId] = useState(editingRecord?.id || `h-${Date.now()}`);
-  const [localId] = useState(editingRecord?.local_id || recordId);
+  const [recordId] = useState(() => editingRecord?.id || uuidv4());
+  const [localId] = useState(() => editingRecord?.local_id || recordId);
   const [lastOsNumber, setLastOsNumber] = useState<number>(0);
 
   const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
@@ -128,7 +129,14 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   };
 
   const handleFinalSave = (isDraft = false) => {
-    if (!selectedAsset || !currentUser) return;
+    if (hasSubmitted.current) return;
+    hasSubmitted.current = true;
+    
+    if (!selectedAsset || !currentUser) {
+      hasSubmitted.current = false;
+      return;
+    }
+    
     setIsSubmitting(true);
     setLastOsNumber(nextOsNumber);
     const isEditingWithTechnician = editingRecord && editingRecord.technician;

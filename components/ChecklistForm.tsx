@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+// v4 UUID import is already present below
 import GenericModal from './GenericModal';
 import { v4 as uuidv4 } from 'uuid';
 import { createPortal } from 'react-dom';
@@ -24,6 +25,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [activePhotoItemId, setActivePhotoItemId] = useState<string | null>(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const hasSubmitted = useRef(false);
   const [isPreview, setIsPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -39,8 +41,8 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [alertTitle, setAlertTitle] = useState('');
   const [alertDesc, setAlertDesc] = useState('');
 
-  const [recordId] = useState(editingRecord?.id || `h-${Date.now()}`);
-  const [localId] = useState(editingRecord?.local_id || recordId);
+  const [recordId] = useState(() => editingRecord?.id || uuidv4());
+  const [localId] = useState(() => editingRecord?.local_id || recordId);
   const [selectedAsset] = useState<CraneAsset | null>(() => {
     if (editingRecord) return assets.find(a => a.id === editingRecord.assetId) || null;
     return assets.find(a => a.id === initialAssetId) || null;
@@ -124,7 +126,9 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [isSavingProgress, setIsSavingProgress] = useState(false);
 
   const handleSaveProgress = async () => {
-    if (!selectedAsset || !currentUser) return;
+    if (hasSubmitted.current) return;
+    hasSubmitted.current = true;
+    if (!selectedAsset || !currentUser) { hasSubmitted.current = false; return; }
     setIsSavingProgress(true);
     const draftRecord: MaintenanceRecord = {
       id: recordId,
@@ -150,6 +154,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       onCancel();
     } catch (error: any) {
       console.error('Error saving draft:', error);
+      hasSubmitted.current = false;
       setIsSavingProgress(false);
       setAlertTitle('Erro no Rascunho');
       setAlertDesc(error.message || 'Não foi possível salvar o rascunho no momento.');
@@ -158,7 +163,9 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   };
 
   const handleFinalSave = async () => {
-    if (!selectedAsset || !currentUser) return;
+    if (hasSubmitted.current) return;
+    hasSubmitted.current = true;
+    if (!selectedAsset || !currentUser) { hasSubmitted.current = false; return; }
     setIsSubmitting(true);
     const isEditingWithTechnician = editingRecord && editingRecord.technician;
     const finalTechnician = isEditingWithTechnician ? editingRecord.technician : currentUser.name;

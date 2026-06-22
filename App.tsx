@@ -378,6 +378,36 @@ const App: React.FC = () => {
     try {
       // 1. Salvar localmente primeiro (Offline-First)
       const localId = record.local_id || (record as any).local_id || uuidv4();
+
+      // Deduplicação extra (Correção 4) - Evitar múltiplos toques salvando duplicatas
+      if (record.inspectionNumber && record.assetId && record.date) {
+        const existingForAsset = await db.ordens_servico
+          .where('assetId').equals(record.assetId)
+          .toArray();
+        
+        const isDuplicate = existingForAsset.some(r => 
+          r.inspectionNumber === record.inspectionNumber && 
+          r.date === record.date &&
+          r.local_id !== localId
+        );
+
+        if (isDuplicate) {
+          console.warn('App: Duplicata detectada. Ignorando salvamento extra.', record);
+          // Omitir o put e resetar a UI
+          setEditingRecord(null);
+          if (record.status === 'COMPLETED') {
+            setPreselectedAssetId(record.assetId);
+            setActiveTab('history');
+          } else {
+            setPreselectedAssetId(null);
+            setActiveTab('open-orders');
+          }
+          setDynamicTitle(null);
+          setHeaderAction(null);
+          return;
+        }
+      }
+
       const localRecord: LocalMaintenanceRecord = {
         ...record,
         id: record.id?.startsWith('h-') ? localId : (record.id || localId), // Prefer UUID over temporary h- format
