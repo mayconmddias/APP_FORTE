@@ -36,12 +36,39 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   initialAssetId,
   editingRecord
 }) => {
-  const [step, setStep] = useState<FlowStep>(editingRecord ? FlowStep.FILL_CHECKLIST : FlowStep.SELECT_CLIENT);
+  const [recordId] = useState(() => editingRecord?.id || uuidv4());
+  const [localId] = useState(() => editingRecord?.local_id || recordId);
+
+  const [step, setStep] = useState<FlowStep>(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
+      if (saved) return JSON.parse(saved).step;
+    } catch {}
+    return editingRecord ? FlowStep.FILL_CHECKLIST : FlowStep.SELECT_CLIENT;
+  });
   const hasSubmitted = useRef(false);
-  const [selectedClient, setSelectedClient] = useState<string | null>(null);
-  const [selectedAsset, setSelectedAsset] = useState<CraneAsset | null>(null);
+  const [selectedClient, setSelectedClient] = useState<string | null>(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
+      if (saved) return JSON.parse(saved).selectedClient;
+    } catch {}
+    return null;
+  });
+  const [selectedAsset, setSelectedAsset] = useState<CraneAsset | null>(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
+      if (saved) return JSON.parse(saved).selectedAsset;
+    } catch {}
+    return null;
+  });
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedItemsTemplate, setSelectedItemsTemplate] = useState<ChecklistItem[]>(editingRecord?.checklists || []);
+  const [selectedItemsTemplate, setSelectedItemsTemplate] = useState<ChecklistItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
+      if (saved) return JSON.parse(saved).selectedItemsTemplate;
+    } catch {}
+    return editingRecord?.checklists || [];
+  });
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [selectorSearch, setSelectorSearch] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -49,14 +76,48 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [activePhotoItemId, setActivePhotoItemId] = useState<string | null>(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [infoModalText, setInfoModalText] = useState<string | null>(null);
-  const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
-  const [clientSignature, setClientSignature] = useState(editingRecord?.clientSignature || '');
+  const [clientName, setClientName] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
+      if (saved) return JSON.parse(saved).clientName;
+    } catch {}
+    return editingRecord?.clientRepresentative || '';
+  });
+  const [clientSignature, setClientSignature] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
+      if (saved) return JSON.parse(saved).clientSignature;
+    } catch {}
+    return editingRecord?.clientSignature || '';
+  });
   const [showSignaturePad, setShowSignaturePad] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [inspectionDate, setInspectionDate] = useState(editingRecord?.date || new Date().toISOString().split('T')[0]);
-  const [recordId] = useState(() => editingRecord?.id || uuidv4());
-  const [localId] = useState(() => editingRecord?.local_id || recordId);
+  const [inspectionDate, setInspectionDate] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
+      if (saved) return JSON.parse(saved).inspectionDate;
+    } catch {}
+    return editingRecord?.date || new Date().toISOString().split('T')[0];
+  });
   const [lastOsNumber, setLastOsNumber] = useState<number>(0);
+
+  // Auto-save form state to localStorage
+  useEffect(() => {
+    const state = {
+      step,
+      selectedClient,
+      selectedAsset,
+      selectedItemsTemplate,
+      clientName,
+      clientSignature,
+      inspectionDate
+    };
+    localStorage.setItem(`forte_draft_corrective_${recordId}`, JSON.stringify(state));
+  }, [step, selectedClient, selectedAsset, selectedItemsTemplate, clientName, clientSignature, inspectionDate, recordId]);
+
+  const clearDraft = () => {
+    localStorage.removeItem(`forte_draft_corrective_${recordId}`);
+  };
 
   const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
     return new Promise((resolve) => {
@@ -157,6 +218,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
       status: (clientName && clientSignature && !isDraft) ? 'COMPLETED' : 'OPEN'
     };
     onSave(newRecord);
+    clearDraft();
     setIsSubmitting(false);
     if (!isDraft) setStep(FlowStep.SUCCESS); else onCancel();
   };
@@ -173,7 +235,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
         </div>
         <h2 className="font-headline font-bold text-2xl text-blue-950 uppercase">OS #{lastOsNumber} criada!</h2>
         <p className="font-body text-sm text-slate-400 max-w-xs mt-2 uppercase">A manutenção corretiva foi registrada com sucesso.</p>
-        <button onClick={onCancel} className="mt-10 h-14 px-10 bg-[#004a88] text-white rounded-full font-headline font-bold text-sm uppercase tracking-widest shadow-lg shadow-blue-900/20 active:scale-95 transition-all">
+        <button onClick={() => { clearDraft(); onCancel(); }} className="mt-10 h-14 px-10 bg-[#004a88] text-white rounded-full font-headline font-bold text-sm uppercase tracking-widest shadow-lg shadow-blue-900/20 active:scale-95 transition-all">
           Voltar ao Início
         </button>
       </div>,
@@ -189,9 +251,19 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
         <header className="bg-background border-b border-slate-100 px-6 py-4 flex items-center justify-between flex-shrink-0">
           <button
             onClick={() => {
-              if (step === FlowStep.BUILD_CHECKLIST) { initialAssetId ? onCancel() : setStep(FlowStep.SELECT_ASSET); }
+              if (step === FlowStep.BUILD_CHECKLIST) {
+                if (initialAssetId) {
+                  clearDraft();
+                  onCancel();
+                } else {
+                  setStep(FlowStep.SELECT_ASSET);
+                }
+              }
               else if (step === FlowStep.SELECT_ASSET) setStep(FlowStep.SELECT_CLIENT);
-              else onCancel();
+              else {
+                clearDraft();
+                onCancel();
+              }
             }}
             className="p-2 text-[#004a88] hover:bg-blue-50 rounded-full transition-all"
           >

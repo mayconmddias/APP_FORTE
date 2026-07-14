@@ -32,17 +32,43 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [infoModalText, setInfoModalText] = useState<string | null>(null);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [selectorSearch, setSelectorSearch] = useState('');
-  const [clientName, setClientName] = useState(editingRecord?.clientRepresentative || '');
-  const [clientSignature, setClientSignature] = useState(editingRecord?.clientSignature || '');
-  const [frequency, setFrequency] = useState<Frequency>(editingRecord?.frequency || Frequency.MENSAL);
-  const [inspectionDate, setInspectionDate] = useState(editingRecord?.date || new Date().toISOString().split('T')[0]);
+
+  const [recordId] = useState(() => editingRecord?.id || uuidv4());
+  const [localId] = useState(() => editingRecord?.local_id || recordId);
+
+  const [clientName, setClientName] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_checklist_${recordId}`);
+      if (saved) return JSON.parse(saved).clientName;
+    } catch {}
+    return editingRecord?.clientRepresentative || '';
+  });
+  const [clientSignature, setClientSignature] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_checklist_${recordId}`);
+      if (saved) return JSON.parse(saved).clientSignature;
+    } catch {}
+    return editingRecord?.clientSignature || '';
+  });
+  const [frequency, setFrequency] = useState<Frequency>(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_checklist_${recordId}`);
+      if (saved) return JSON.parse(saved).frequency;
+    } catch {}
+    return editingRecord?.frequency || Frequency.MENSAL;
+  });
+  const [inspectionDate, setInspectionDate] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_checklist_${recordId}`);
+      if (saved) return JSON.parse(saved).inspectionDate;
+    } catch {}
+    return editingRecord?.date || new Date().toISOString().split('T')[0];
+  });
 
   const [showAlert, setShowAlert] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertDesc, setAlertDesc] = useState('');
 
-  const [recordId] = useState(() => editingRecord?.id || uuidv4());
-  const [localId] = useState(() => editingRecord?.local_id || recordId);
   const [selectedAsset] = useState<CraneAsset | null>(() => {
     if (editingRecord) return assets.find(a => a.id === editingRecord.assetId) || null;
     return assets.find(a => a.id === initialAssetId) || null;
@@ -54,7 +80,29 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
     return 'PONTE_PRINCIPAL';
   });
 
-  const [items, setItems] = useState<ChecklistItem[]>(editingRecord?.checklists || []);
+  const [items, setItems] = useState<ChecklistItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_checklist_${recordId}`);
+      if (saved) return JSON.parse(saved).items;
+    } catch {}
+    return editingRecord?.checklists || [];
+  });
+
+  // Auto-save form state to localStorage
+  useEffect(() => {
+    const state = {
+      clientName,
+      clientSignature,
+      frequency,
+      inspectionDate,
+      items
+    };
+    localStorage.setItem(`forte_draft_checklist_${recordId}`, JSON.stringify(state));
+  }, [clientName, clientSignature, frequency, inspectionDate, items, recordId]);
+
+  const clearDraft = () => {
+    localStorage.removeItem(`forte_draft_checklist_${recordId}`);
+  };
 
   const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
     return new Promise((resolve) => {
@@ -151,6 +199,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
     try {
       await onSave(draftRecord);
       setIsSavingProgress(false);
+      clearDraft();
       onCancel();
     } catch (error: any) {
       console.error('Error saving draft:', error);
@@ -189,6 +238,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       status: 'COMPLETED'
     };
     await onSave(newRecord);
+    clearDraft();
     setIsSubmitting(false);
   };
 
@@ -201,7 +251,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
         <h2 className="font-headline font-bold text-2xl text-blue-950 uppercase">Relatório Salvo!</h2>
         <p className="text-slate-400 font-body font-bold max-w-xs mt-2 text-[11px] uppercase">A Ordem de Serviço foi sincronizada com sucesso.</p>
         <button
-          onClick={onCancel}
+          onClick={() => { clearDraft(); onCancel(); }}
           className="mt-10 h-14 px-10 bg-[#004a88] text-white rounded-full font-headline font-bold text-sm uppercase tracking-widest shadow-lg shadow-blue-900/20 active:scale-95 transition-all"
         >
           Voltar ao Início
@@ -216,7 +266,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
 
       {/* Header */}
       <header className="bg-background border-b border-slate-100 flex items-center justify-between px-6 py-4 flex-shrink-0">
-        <button onClick={onCancel} className="p-2 text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
+        <button onClick={() => { clearDraft(); onCancel(); }} className="p-2 text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
           <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '24px' }}>arrow_back</span>
         </button>
         <div className="text-center flex-1">

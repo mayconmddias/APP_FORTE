@@ -25,12 +25,52 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
   const [recordId] = useState(editingRdo?.id || uuidv4());
   const [localId] = useState(editingRdo?.local_id || recordId);
   const [rdoNumber] = useState(editingRdo?.rdoNumber || nextRdoNumber);
-  const [siteName, setSiteName] = useState(editingRdo?.siteName || '');
-  const [clientName, setClientName] = useState(editingRdo?.clientName || '');
-  const [activities, setActivities] = useState<string>(editingRdo?.activities?.join('\n') || '');
-  const [photos, setPhotos] = useState<string[]>(editingRdo?.photos || []);
+
+  const [siteName, setSiteName] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_rdo_${recordId}`);
+      if (saved) return JSON.parse(saved).siteName;
+    } catch {}
+    return editingRdo?.siteName || '';
+  });
+  const [clientName, setClientName] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_rdo_${recordId}`);
+      if (saved) return JSON.parse(saved).clientName;
+    } catch {}
+    return editingRdo?.clientName || '';
+  });
+  const [activities, setActivities] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_rdo_${recordId}`);
+      if (saved) return JSON.parse(saved).activities;
+    } catch {}
+    return editingRdo?.activities?.join('\n') || '';
+  });
+  const [photos, setPhotos] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`forte_draft_rdo_${recordId}`);
+      if (saved) return JSON.parse(saved).photos;
+    } catch {}
+    return editingRdo?.photos || [];
+  });
   const [technicianId] = useState(editingRdo?.technicianId || currentUser?.id);
   const [technicianName] = useState(editingRdo?.technicianName || currentUser?.name);
+
+  // Auto-save form state to localStorage
+  useEffect(() => {
+    const state = {
+      siteName,
+      clientName,
+      activities,
+      photos
+    };
+    localStorage.setItem(`forte_draft_rdo_${recordId}`, JSON.stringify(state));
+  }, [siteName, clientName, activities, photos, recordId]);
+
+  const clearDraft = () => {
+    localStorage.removeItem(`forte_draft_rdo_${recordId}`);
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
@@ -139,6 +179,7 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
     };
 
     onSave(record);
+    clearDraft();
     setIsSaving(false);
   };
 
@@ -153,7 +194,7 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
 
       {/* Header */}
       <header className="bg-background border-b border-slate-100 px-6 py-4 flex items-center justify-between flex-shrink-0">
-        <button onClick={onCancel} className="p-2 text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
+        <button onClick={() => { clearDraft(); onCancel(); }} className="p-2 text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
           <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '24px' }}>arrow_back</span>
         </button>
         <div className="text-center flex-1">

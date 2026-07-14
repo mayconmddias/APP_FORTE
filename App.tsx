@@ -22,9 +22,29 @@ import { networkManager } from './services/networkManager';
 import { v4 as uuidv4 } from 'uuid';
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [activeTab, setActiveTab] = useState('assets');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      const session = localStorage.getItem('forte_session');
+      return session ? JSON.parse(session).isAuthenticated : false;
+    } catch {
+      return false;
+    }
+  });
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    try {
+      const session = localStorage.getItem('forte_session');
+      return session ? JSON.parse(session).user : null;
+    } catch {
+      return null;
+    }
+  });
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    try {
+      return localStorage.getItem('forte_active_tab') || 'assets';
+    } catch {
+      return 'assets';
+    }
+  });
   const [dynamicTitle, setDynamicTitle] = useState<string | null>(null);
   const [headerAction, setHeaderAction] = useState<React.ReactNode>(null);
   const [history, setHistory] = useState<MaintenanceRecord[]>([]);
@@ -34,15 +54,104 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [nextOsNumber, setNextOsNumber] = useState<number>(1);
 
-  const [preselectedAssetId, setPreselectedAssetId] = useState<string | null>(null);
-  const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
-  const [editingRdo, setEditingRdo] = useState<RdoRecord | null>(null);
+  const [preselectedAssetId, setPreselectedAssetId] = useState<string | null>(() => {
+    return localStorage.getItem('forte_preselected_asset_id');
+  });
+  const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(() => {
+    try {
+      const saved = localStorage.getItem('forte_editing_record');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [editingRdo, setEditingRdo] = useState<RdoRecord | null>(() => {
+    try {
+      const saved = localStorage.getItem('forte_editing_rdo');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [nextRdoNumber, setNextRdoNumber] = useState<number>(1);
-  const [rdoSelectedClient, setRdoSelectedClient] = useState<string | null>(null);
-  const [rdoSourceTab, setRdoSourceTab] = useState<string | null>(null);
+  const [rdoSelectedClient, setRdoSelectedClient] = useState<string | null>(() => {
+    return localStorage.getItem('forte_rdo_selected_client');
+  });
+  const [rdoSourceTab, setRdoSourceTab] = useState<string | null>(() => {
+    return localStorage.getItem('forte_rdo_source_tab');
+  });
 
-  const [selectedClient, setSelectedClient] = useState<string | null>(null);
-  const [selectedAssetIdForAction, setSelectedAssetIdForAction] = useState<string | null>(null);
+  const [selectedClient, setSelectedClient] = useState<string | null>(() => {
+    return localStorage.getItem('forte_selected_client');
+  });
+  const [selectedAssetIdForAction, setSelectedAssetIdForAction] = useState<string | null>(() => {
+    return localStorage.getItem('forte_selected_asset_id_action');
+  });
+
+  // Effects to synchronize state changes to localStorage
+  useEffect(() => {
+    localStorage.setItem('forte_session', JSON.stringify({ isAuthenticated, user: currentUser }));
+  }, [isAuthenticated, currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem('forte_active_tab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (preselectedAssetId) {
+      localStorage.setItem('forte_preselected_asset_id', preselectedAssetId);
+    } else {
+      localStorage.removeItem('forte_preselected_asset_id');
+    }
+  }, [preselectedAssetId]);
+
+  useEffect(() => {
+    if (editingRecord) {
+      localStorage.setItem('forte_editing_record', JSON.stringify(editingRecord));
+    } else {
+      localStorage.removeItem('forte_editing_record');
+    }
+  }, [editingRecord]);
+
+  useEffect(() => {
+    if (editingRdo) {
+      localStorage.setItem('forte_editing_rdo', JSON.stringify(editingRdo));
+    } else {
+      localStorage.removeItem('forte_editing_rdo');
+    }
+  }, [editingRdo]);
+
+  useEffect(() => {
+    if (rdoSelectedClient) {
+      localStorage.setItem('forte_rdo_selected_client', rdoSelectedClient);
+    } else {
+      localStorage.removeItem('forte_rdo_selected_client');
+    }
+  }, [rdoSelectedClient]);
+
+  useEffect(() => {
+    if (rdoSourceTab) {
+      localStorage.setItem('forte_rdo_source_tab', rdoSourceTab);
+    } else {
+      localStorage.removeItem('forte_rdo_source_tab');
+    }
+  }, [rdoSourceTab]);
+
+  useEffect(() => {
+    if (selectedClient) {
+      localStorage.setItem('forte_selected_client', selectedClient);
+    } else {
+      localStorage.removeItem('forte_selected_client');
+    }
+  }, [selectedClient]);
+
+  useEffect(() => {
+    if (selectedAssetIdForAction) {
+      localStorage.setItem('forte_selected_asset_id_action', selectedAssetIdForAction);
+    } else {
+      localStorage.removeItem('forte_selected_asset_id_action');
+    }
+  }, [selectedAssetIdForAction]);
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -350,8 +459,48 @@ const App: React.FC = () => {
     }
   };
 
+  const [debouncedTrigger, setDebouncedTrigger] = useState(0);
+
+  // Debounced effect to fetch data to avoid slamming the Supabase DB
   useEffect(() => {
+    if (debouncedTrigger === 0) return;
+    const timer = setTimeout(() => {
+      console.log("Realtime: Triggering debounced fetchData...");
+      fetchData();
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [debouncedTrigger]);
+
+  useEffect(() => {
+    // Initial fetch on mount
     fetchData();
+
+    // Background polling (every 60 seconds) as a fallback in case websocket breaks
+    const pollingInterval = setInterval(() => {
+      console.log("Polling: Triggering background sync check...");
+      fetchData();
+    }, 60000);
+
+    // Supabase Realtime Subscription
+    console.log("Realtime: Setting up Supabase channels subscription...");
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public' },
+        (payload) => {
+          console.log("Realtime event received:", payload);
+          setDebouncedTrigger(prev => prev + 1);
+        }
+      )
+      .subscribe((status) => {
+        console.log(`Realtime channel status: ${status}`);
+      });
+
+    return () => {
+      clearInterval(pollingInterval);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleLogin = (user: UserProfile) => {
