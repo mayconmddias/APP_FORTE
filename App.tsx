@@ -378,7 +378,9 @@ const App: React.FC = () => {
               criticality: h.criticality,
               checklists: h.checklists,
               clientRepresentative: h.client_representative,
+              clientSignature: h.client_signature || h.clientSignature,
               signature: h.signature,
+              status: h.status,
               sync_status: 'SYNCED',
               updated_at: new Date().toISOString(),
               version: 1
