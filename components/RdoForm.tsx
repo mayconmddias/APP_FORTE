@@ -253,7 +253,7 @@ const RdoForm: React.FC<RdoFormProps> = ({
 
   return createPortal(
     <>
-      <div className="fixed inset-0 bg-background z-[9999] flex flex-col animate-in fade-in h-screen overflow-hidden">
+      <div className="fixed inset-0 lg:left-1/2 lg:-translate-x-1/2 lg:max-w-3xl lg:w-full lg:shadow-2xl lg:border-x lg:border-slate-100 bg-background z-[9999] flex flex-col animate-in fade-in h-screen overflow-hidden">
 
       {/* Header */}
       <header className="bg-background border-b border-slate-100 px-6 py-4 flex items-center justify-between flex-shrink-0">

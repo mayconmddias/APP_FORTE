@@ -245,7 +245,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
 
   if (isSuccess) {
     return createPortal(
-      <div className="fixed inset-0 bg-background z-[9999] flex flex-col items-center justify-center p-6 text-center animate-in zoom-in-95">
+      <div className="fixed inset-0 lg:left-1/2 lg:-translate-x-1/2 lg:max-w-3xl lg:w-full lg:shadow-2xl lg:border-x lg:border-slate-100 bg-background z-[9999] flex flex-col items-center justify-center p-6 text-center animate-in zoom-in-95">
         <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
           <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '40px', fontVariationSettings: "'FILL' 1" }}>task_alt</span>
         </div>
@@ -263,7 +263,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   }
 
   return createPortal(
-    <div className="fixed inset-0 bg-background z-[9999] flex flex-col animate-in slide-in-from-bottom-4 overflow-hidden">
+    <div className="fixed inset-0 lg:left-1/2 lg:-translate-x-1/2 lg:max-w-3xl lg:w-full lg:shadow-2xl lg:border-x lg:border-slate-100 bg-background z-[9999] flex flex-col animate-in slide-in-from-bottom-4 overflow-hidden">
 
       {/* Header */}
       <header className="bg-background border-b border-slate-100 flex items-center justify-between px-6 py-4 flex-shrink-0">
