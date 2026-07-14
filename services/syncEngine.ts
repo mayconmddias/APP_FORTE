@@ -194,7 +194,8 @@ class SyncEngine {
                         checklists: data.checklists,
                         client_representative: data.clientRepresentative,
                         client_signature: data.clientSignature,
-                        signature: data.signature
+                        signature: data.signature,
+                        status: data.status
                     });
                 } else if (localTable === 'rdo') {
                     Object.assign(mapped, {
