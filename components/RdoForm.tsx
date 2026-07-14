@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2 } from 'lucide-react';
-import { RdoRecord, UserProfile, Weather } from '../types';
+import { RdoRecord, UserProfile, Weather, CraneAsset } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface RdoFormProps {
@@ -13,9 +13,20 @@ interface RdoFormProps {
   allowFinalize?: boolean;
   onTitleChange?: (title: string | null) => void;
   rdos?: RdoRecord[];
+  assets?: CraneAsset[];
 }
 
-const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editingRdo, nextRdoNumber, allowFinalize, onTitleChange, rdos = [] }) => {
+const RdoForm: React.FC<RdoFormProps> = ({ 
+  onSave, 
+  onCancel, 
+  currentUser, 
+  editingRdo, 
+  nextRdoNumber, 
+  allowFinalize, 
+  onTitleChange, 
+  rdos = [], 
+  assets = [] 
+}) => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -72,14 +83,43 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
     localStorage.removeItem(`forte_draft_rdo_${recordId}`);
   };
 
+  const clientSuggestions = useMemo(() => {
+    const clients = new Set<string>();
+    rdos.forEach(r => { if (r.clientName) clients.add(r.clientName.trim().toUpperCase()); });
+    assets.forEach(a => { if (a.client) clients.add(a.client.trim().toUpperCase()); });
+    return Array.from(clients).sort();
+  }, [rdos, assets]);
+
+  const siteSuggestions = useMemo(() => {
+    return Array.from(new Set(rdos.map(r => r.siteName?.trim().toUpperCase()))).filter(Boolean).sort() as string[];
+  }, [rdos]);
+
+  const [selectedDropdownClient, setSelectedDropdownClient] = useState<string>(() => {
+    if (!clientName) return '';
+    const nameUpper = clientName.trim().toUpperCase();
+    if (clientSuggestions.includes(nameUpper)) {
+      return nameUpper;
+    }
+    return 'NEW';
+  });
+
+  const handleDropdownClientChange = (val: string) => {
+    setSelectedDropdownClient(val);
+    if (val === 'NEW') {
+      setClientName('');
+    } else {
+      setClientName(val);
+    }
+  };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
+  const isSubmittingRef = useRef(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [replaceMode, setReplaceMode] = useState<'camera' | 'gallery' | null>(null);
   const [showPhotoSelector, setShowPhotoSelector] = useState(false);
 
-  const clientSuggestions = Array.from(new Set(rdos.map(r => r.clientName))).sort();
-  const siteSuggestions = Array.from(new Set(rdos.map(r => r.siteName))).sort();
+
 
   const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
     return new Promise((resolve) => {
@@ -148,39 +188,46 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
 
 
   const handleSave = async () => {
-    if (!currentUser) return;
+    if (!currentUser || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSaving(true);
 
-    const now = new Date();
-    const currentDate = now.toISOString().split('T')[0];
-    const currentTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    try {
+      const now = new Date();
+      const currentDate = now.toISOString().split('T')[0];
+      const currentTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const record: RdoRecord = {
-      id: recordId,
-      local_id: localId,
-      date: currentDate,
-      arrivalTime: currentTime,
-      startTime: currentTime,
-      siteName: siteName.toUpperCase(),
-      clientName: clientName.toUpperCase(),
-      weather: Weather.SOL,
-      teamDescription: '',
-      activities: activities.split('\n').filter(a => a.trim() !== '').map(a => a.toUpperCase()),
-      materials: [],
-      equipment: [],
-      occurrences: '',
-      photos,
-      technicianId,
-      technicianName,
-      endTime: currentTime,
-      rdoNumber,
-      status: 'COMPLETED',
-      signature: 'SIGNED'
-    };
+      const record: RdoRecord = {
+        id: recordId,
+        local_id: localId,
+        date: currentDate,
+        arrivalTime: currentTime,
+        startTime: currentTime,
+        siteName: siteName.toUpperCase(),
+        clientName: clientName.toUpperCase(),
+        weather: Weather.SOL,
+        teamDescription: '',
+        activities: activities.split('\n').filter(a => a.trim() !== '').map(a => a.toUpperCase()),
+        materials: [],
+        equipment: [],
+        occurrences: '',
+        photos,
+        technicianId,
+        technicianName,
+        endTime: currentTime,
+        rdoNumber,
+        status: 'COMPLETED',
+        signature: 'SIGNED'
+      };
 
-    onSave(record);
-    clearDraft();
-    setIsSaving(false);
+      onSave(record);
+      clearDraft();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+      isSubmittingRef.current = false;
+    }
   };
 
   const isFormValid = clientName.trim() && siteName.trim() && activities.trim();
@@ -221,16 +268,27 @@ const RdoForm: React.FC<RdoFormProps> = ({ onSave, onCancel, currentUser, editin
             </div>
             <div>
               <label className={labelClasses}>CLIENTE</label>
-              <input
-                list="client-list"
-                value={clientName}
-                onChange={e => setClientName(e.target.value)}
-                placeholder="NOME DO CLIENTE"
-                className={`${inputClasses} uppercase`}
-              />
-              <datalist id="client-list">
-                {clientSuggestions.map(s => <option key={s} value={s} />)}
-              </datalist>
+              <select
+                value={selectedDropdownClient}
+                onChange={e => handleDropdownClientChange(e.target.value)}
+                className={`${inputClasses} uppercase mb-2`}
+              >
+                <option value="">-- SELECIONE O CLIENTE --</option>
+                {clientSuggestions.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+                <option value="NEW">[ + CADASTRAR NOVO CLIENTE ]</option>
+              </select>
+
+              {selectedDropdownClient === 'NEW' && (
+                <input
+                  type="text"
+                  value={clientName}
+                  onChange={e => setClientName(e.target.value)}
+                  placeholder="NOME DO NOVO CLIENTE"
+                  className={`${inputClasses} uppercase animate-in slide-in-from-top-2 duration-200`}
+                />
+              )}
             </div>
             <div>
               <label className={labelClasses}>DESCRIÇÃO DO SERVIÇO</label>

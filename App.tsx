@@ -970,6 +970,7 @@ const App: React.FC = () => {
             nextRdoNumber={nextRdoNumber}
             allowFinalize={true}
             rdos={rdos}
+            assets={assets}
             onSave={handleSaveRdo}
             onCancel={() => { 
               setEditingRdo(null); 

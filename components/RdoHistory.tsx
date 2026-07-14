@@ -235,24 +235,27 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
   }, [records]);
 
   const filteredReports = useMemo(() => {
-    return records.filter(rec => {
+    const baseFiltered = records.filter(rec => {
       const matchesSearch =
         rec.siteName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rec.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rec.technicianName.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesClient = mode === 'OPEN' || !selectedClient || rec.clientName === selectedClient;
       if (!matchesClient || !matchesSearch) return false;
-      if (mode === 'COMPLETED' && selectedClient) {
-        if (startDate && endDate) {
-          return rec.date >= startDate && rec.date <= endDate;
-        } else {
-          const twoDaysAgo = new Date();
-          twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-          return rec.date >= twoDaysAgo.toISOString().split('T')[0];
-        }
+      
+      // If client is selected, completed mode, and dates are provided, filter by range
+      if (mode === 'COMPLETED' && selectedClient && startDate && endDate) {
+        return rec.date >= startDate && rec.date <= endDate;
       }
       return true;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    // If client is selected, completed mode, and no date filter is applied, return last 5 reports
+    if (mode === 'COMPLETED' && selectedClient && (!startDate || !endDate)) {
+      return baseFiltered.slice(0, 5);
+    }
+
+    return baseFiltered;
   }, [records, searchTerm, startDate, endDate, selectedClient, mode]);
 
   // View 1: Lista de Clientes

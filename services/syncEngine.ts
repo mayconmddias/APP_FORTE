@@ -198,6 +198,7 @@ class SyncEngine {
                     });
                 } else if (localTable === 'rdo') {
                     Object.assign(mapped, {
+                        rdo_number: data.rdoNumber,
                         date: data.date,
                         arrival_time: data.arrivalTime,
                         start_time: data.startTime,
