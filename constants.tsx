@@ -157,10 +157,55 @@ export const CHECKLIST_PONTE: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>
 ];
 
 export const CHECKLIST_TALHA: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>[] = [
-  ...CHECKLIST_PONTE.slice(0, 9),      // 01 a 09
-  ...CHECKLIST_PONTE.slice(10, 12),    // 11 a 12
-  ...CHECKLIST_PONTE.slice(23, 26),    // 24 a 26
-  ...CHECKLIST_PONTE.slice(32, 66)     // 33 a 66 (O item 66 agora é o card 48)
+  { category: 'ELÉTRICO', label: 'TENSÃO DE ENTRADA DO EQUIPAMENTO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM MULTÍMETRO.' },
+  { category: 'ELÉTRICO', label: 'TENSÃO DE COMANDO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM MULTÍMETRO.' },
+  { category: 'SEGURANÇA', label: 'IDENTIFICAÇÃO DO EQUIPAMENTO', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'SEGURANÇA', label: 'IDENTIFICAÇÃO DE CAPACIDADE DE ELEVAÇÃO', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'SEGURANÇA', label: 'OPERADORES SÃO CAPACITADOS PARA OPERAÇÃO DO EQUIPAMENTO', instruction: 'VERIFICAÇÃO VISUAL.' },
+  { category: 'SEGURANÇA', label: 'ACESSO PARA MANUTENÇÃO DO EQUIPAMENTO', instruction: 'VERIFICAÇÃO VISUAL.' },
+  { category: 'SEGURANÇA', label: 'BLOQUEIO DO EQUIPAMENTO PARA MANUTENÇÃO', instruction: 'TESTE/BLOQUEIO.' },
+  { category: 'ELÉTRICO', label: 'ACIONAMENTO COMANDO ELEVAÇÃO', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'ELÉTRICO', label: 'ACIONAMENTO COMANDO DIREÇÃO', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'MECÂNICO', label: 'ESTRUTURA DO EQUIPAMENTO', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'ELÉTRICO', label: 'BARRAMENTO DE ALIMENTAÇÃO - ALINHAMENTO / FIXAÇÃO', instruction: 'INSPEÇÃO VISUAL E REAPERTO.' },
+  { category: 'ELÉTRICO', label: 'LINHA DE PORTA CABOS CHATO', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'ELÉTRICO', label: 'LIMPEZA E REAPERTO DO PAINEL ELÉTRICO', instruction: 'LIMPEZA E MANUTENÇÃO.' },
+  { category: 'ELÉTRICO', label: 'INSPEÇÃO VISUAL E FUNCIONAL DE BOTOEIRA E CONTROLE REMÓTO', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'MECÂNICO', label: 'LUBRIFICAÇÃO DE PINHÃO E ENGRENAGENS DE RODAS', instruction: 'APLICAR LUBRIFICANTE.' },
+  { category: 'MECÂNICO', label: 'LUBRIFICAÇÃO DO CABO DE AÇO', instruction: 'APLICAR LUBRIFICANTE.' },
+  { category: 'MECÂNICO', label: 'AJUSTE DOS FREIOS DE TRANSLAÇÃO', instruction: 'VERIFICAR E AJUSTAR.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR TRANSLAÇÃO', instruction: 'MEDIÇÃO COM ALICATE AMPERÍMETRO.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO DE TRASLAÇÃO', instruction: 'MEDIÇÃO COM ALICATE AMPERÍMETRO.' },
+  { category: 'MECÂNICO', label: 'RODA MOTRIZ - CARRO', instruction: 'INSPEÇÃO VISUAL E MEDIÇÃO.' },
+  { category: 'MECÂNICO', label: 'RODA LIVRE - CARRO', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'MECÂNICO', label: 'PINHÃO DA RODA', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'MECÂNICO', label: 'VEDAÇÃO DO REDUTOR DE DIREÇÃO', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'MECÂNICO', label: 'RUIDO DO REDUTOR DE DIREÇÃO', instruction: 'INSPEÇÃO AUDITIVA.' },
+  { category: 'ELÉTRICO', label: 'MOTOR DE DIREÇÃO', instruction: 'INSPEÇÃO VISUAL E FUNCIONAL.' },
+  { category: 'MECÂNICO', label: 'FREIO DE DIREÇÃO', instruction: 'VERIFICAÇÃO DE FUNCIONAMENTO.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR DIREÇÃO', instruction: 'MEDIÇÃO COM ALICATE AMPERÍMETRO.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO DE DIREÇÃO', instruction: 'MEDIÇÃO COM ALICATE AMPERÍMETRO.' },
+  { category: 'MECÂNICO', label: 'AJUSTE DE FREIO DE DIREÇÃO', instruction: 'VERIFICAR E REGULAR.' },
+  { category: 'ELÉTRICO', label: 'FIM DE CURSO DIREÇÃO RAPIDA - DIREITA', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'ELÉTRICO', label: 'FIM DE CURSO DIREÇÃO LENTA - DIREITA', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'ELÉTRICO', label: 'FIM DE CURSO DIREÇÃO RAPIDA - ESQUERDA', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'ELÉTRICO', label: 'FIM DE CURSO DIREÇÃO LENTA - ESQUERDA', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'MECÂNICO', label: 'VEDAÇÃO DO REDUTOR DE ELEVAÇÃO', instruction: 'VERIFICAR SE HÁ VAZAMENTOS.' },
+  { category: 'MECÂNICO', label: 'RUIDO DO REDUTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO AUDITIVA.' },
+  { category: 'ELÉTRICO', label: 'MOTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO VISUAL E FUNCIONAL.' },
+  { category: 'MECÂNICO', label: 'FREIO DE ELEVAÇÃO', instruction: 'VERIFICAR DESGASTE E DESLOCAMENTO.' },
+  { category: 'MECÂNICO', label: 'AJUSTE DE FREIO DE ELEVAÇÃO', instruction: 'VERIFICAR E REGULAR.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR ELEVAÇÃO PRINCIPAL', instruction: 'MEDIÇÃO COM ALICATE AMPERÍMETRO.' },
+  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO ELEVAÇÃO PRINCIPAL', instruction: 'MEDIÇÃO COM ALICATE AMPERÍMETRO.' },
+  { category: 'MECÂNICO', label: 'TAMBOR - VER MEDIDA CANAL', instruction: 'INSPEÇÃO VISUAL E MEDIÇÃO.' },
+  { category: 'MECÂNICO', label: 'CABO DE AÇO - VER MEDIDA', instruction: 'INSPEÇÃO E MEDIÇÃO DO DIÂMETRO.' },
+  { category: 'MECÂNICO', label: 'CLIP´S CABO DE AÇO', instruction: 'VERIFICAR APERTO E QUANTIDADE.' },
+  { category: 'MECÂNICO', label: 'ROLDANA DE DESVIO', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'MECÂNICO', label: 'CAIXA DE GANCHO', instruction: 'VERIFICAR GARGAL E DEFORMAÇÃO.' },
+  { category: 'ELÉTRICO', label: 'FIM DE CURSO - SOBE', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'ELÉTRICO', label: 'SOBRE CURSO - SOBE', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'ELÉTRICO', label: 'FIM DE CURSO - DESCE', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'SEGURANÇA', label: 'TESTE COM CARGA', instruction: 'TESTE DINÂMICO E ESTÁTICO.' }
 ];
 
 export const RDO_MATERIAIS = [
