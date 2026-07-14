@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { createPortal } from 'react-dom';
 import { Loader2 } from 'lucide-react';
-import { CHECKLIST_PONTE, CHECKLIST_TALHA } from '../constants';
+import { getChecklistTemplate } from '../constants';
 import { ChecklistItem, CraneAsset, MaintenanceRecord, MaintenanceType, UserProfile, Frequency } from '../types';
 import SignaturePad from './SignaturePad';
 
@@ -172,7 +172,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
 
   const availableItems = useMemo(() => {
     if (!selectedAsset) return [];
-    const base = (selectedAsset.equipmentType === 'Talha' || selectedAsset.equipmentType === 'Monovia') ? CHECKLIST_TALHA : CHECKLIST_PONTE;
+    const base = getChecklistTemplate(selectedAsset.equipmentType);
     return base.map((item, idx) => ({ ...item, id: `template-${idx}`, isOk: null, observation: '', photos: [] } as ChecklistItem));
   }, [selectedAsset]);
 
@@ -203,11 +203,12 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
     const isEditingWithTechnician = editingRecord && editingRecord.technician;
     const finalTechnician = isEditingWithTechnician ? editingRecord.technician! : currentUser.name;
     const finalTechnicianId = isEditingWithTechnician ? editingRecord.technicianId! : currentUser.id;
+    const isTalhaType = ['Talha', 'Elevador de Carga', 'Encaixotadora', 'Desencaixotadora'].includes(selectedAsset.equipmentType || '');
     const newRecord: MaintenanceRecord = {
       id: recordId, local_id: localId,
       inspectionNumber: editingRecord?.inspectionNumber || nextOsNumber,
       assetId: selectedAsset.id, type: MaintenanceType.CORRETIVA,
-      checklistType: (selectedAsset.equipmentType === 'Talha' || selectedAsset.equipmentType === 'Monovia') ? 'TALHA_PRINCIPAL' : 'PONTE_PRINCIPAL',
+      checklistType: isTalhaType ? 'TALHA_PRINCIPAL' : 'PONTE_PRINCIPAL',
       frequency: Frequency.MENSAL, date: inspectionDate,
       technician: finalTechnician, technicianId: finalTechnicianId,
       downtimeHours: 0,

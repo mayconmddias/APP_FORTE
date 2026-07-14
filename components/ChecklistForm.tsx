@@ -4,7 +4,7 @@ import GenericModal from './GenericModal';
 import { v4 as uuidv4 } from 'uuid';
 import { createPortal } from 'react-dom';
 import { Loader2 } from 'lucide-react';
-import { CHECKLIST_PONTE, CHECKLIST_TALHA } from '../constants';
+import { getChecklistTemplate } from '../constants';
 import { ChecklistItem, CraneAsset, MaintenanceRecord, MaintenanceType, UserProfile, Frequency, ChecklistType } from '../types';
 import ChecklistItemCard from './ChecklistItemCard';
 import ChecklistReview from './ChecklistReview';
@@ -76,7 +76,8 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
 
   const [checklistType] = useState<ChecklistType | null>(() => {
     if (editingRecord) return editingRecord.checklistType;
-    if (selectedAsset?.equipmentType === 'Talha' || selectedAsset?.equipmentType === 'Monovia') return 'TALHA_PRINCIPAL';
+    const talhaTypes = ['Talha', 'Elevador de Carga', 'Encaixotadora', 'Desencaixotadora'];
+    if (talhaTypes.includes(selectedAsset?.equipmentType || '')) return 'TALHA_PRINCIPAL';
     return 'PONTE_PRINCIPAL';
   });
 
@@ -132,7 +133,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       pageTitle = editingRecord.type === MaintenanceType.CORRETIVA ? 'EDIÇÃO DE CORRETIVA' : 'EDIÇÃO DE PREVENTIVA';
     }
     if (selectedAsset && checklistType && !items.length) {
-      const template = checklistType === 'TALHA_PRINCIPAL' ? CHECKLIST_TALHA : CHECKLIST_PONTE;
+      const template = getChecklistTemplate(selectedAsset.equipmentType);
       setItems(template.map((t, idx) => ({ ...t, id: `item-${idx}`, isOk: null, observation: '', photos: [] })));
     }
     onTitleChange?.(pageTitle);
@@ -144,7 +145,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
 
   const availableItems = useMemo(() => {
     if (!selectedAsset) return [];
-    const base = (selectedAsset.equipmentType === 'Talha' || selectedAsset.equipmentType === 'Monovia') ? CHECKLIST_TALHA : CHECKLIST_PONTE;
+    const base = getChecklistTemplate(selectedAsset.equipmentType);
     return base.map((item, idx) => ({
       ...item,
       id: `template-${idx}-${Date.now()}`,
@@ -314,7 +315,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-3 pb-32">
 
         {/* Seleção de periodicidade */}
-        {editingRecord?.type !== MaintenanceType.CORRETIVA && !['Monovia', 'Talha'].includes(selectedAsset?.equipmentType || '') && (
+        {editingRecord?.type !== MaintenanceType.CORRETIVA && !['Talha', 'Elevador de Carga', 'Encaixotadora', 'Desencaixotadora'].includes(selectedAsset?.equipmentType || '') && (
           <div className="bg-[#eef2f7] p-1 rounded-full flex items-center gap-1 mb-2">
             {Object.values(Frequency).map((freq) => (
               <button

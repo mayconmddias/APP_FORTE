@@ -36,7 +36,7 @@ const InstructionsModal: React.FC<InstructionsModalProps> = ({ isOpen, onClose }
         <div className="flex-1 overflow-y-auto pr-2 space-y-5 font-body text-[12px] text-slate-600 leading-relaxed uppercase">
           <div>
             <h3 className="font-headline font-bold text-sm text-blue-950 mb-1">APP FORTE PRO 4.0</h3>
-            <p className="font-bold text-slate-400">MENUS EXCLUSIVOS PARA INSPEÇÕES PREVENTIVAS E CORRETIVAS DE EQUIPAMENTOS DE ELEVAÇÃO (PONTE, TALHA, MONOVIA, ELEVADOR DE CARGA, ETC.)</p>
+            <p className="font-bold text-slate-400">MENUS EXCLUSIVOS PARA INSPEÇÕES PREVENTIVAS E CORRETIVAS DE EQUIPAMENTOS DE ELEVAÇÃO (PONTE, TALHA, ELEVADOR DE CARGA, ENCAIXOTADORA, DESENCAIXOTADORA, PÓRTICO, ETC.)</p>
             <ul className="list-disc pl-5 mt-2 space-y-1 text-slate-500 font-bold text-[11px] tracking-wide">
               <li>CLIENTES</li>
               <li>HISTÓRICO</li>

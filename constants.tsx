@@ -156,20 +156,56 @@ export const CHECKLIST_PONTE: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>
   { category: 'MECÂNICO', label: 'CAIXA DE GANCHO', instruction: 'REALIZAR TESTE COM LIQUIDO PENETRANTE.' }
 ];
 
+// --- ITENS DE VERIFICAÇÃO REUTILIZÁVEIS ---
+type CItem = Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>;
+
+const I_TENSAO_ENTRADA: CItem = { category: 'ELÉTRICO', label: 'TENSÃO DE ENTRADA DO EQUIPAMENTO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM MULTÍMETRO.' };
+const I_TENSAO_COMANDO: CItem = { category: 'ELÉTRICO', label: 'TENSÃO DE COMANDO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM MULTÍMETRO.' };
+const I_IDENT_EQUIP: CItem = { category: 'SEGURANÇA', label: 'IDENTIFICAÇÃO DO EQUIPAMENTO', instruction: 'INSPEÇÃO VISUAL.' };
+const I_IDENT_CAPACIDADE: CItem = { category: 'SEGURANÇA', label: 'IDENTIFICAÇÃO DE CAPACIDADE DE ELEVAÇÃO', instruction: 'INSPEÇÃO VISUAL.' };
+const I_OPER_CAPACITADOS: CItem = { category: 'SEGURANÇA', label: 'OPERADORES SÃO CAPACITADOS PARA OPERAÇÃO DO EQUIPAMENTO', instruction: 'VERIFICAÇÃO VISUAL.' };
+const I_ACESSO_MANUT: CItem = { category: 'SEGURANÇA', label: 'ACESSO PARA MANUTENÇÃO DO EQUIPAMENTO', instruction: 'VERIFICAÇÃO VISUAL.' };
+const I_BLOQUEIO_MANUT: CItem = { category: 'SEGURANÇA', label: 'BLOQUEIO DO EQUIPAMENTO PARA MANUTENÇÃO', instruction: 'TESTE/BLOQUEIO.' };
+const I_ACION_ELEV: CItem = { category: 'ELÉTRICO', label: 'ACIONAMENTO COMANDO ELEVAÇÃO', instruction: 'TESTE FUNCIONAL.' };
+const I_ESTRUTURA: CItem = { category: 'MECÂNICO', label: 'ESTRUTURA DO EQUIPAMENTO', instruction: 'INSPEÇÃO VISUAL.' };
+const I_ALIMENT_EL_TALHA: CItem = { category: 'ELÉTRICO', label: 'ALIMENTAÇÃO ELÉTRICA DA TALHA', instruction: 'INSPEÇÃO VISUAL.' };
+const I_LIMP_REAPERTO_PAINEL: CItem = { category: 'ELÉTRICO', label: 'LIMPEZA E REAPERTO DO PAINEL ELÉTRICO', instruction: 'LIMPEZA E MANUTENÇÃO.' };
+const I_BOTOEIRA_ACION: CItem = { category: 'ELÉTRICO', label: 'BOTOEIRA DE ACIONAMENTO', instruction: 'TESTE FUNCIONAL.' };
+const I_LUB_CORRENTE: CItem = { category: 'MECÂNICO', label: 'LUBRIFICAÇÃO DO CORRENTE', instruction: 'APLICAR LUBRIFICANTE.' };
+const I_VED_RED_ELEV: CItem = { category: 'MECÂNICO', label: 'VEDAÇÃO DO REDUTOR DE ELEVAÇÃO', instruction: 'VERIFICAR SE HÁ VAZAMENTOS.' };
+const I_RUIDO_RED_ELEV: CItem = { category: 'MECÂNICO', label: 'RUIDO DO REDUTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO AUDITIVA.' };
+const I_MOTOR_ELEV: CItem = { category: 'ELÉTRICO', label: 'MOTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO VISUAL AND FUNCIONAL.' };
+const I_FREIO_ELEV: CItem = { category: 'MECÂNICO', label: 'FREIO DE ELEVAÇÃO', instruction: 'VERIFICAR DESGASTE E DESLOCAMENTO.' };
+const I_AJUST_FREIO_ELEV: CItem = { category: 'MECÂNICO', label: 'AJUSTE DE FREIO DE ELEVAÇÃO', instruction: 'VERIFICAR E REGULAR.' };
+const I_CORR_EL_MOT_ELEV: CItem = { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR ELEVAÇÃO PRINCIPAL', instruction: 'MEDIÇÃO COM ALICATE AMPERÍMETRO.' };
+const I_CORR_EL_FR_ELEV: CItem = { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO ELEVAÇÃO PRINCIPAL', instruction: 'MEDIÇÃO COM ALICATE AMPERÍMETRO.' };
+const I_FIX_CORRENTE: CItem = { category: 'MECÂNICO', label: 'FIXAÇÃO DA CORRENTE', instruction: 'INSPEÇÃO VISUAL.' };
+const I_CAIXA_GANCHO: CItem = { category: 'MECÂNICO', label: 'CAIXA DE GANCHO', instruction: 'VERIFICAR GARGAL E DEFORMAÇÃO.' };
+const I_SIST_FIX_GANCHO: CItem = { category: 'MECÂNICO', label: 'SISTEMA DE FIXAÇÃO DO GANCHO', instruction: 'INSPEÇÃO VISUAL.' };
+const I_FC_SOBE: CItem = { category: 'ELÉTRICO', label: 'FIM DE CURSO - SOBE', instruction: 'TESTE FUNCIONAL.' };
+const I_SC_SOBE: CItem = { category: 'ELÉTRICO', label: 'SOBRE CURSO - SOBE', instruction: 'TESTE FUNCIONAL.' };
+const I_FC_DESCE: CItem = { category: 'ELÉTRICO', label: 'FIM DE CURSO - DESCE', instruction: 'TESTE FUNCIONAL.' };
+const I_TESTE_CARGA: CItem = { category: 'SEGURANÇA', label: 'TESTE COM CARGA', instruction: 'TESTE DINÂMICO E ESTÁTICO.' };
+const I_BOLSA_CORRENTE: CItem = { category: 'MECÂNICO', label: 'BOLSA DA CORRENTE', instruction: 'INSPEÇÃO VISUAL.' };
+const I_SIST_GIRO_GUIND: CItem = { category: 'MECÂNICO', label: 'SISTEMA DE GIRO DO GUINDASTE', instruction: 'INSPEÇÃO VISUAL.' };
+const I_FIX_GUIND_PISO: CItem = { category: 'MECÂNICO', label: 'FIXAÇÃO DO GUINDASTE NO PISO', instruction: 'INSPEÇÃO VISUAL E REAPERTO.' };
+
+// --- LISTAS DE CHECKLIST ---
+
 export const CHECKLIST_TALHA: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>[] = [
-  { category: 'ELÉTRICO', label: 'TENSÃO DE ENTRADA DO EQUIPAMENTO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM MULTÍMETRO.' },
-  { category: 'ELÉTRICO', label: 'TENSÃO DE COMANDO', instruction: 'MEDIÇÃO: REALIZAR MEDIÇÃO COM MULTÍMETRO.' },
-  { category: 'SEGURANÇA', label: 'IDENTIFICAÇÃO DO EQUIPAMENTO', instruction: 'INSPEÇÃO VISUAL.' },
-  { category: 'SEGURANÇA', label: 'IDENTIFICAÇÃO DE CAPACIDADE DE ELEVAÇÃO', instruction: 'INSPEÇÃO VISUAL.' },
-  { category: 'SEGURANÇA', label: 'OPERADORES SÃO CAPACITADOS PARA OPERAÇÃO DO EQUIPAMENTO', instruction: 'VERIFICAÇÃO VISUAL.' },
-  { category: 'SEGURANÇA', label: 'ACESSO PARA MANUTENÇÃO DO EQUIPAMENTO', instruction: 'VERIFICAÇÃO VISUAL.' },
-  { category: 'SEGURANÇA', label: 'BLOQUEIO DO EQUIPAMENTO PARA MANUTENÇÃO', instruction: 'TESTE/BLOQUEIO.' },
-  { category: 'ELÉTRICO', label: 'ACIONAMENTO COMANDO ELEVAÇÃO', instruction: 'TESTE FUNCIONAL.' },
+  I_TENSAO_ENTRADA,
+  I_TENSAO_COMANDO,
+  I_IDENT_EQUIP,
+  I_IDENT_CAPACIDADE,
+  I_OPER_CAPACITADOS,
+  I_ACESSO_MANUT,
+  I_BLOQUEIO_MANUT,
+  I_ACION_ELEV,
   { category: 'ELÉTRICO', label: 'ACIONAMENTO COMANDO DIREÇÃO', instruction: 'TESTE FUNCIONAL.' },
-  { category: 'MECÂNICO', label: 'ESTRUTURA DO EQUIPAMENTO', instruction: 'INSPEÇÃO VISUAL.' },
+  I_ESTRUTURA,
   { category: 'ELÉTRICO', label: 'BARRAMENTO DE ALIMENTAÇÃO - ALINHAMENTO / FIXAÇÃO', instruction: 'INSPEÇÃO VISUAL E REAPERTO.' },
   { category: 'ELÉTRICO', label: 'LINHA DE PORTA CABOS CHATO', instruction: 'INSPEÇÃO VISUAL.' },
-  { category: 'ELÉTRICO', label: 'LIMPEZA E REAPERTO DO PAINEL ELÉTRICO', instruction: 'LIMPEZA E MANUTENÇÃO.' },
+  I_LIMP_REAPERTO_PAINEL,
   { category: 'ELÉTRICO', label: 'INSPEÇÃO VISUAL E FUNCIONAL DE BOTOEIRA E CONTROLE REMÓTO', instruction: 'TESTE FUNCIONAL.' },
   { category: 'MECÂNICO', label: 'LUBRIFICAÇÃO DE PINHÃO E ENGRENAGENS DE RODAS', instruction: 'APLICAR LUBRIFICANTE.' },
   { category: 'MECÂNICO', label: 'LUBRIFICAÇÃO DO CABO DE AÇO', instruction: 'APLICAR LUBRIFICANTE.' },
@@ -190,23 +226,165 @@ export const CHECKLIST_TALHA: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>
   { category: 'ELÉTRICO', label: 'FIM DE CURSO DIREÇÃO LENTA - DIREITA', instruction: 'TESTE FUNCIONAL.' },
   { category: 'ELÉTRICO', label: 'FIM DE CURSO DIREÇÃO RAPIDA - ESQUERDA', instruction: 'TESTE FUNCIONAL.' },
   { category: 'ELÉTRICO', label: 'FIM DE CURSO DIREÇÃO LENTA - ESQUERDA', instruction: 'TESTE FUNCIONAL.' },
-  { category: 'MECÂNICO', label: 'VEDAÇÃO DO REDUTOR DE ELEVAÇÃO', instruction: 'VERIFICAR SE HÁ VAZAMENTOS.' },
-  { category: 'MECÂNICO', label: 'RUIDO DO REDUTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO AUDITIVA.' },
-  { category: 'ELÉTRICO', label: 'MOTOR DE ELEVAÇÃO', instruction: 'INSPEÇÃO VISUAL E FUNCIONAL.' },
-  { category: 'MECÂNICO', label: 'FREIO DE ELEVAÇÃO', instruction: 'VERIFICAR DESGASTE E DESLOCAMENTO.' },
-  { category: 'MECÂNICO', label: 'AJUSTE DE FREIO DE ELEVAÇÃO', instruction: 'VERIFICAR E REGULAR.' },
-  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA MOTOR ELEVAÇÃO PRINCIPAL', instruction: 'MEDIÇÃO COM ALICATE AMPERÍMETRO.' },
-  { category: 'ELÉTRICO', label: 'CORRENTE ELÉTRICA FREIO ELEVAÇÃO PRINCIPAL', instruction: 'MEDIÇÃO COM ALICATE AMPERÍMETRO.' },
+  I_VED_RED_ELEV,
+  I_RUIDO_RED_ELEV,
+  I_MOTOR_ELEV,
+  I_FREIO_ELEV,
+  I_AJUST_FREIO_ELEV,
+  I_CORR_EL_MOT_ELEV,
+  I_CORR_EL_FR_ELEV,
   { category: 'MECÂNICO', label: 'TAMBOR - VER MEDIDA CANAL', instruction: 'INSPEÇÃO VISUAL E MEDIÇÃO.' },
   { category: 'MECÂNICO', label: 'CABO DE AÇO - VER MEDIDA', instruction: 'INSPEÇÃO E MEDIÇÃO DO DIÂMETRO.' },
   { category: 'MECÂNICO', label: 'CLIP´S CABO DE AÇO', instruction: 'VERIFICAR APERTO E QUANTIDADE.' },
   { category: 'MECÂNICO', label: 'ROLDANA DE DESVIO', instruction: 'INSPEÇÃO VISUAL.' },
-  { category: 'MECÂNICO', label: 'CAIXA DE GANCHO', instruction: 'VERIFICAR GARGAL E DEFORMAÇÃO.' },
-  { category: 'ELÉTRICO', label: 'FIM DE CURSO - SOBE', instruction: 'TESTE FUNCIONAL.' },
-  { category: 'ELÉTRICO', label: 'SOBRE CURSO - SOBE', instruction: 'TESTE FUNCIONAL.' },
-  { category: 'ELÉTRICO', label: 'FIM DE CURSO - DESCE', instruction: 'TESTE FUNCIONAL.' },
-  { category: 'SEGURANÇA', label: 'TESTE COM CARGA', instruction: 'TESTE DINÂMICO E ESTÁTICO.' }
+  I_CAIXA_GANCHO,
+  I_FC_SOBE,
+  I_SC_SOBE,
+  I_FC_DESCE,
+  I_TESTE_CARGA
 ];
+
+export const CHECKLIST_ELEVADOR: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>[] = [
+  I_TENSAO_ENTRADA,
+  I_TENSAO_COMANDO,
+  I_IDENT_EQUIP,
+  I_IDENT_CAPACIDADE,
+  I_OPER_CAPACITADOS,
+  I_ACESSO_MANUT,
+  I_BLOQUEIO_MANUT,
+  I_ACION_ELEV,
+  { category: 'MECÂNICO', label: 'RODA GUIAS', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'MECÂNICO', label: 'MANCAL DA RODA GUIA', instruction: 'INSPEÇÃO VISUAL.' },
+  I_ESTRUTURA,
+  { category: 'MECÂNICO', label: 'GUIAS DAS RODAS DO ELEVADOR', instruction: 'INSPEÇÃO VISUAL.' },
+  I_ALIMENT_EL_TALHA,
+  I_LIMP_REAPERTO_PAINEL,
+  I_BOTOEIRA_ACION,
+  I_LUB_CORRENTE,
+  I_VED_RED_ELEV,
+  I_RUIDO_RED_ELEV,
+  I_MOTOR_ELEV,
+  I_FREIO_ELEV,
+  I_AJUST_FREIO_ELEV,
+  I_CORR_EL_MOT_ELEV,
+  I_CORR_EL_FR_ELEV,
+  { category: 'MECÂNICO', label: 'CORRENTE DE ELEVAÇÃO - VER MEDIDA DOS GOMOS', instruction: 'INSPEÇÃO E MEDIÇÃO.' },
+  I_FIX_CORRENTE,
+  I_CAIXA_GANCHO,
+  I_BOLSA_CORRENTE,
+  I_SIST_FIX_GANCHO,
+  { category: 'SEGURANÇA', label: 'PORTA DO ELEVADOR', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'ELÉTRICO', label: 'SENSORES DE MONITORAMENTO DAS POSTAS', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'ELÉTRICO', label: 'TRAVA MAGNÉTICA DAS PORTAS PISO 1', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'ELÉTRICO', label: 'TRAVA MAGNÉTICA DAS PORTAS PISO 2', instruction: 'TESTE FUNCIONAL.' },
+  I_FC_SOBE,
+  I_SC_SOBE,
+  I_FC_DESCE,
+  I_TESTE_CARGA
+];
+
+export const CHECKLIST_PORTICO: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>[] = [
+  I_IDENT_EQUIP,
+  I_IDENT_CAPACIDADE,
+  I_OPER_CAPACITADOS,
+  I_ACESSO_MANUT,
+  I_ESTRUTURA,
+  { category: 'MECÂNICO', label: 'RODIZIOS DE TRANSLAÇÃO', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'MECÂNICO', label: 'FREIO MANUAL DOS RODIZIOS', instruction: 'TESTE FUNCIONAL.' },
+  { category: 'MECÂNICO', label: 'RODAS DO TROLEI MANUAL', instruction: 'INSPEÇÃO VISUAL.' },
+  { category: 'MECÂNICO', label: 'SISTEMA DE TRAVA MANUAL DA TALHA', instruction: 'TESTE FUNCIONAL.' },
+  I_LUB_CORRENTE,
+  I_FIX_CORRENTE,
+  I_CAIXA_GANCHO,
+  I_SIST_FIX_GANCHO,
+  I_TESTE_CARGA
+];
+
+export const CHECKLIST_ENCAIXOTADORA: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>[] = [
+  I_TENSAO_ENTRADA,
+  I_TENSAO_COMANDO,
+  I_IDENT_EQUIP,
+  I_IDENT_CAPACIDADE,
+  I_OPER_CAPACITADOS,
+  I_ACESSO_MANUT,
+  I_BLOQUEIO_MANUT,
+  I_ACION_ELEV,
+  I_ESTRUTURA,
+  I_SIST_GIRO_GUIND,
+  I_FIX_GUIND_PISO,
+  I_ALIMENT_EL_TALHA,
+  I_LIMP_REAPERTO_PAINEL,
+  I_BOTOEIRA_ACION,
+  I_LUB_CORRENTE,
+  I_VED_RED_ELEV,
+  I_RUIDO_RED_ELEV,
+  I_MOTOR_ELEV,
+  I_FREIO_ELEV,
+  I_AJUST_FREIO_ELEV,
+  I_CORR_EL_MOT_ELEV,
+  I_CORR_EL_FR_ELEV,
+  { category: 'MECÂNICO', label: 'CORRENTE DE ELEVAÇÃO - VER MEDIDA DOS GOMOS', instruction: 'INSPEÇÃO E MEDIÇÃO.' },
+  I_FIX_CORRENTE,
+  I_CAIXA_GANCHO,
+  I_BOLSA_CORRENTE,
+  I_SIST_FIX_GANCHO,
+  I_FC_SOBE,
+  I_SC_SOBE,
+  I_FC_DESCE,
+  I_TESTE_CARGA
+];
+
+export const CHECKLIST_DESENCAIXOTADORA: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>[] = [
+  I_TENSAO_ENTRADA,
+  I_TENSAO_COMANDO,
+  I_IDENT_EQUIP,
+  I_IDENT_CAPACIDADE,
+  I_OPER_CAPACITADOS,
+  I_ACESSO_MANUT,
+  I_BLOQUEIO_MANUT,
+  I_ACION_ELEV,
+  I_ESTRUTURA,
+  I_SIST_GIRO_GUIND,
+  I_FIX_GUIND_PISO,
+  I_ALIMENT_EL_TALHA,
+  I_LIMP_REAPERTO_PAINEL,
+  I_BOTOEIRA_ACION,
+  I_LUB_CORRENTE,
+  I_VED_RED_ELEV,
+  I_RUIDO_RED_ELEV,
+  I_MOTOR_ELEV,
+  I_FREIO_ELEV,
+  I_AJUST_FREIO_ELEV,
+  I_CORR_EL_MOT_ELEV,
+  I_CORR_EL_FR_ELEV,
+  { category: 'MECÂNICO', label: 'CORRENTE DE ELEVAÇÃO - VER MEDIDA DOS GOMOS', instruction: 'INSPEÇÃO E MEDIÇÃO.' },
+  I_FIX_CORRENTE,
+  I_CAIXA_GANCHO,
+  I_BOLSA_CORRENTE,
+  I_SIST_FIX_GANCHO,
+  I_FC_SOBE,
+  I_SC_SOBE,
+  I_FC_DESCE,
+  I_TESTE_CARGA
+];
+
+export const getChecklistTemplate = (equipmentType?: string) => {
+  switch (equipmentType?.trim().toUpperCase()) {
+    case 'TALHA':
+      return CHECKLIST_TALHA;
+    case 'ELEVADOR DE CARGA':
+      return CHECKLIST_ELEVADOR;
+    case 'PORTICO':
+    case 'PÓRTICO':
+      return CHECKLIST_PORTICO;
+    case 'ENCAIXOTADORA':
+      return CHECKLIST_ENCAIXOTADORA;
+    case 'DESENCAIXOTADORA':
+      return CHECKLIST_DESENCAIXOTADORA;
+    default:
+      return CHECKLIST_PONTE;
+  }
+};
 
 export const RDO_MATERIAIS = [
   { category: 'MATERIAIS', label: 'EPIs (Capacete, Luva, Óculos, Bota)' },
