@@ -18,6 +18,7 @@ import { UserProfile } from '../types';
 import { db } from '../services/offlineDb';
 import { alertService, DOCS_CHANGED_EVENT } from '../services/alertService';
 import { useLiveQuery } from 'dexie-react-hooks';
+import InstructionsModal from './InstructionsModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,6 +33,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLogout, currentUser, pageTitle, headerAction }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [criticalAlerts, setCriticalAlerts] = useState(0);
+  const [showInstructions, setShowInstructions] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -94,6 +96,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
       ) : undefined },
       { id: 'users', label: 'USUÁRIOS', icon: 'manage_accounts' }
     ] : []),
+    { id: 'instructions', label: 'INSTRUÇÕES', icon: 'menu_book' }
   ];
 
   return (
@@ -126,7 +129,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
           {menuItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => { setActiveTab(item.id); setIsExpanded(false); }}
+              onClick={() => { 
+                if (item.id === 'instructions') {
+                  setShowInstructions(true);
+                } else {
+                  setActiveTab(item.id);
+                }
+                setIsExpanded(false); 
+              }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ease-in-out hover:translate-x-1 active:scale-95
                 ${activeTab === item.id
                   ? 'bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] nav-item-active text-[#0062B1]'
@@ -177,6 +187,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
           </div>
         </div>
       </main>
+      <InstructionsModal isOpen={showInstructions} onClose={() => setShowInstructions(false)} />
     </div>
   );
 };
