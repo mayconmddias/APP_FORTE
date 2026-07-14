@@ -168,9 +168,9 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
 
     <section class="mt-16 pt-10 border-t border-gray-100 avoid-break">
       <div class="flex justify-center">
-        <div class="flex flex-col items-center max-w-xs w-full">
-          <div class="h-12 flex items-end justify-center mb-2">
-            <span style="font-family: 'Manrope', sans-serif; font-size: 16px; color: #004a88; font-weight: 500; font-style: italic; letter-spacing: 1px;">${record.technicianName}</span>
+        <div class="flex flex-col items-center max-w-md w-full">
+          <div class="h-12 flex items-end justify-center mb-2 whitespace-nowrap">
+            <span style="font-family: 'Manrope', sans-serif; font-size: 13px; color: #004a88; font-weight: 500; font-style: italic; letter-spacing: 0.5px;">${record.technicianName}</span>
           </div>
           <div class="w-full border-b border-brandDarkGrey"></div>
           <p class="text-[10px] text-center text-brandLabel uppercase font-bold mt-2">Responsável Técnico / Finalização RD</p>
@@ -230,7 +230,11 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
 
   const clientsWithCompletedRdos = useMemo(() => {
     const clients = new Set<string>();
-    records.forEach(r => { if (r.status === 'COMPLETED') clients.add(r.clientName); });
+    records.forEach(r => { 
+      if (r.status === 'COMPLETED' && r.clientName) {
+        clients.add(r.clientName.trim().toUpperCase()); 
+      }
+    });
     return Array.from(clients).sort();
   }, [records]);
 
@@ -240,7 +244,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
         rec.siteName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rec.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rec.technicianName.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesClient = mode === 'OPEN' || !selectedClient || rec.clientName === selectedClient;
+      const matchesClient = mode === 'OPEN' || !selectedClient || rec.clientName?.trim().toUpperCase() === selectedClient?.trim().toUpperCase();
       if (!matchesClient || !matchesSearch) return false;
       
       // If client is selected, completed mode, and dates are provided, filter by range
@@ -284,7 +288,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
                 <div>
                   <h3 className="font-headline font-bold text-base text-blue-950 uppercase">{client}</h3>
                   <p className="font-headline text-[10px] font-bold text-[#004a88] uppercase tracking-widest mt-0.5">
-                    {records.filter(r => r.clientName === client && r.status === 'COMPLETED').length} RELATÓRIOS
+                    {records.filter(r => r.clientName?.trim().toUpperCase() === client?.trim().toUpperCase() && r.status === 'COMPLETED').length} RELATÓRIOS
                   </p>
                 </div>
               </div>
@@ -374,7 +378,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
                 <span className="font-body text-[9px] font-bold text-slate-400 uppercase tracking-widest">RD</span>
                 <span className="font-headline font-bold text-sm text-blue-950">#{rdo.rdoNumber}</span>
               </div>
-              <span className="font-body text-[9px] font-bold text-slate-400 uppercase truncate max-w-[120px]">{rdo.clientName}</span>
+              <span className="font-body text-[9px] font-bold text-blue-950 uppercase truncate max-w-[120px]">{rdo.clientName}</span>
             </div>
 
             <h3 className="font-headline font-bold text-sm text-blue-950 uppercase truncate mb-3">

@@ -4,6 +4,15 @@ import { Loader2 } from 'lucide-react';
 import { RdoRecord, UserProfile, Weather, CraneAsset } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
+const normalizeString = (str: string): string => {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .replace(/[^a-z0-9]/g, "") // Remove spaces, punctuation, special chars
+    .trim();
+};
+
 interface RdoFormProps {
   onSave: (record: RdoRecord) => void;
   onCancel: () => void;
@@ -197,6 +206,13 @@ const RdoForm: React.FC<RdoFormProps> = ({
       const currentDate = now.toISOString().split('T')[0];
       const currentTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
+      let finalClientName = clientName.trim().toUpperCase();
+      const normalizedNew = normalizeString(finalClientName);
+      const matchedSuggestion = clientSuggestions.find(s => normalizeString(s) === normalizedNew);
+      if (matchedSuggestion) {
+        finalClientName = matchedSuggestion;
+      }
+
       const record: RdoRecord = {
         id: recordId,
         local_id: localId,
@@ -204,7 +220,7 @@ const RdoForm: React.FC<RdoFormProps> = ({
         arrivalTime: currentTime,
         startTime: currentTime,
         siteName: siteName.toUpperCase(),
-        clientName: clientName.toUpperCase(),
+        clientName: finalClientName,
         weather: Weather.SOL,
         teamDescription: '',
         activities: activities.split('\n').filter(a => a.trim() !== '').map(a => a.toUpperCase()),
@@ -274,10 +290,10 @@ const RdoForm: React.FC<RdoFormProps> = ({
                 className={`${inputClasses} uppercase mb-2`}
               >
                 <option value="">-- SELECIONE O CLIENTE --</option>
+                <option value="NEW">[ + NOVO CLIENTE ]</option>
                 {clientSuggestions.map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
-                <option value="NEW">[ + CADASTRAR NOVO CLIENTE ]</option>
               </select>
 
               {selectedDropdownClient === 'NEW' && (

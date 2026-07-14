@@ -806,6 +806,8 @@ const App: React.FC = () => {
     setEditingRecord(null);
     setSelectedClient(null);
     setSelectedAssetIdForAction(null);
+    setRdoSelectedClient(null);
+    setEditingRdo(null);
 
     setActiveTab(tab);
     setDynamicTitle(null);
