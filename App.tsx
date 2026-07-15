@@ -1,5 +1,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
 import Layout from './components/Layout';
 import Login from './components/Login';
 import AssetManagement from './components/AssetManagement';
@@ -152,6 +154,32 @@ const App: React.FC = () => {
       localStorage.removeItem('forte_selected_asset_id_action');
     }
   }, [selectedAssetIdForAction]);
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      PushNotifications.requestPermissions().then((result) => {
+        if (result.receive === 'granted') {
+          PushNotifications.register();
+        }
+      });
+
+      PushNotifications.addListener('registration', (token) => {
+        console.log('FCM Token:', token.value);
+        if (currentUser?.id) {
+          supabase
+            .from('push_tokens')
+            .upsert({ user_id: currentUser.id, token: token.value })
+            .then(({ error }) => {
+              if (error) console.error('Erro ao salvar token:', error);
+            });
+        }
+      });
+
+      PushNotifications.addListener('registrationError', (error) => {
+        console.error('Erro no registro do Push:', error);
+      });
+    }
+  }, [currentUser]);
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean;

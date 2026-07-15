@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "271847567425",
+    "project_id": "app-forte-6f756",
+    "storage_bucket": "app-forte-6f756.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:271847567425:android:32c758ea6d9ecb672c56c0",
+        "android_client_info": {
+          "package_name": "com.forte.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFgUpjKe8XzR6J1JTK7hjyuHx4LZFIWkc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
