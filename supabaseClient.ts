@@ -71,16 +71,15 @@ import { createClient } from '@supabase/supabase-js';
  * CREATE POLICY "Acesso total registros" ON public.maintenance_records FOR ALL USING (true);
  */
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://tnwbnjksbhskgyqdibsu.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_uGkKal41PXStrmQHl7bRCQ_iDQcTlYW';
 
 console.log("Supabase Client: Initializing checking config...");
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.error("🚨 ERRO CRÍTICO SUPABASE: Variáveis de ambiente VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY não encontradas!");
-    console.log("Dica: Verifique o painel da Vercel (Environment Variables).");
+if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    console.warn("⚠️ SUPABASE WARNING: Variáveis de ambiente VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY não encontradas no build. Usando valores de fallback padrão.");
 } else {
-    console.log("Supabase Client: Configuration found.");
+    console.log("Supabase Client: Configuration found in environment variables.");
 }
 
-export const supabase = createClient(SUPABASE_URL || '', SUPABASE_ANON_KEY || '');
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

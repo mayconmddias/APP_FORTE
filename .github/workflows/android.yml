@@ -25,6 +25,10 @@ jobs:
         run: npm install
 
       - name: Build Web App
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://tnwbnjksbhskgyqdibsu.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'sb_publishable_uGkKal41PXStrmQHl7bRCQ_iDQcTlYW' }}
+          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY || 'PLACEHOLDER_API_KEY' }}
         run: npm run build
 
       - name: Setup Java JDK
