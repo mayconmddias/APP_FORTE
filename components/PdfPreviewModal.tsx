@@ -25,26 +25,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-const getOfflineStyles = async (): Promise<string> => {
-  let cssText = '';
-  try {
-    const links = document.querySelectorAll('link[rel="stylesheet"]');
-    for (let i = 0; i < links.length; i++) {
-      const href = links[i].getAttribute('href');
-      if (href) {
-        try {
-          const response = await fetch(href);
-          cssText += (await response.text()) + '\n';
-        } catch (e) {
-          console.error(`Erro ao buscar stylesheet ${href}:`, e);
-        }
-      }
-    }
-  } catch (e) {
-    console.error('Erro ao ler link stylesheets:', e);
-  }
-  return cssText;
-};
+
 
 const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
   isOpen,
@@ -93,23 +74,11 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           logging: false,
           width: 1024,
           windowWidth: 1024,
-          delay: 300
+          delay: 500,
+          letterRendering: true
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
-
-      // Obtém os estilos de css pré-compilados do aplicativo de forma segura e offline
-      const parentStyles = await getOfflineStyles();
-
-      // Substitui a tag da CDN do Tailwind pelos estilos locais para suporte offline completo
-      let styledHtml = html;
-      const cdnScriptTag = '<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>';
-      
-      if (html.includes(cdnScriptTag)) {
-        styledHtml = html.replace(cdnScriptTag, `<style>${parentStyles}</style>`);
-      } else {
-        styledHtml = html.replace('</head>', `<style>${parentStyles}</style></head>`);
-      }
 
       // Resolve a referência do html2pdf.js com suporte a ESM/UMD e fallbacks
       const html2pdfFunc = (html2pdf as any).default || html2pdf || (window as any).html2pdf;
@@ -117,8 +86,9 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         throw new Error('Biblioteca html2pdf não foi carregada como função válida.');
       }
 
+      // O HTML do relatório já contém CSS puro embeddido (sem dependência de CDN/Tailwind)
       // Converte a string HTML diretamente para um arquivo PDF Blob usando html2pdf.js
-      const pdfBlob = await html2pdfFunc().from(styledHtml).set(opt).output('blob');
+      const pdfBlob = await html2pdfFunc().from(html).set(opt).output('blob');
 
       if (Capacitor.isNativePlatform()) {
         const base64Data = await blobToBase64(pdfBlob);

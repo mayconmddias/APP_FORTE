@@ -112,26 +112,26 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     items.forEach((i, index) => {
       rowsTableHtml += `
         <tr class="inspection-row">
-          <td class="col-item pl-4 pr-1 py-3 border-l border-gray-200">
-            <div class="flex items-start gap-3">
-              <span class="text-lg font-heading text-brandBlue">${String(index + 1).padStart(2, '0')}</span>
+          <td class="col-item td-item">
+            <div class="item-wrap">
+              <span class="item-number">${String(index + 1).padStart(2, '0')}</span>
               <div>
-                <p class="font-bold text-xs leading-tight uppercase font-sans">${i.label}</p>
-                <p class="text-[9px] text-brandLabel uppercase mt-1 font-sans">${i.category}</p>
+                <p class="item-label">${i.label}</p>
+                <p class="item-category">${i.category}</p>
               </div>
             </div>
           </td>
-          <td class="col-status text-center px-0 py-3 border-gray-200">
-            <span class="${i.isOk ? 'text-successGreen' : 'text-red-600'} text-xs font-bold font-sans">${i.isOk ? 'OK' : 'NOK'}</span>
+          <td class="col-status td-status">
+            <span class="${i.isOk ? 'status-ok' : 'status-nok'}">${i.isOk ? 'OK' : 'NOK'}</span>
           </td>
-          <td class="col-obs px-1 py-3 border-gray-200">
-            <span class="text-xs font-mono text-gray-600 uppercase break-words font-sans">${i.observation || '-'}</span>
+          <td class="col-obs td-obs">
+            <span class="obs-text">${i.observation || '-'}</span>
           </td>
-          <td class="col-anexo pl-1 pr-4 py-3 border-r border-gray-200 text-center">
-            <div class="flex justify-center">
+          <td class="col-anexo td-anexo">
+            <div class="anexo-wrap">
               ${(i.photos && i.photos[0]) 
-                ? `<img alt="Anexo" class="h-14 w-14 object-cover rounded shadow-sm border border-gray-200" src="${i.photos[0]}" />` 
-                : '<span class="text-brandLabel text-[10px]">-</span>'}
+                ? `<img alt="Anexo" class="anexo-img" src="${i.photos[0]}" />` 
+                : '<span class="anexo-empty">-</span>'}
             </div>
           </td>
         </tr>`;
@@ -143,158 +143,367 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
   <meta charset="utf-8"/>
   <meta content="width=1024" name="viewport"/>
   <title>Relatório Técnico de Inspeção ${type === MaintenanceType.CORRETIVA ? 'Corretiva' : 'Preventiva'} - Forte Engenharia</title>
-  <link href="https://fonts.googleapis.com" rel="preconnect"/>
-  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brandBlue: '#004a88',
-            brandLightGrey: '#f8fafc',
-            brandDarkGrey: '#334155',
-            brandLabel: '#64748b',
-            successGreen: '#16a34a',
-          },
-          fontFamily: {
-            sans: ['Manrope', 'sans-serif'],
-            heading: ['Space Grotesk', 'sans-serif'],
-          },
-        },
-      },
-    }
-  </script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap');
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+      color: #334155;
+      background-color: #f1f5f9;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* ===== CONTENT CONTAINER ===== */
+    .content-container {
+      max-width: 1000px;
+      margin: 32px auto;
+      background: #ffffff;
+      min-height: 100vh;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      padding: 40px;
+    }
+
+    /* ===== HEADER ===== */
+    .report-header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      border-bottom: 2px solid #004a88;
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    .header-logo-wrap { display: flex; align-items: center; gap: 12px; }
+    .header-logo-box { width: 130px; height: 65px; display: flex; align-items: center; justify-content: center; }
+    .header-logo-box img { width: 100%; height: 100%; object-fit: contain; }
+    .header-title-wrap { display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .header-company {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #004a88;
+      text-transform: uppercase;
+      letter-spacing: -0.025em;
+      line-height: 1;
+    }
+    .header-company-light { font-weight: 400; opacity: 0.7; }
+    .header-report-title {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 14px;
+      color: #004a88;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+    .header-os-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 0; }
+    .header-os-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #64748b;
+      line-height: 1;
+    }
+    .header-os-number {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 18px;
+      color: #004a88;
+      line-height: 1.25;
+    }
+
+    /* ===== INFO GRID ===== */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px 16px;
+      margin-bottom: 40px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 32px;
+    }
+    .info-item { display: flex; flex-direction: column; }
+    .info-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+    .info-value {
+      font-weight: 700;
+      font-size: 14px;
+      color: #334155;
+      text-transform: uppercase;
+      font-family: 'Manrope', sans-serif;
+    }
+    .info-value-blue { color: #004a88; }
+
+    /* ===== TABLE ===== */
+    table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+    th, td { text-align: left; vertical-align: middle; }
+
+    .col-item { width: 40%; }
+    .col-status { width: 15%; }
+    .col-obs { width: 30%; }
+    .col-anexo { width: 15%; }
+
+    .table-header {
+      background-color: #004a88;
+      color: #ffffff;
+    }
+    .table-header th {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 12px 16px;
+      border: 1px solid #004a88;
+    }
+    .table-header .th-status,
+    .table-header .th-anexo { text-align: center; }
+    .table-header .th-obs { padding: 12px 4px; }
+
+    .table-body { border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+
+    .inspection-row td { border: 1px solid #e2e8f0; }
+    .inspection-row:nth-child(even) { background-color: #f8fafc; }
+
+    .td-item { padding: 12px 4px 12px 16px; }
+    .item-wrap { display: flex; align-items: flex-start; gap: 12px; }
+    .item-number {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 18px;
+      color: #004a88;
+      line-height: 1;
+      flex-shrink: 0;
+      min-width: 28px;
+    }
+    .item-label {
+      font-weight: 700;
+      font-size: 12px;
+      line-height: 1.25;
+      text-transform: uppercase;
+      font-family: 'Manrope', sans-serif;
+      color: #334155;
+    }
+    .item-category {
+      font-size: 9px;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-top: 4px;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    .td-status { text-align: center; padding: 12px 0; }
+    .status-ok { color: #16a34a; font-size: 12px; font-weight: 700; font-family: 'Manrope', sans-serif; }
+    .status-nok { color: #dc2626; font-size: 12px; font-weight: 700; font-family: 'Manrope', sans-serif; }
+
+    .td-obs { padding: 12px 4px; }
+    .obs-text {
+      font-size: 12px;
+      font-family: 'Manrope', sans-serif;
+      color: #4b5563;
+      text-transform: uppercase;
+      word-break: break-word;
+    }
+
+    .td-anexo { padding: 12px 16px 12px 4px; text-align: center; }
+    .anexo-wrap { display: flex; justify-content: center; }
+    .anexo-img {
+      height: 56px;
+      width: 56px;
+      object-fit: cover;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
+    }
+    .anexo-empty { color: #64748b; font-size: 10px; }
+
+    /* ===== SIGNATURES ===== */
+    .signatures-section { margin-top: 48px; break-inside: avoid; }
+    .signatures-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; }
+    .signature-block { display: flex; flex-direction: column; align-items: center; }
+    .signature-area { height: 64px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 8px; width: 100%; }
+    .signature-name {
+      font-family: 'Manrope', sans-serif;
+      font-size: 16px;
+      color: #004a88;
+      font-weight: 500;
+      font-style: italic;
+      letter-spacing: 1px;
+    }
+    .signature-line { width: 100%; border-bottom: 1px solid #334155; }
+    .signature-role {
+      font-size: 10px;
+      text-align: center;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    .signature-person {
+      font-size: 9px;
+      text-align: center;
+      color: #334155;
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-top: 4px;
+      font-family: 'Manrope', sans-serif;
+    }
+    .signature-img { height: 100%; object-fit: contain; }
+
+    /* ===== FOOTER ===== */
+    .report-footer { margin-top: 48px; padding-top: 32px; border-top: 1px solid #f1f5f9; }
+    .footer-sections { display: flex; flex-direction: column; gap: 24px; }
+    .footer-block { break-inside: avoid; }
+    .footer-block-bg {
+      break-inside: avoid;
+      padding: 16px;
+      background-color: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #f1f5f9;
+    }
+    .footer-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #004a88;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      text-align: center;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 8px;
+    }
+    .footer-text {
+      font-size: 9px;
+      color: #334155;
+      line-height: 1.625;
+      white-space: pre-wrap;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    /* ===== PRINT STYLES ===== */
     @media print {
       body { background-color: white !important; }
       .no-print { display: none !important; }
       .page-break { page-break-after: always; }
-      .content-container { 
-        width: 100% !important; 
-        max-width: 100% !important; 
-        margin: 0 !important; 
-        padding: 5mm !important; 
-        box-shadow: none !important; 
+      .content-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 5mm !important;
+        box-shadow: none !important;
       }
       thead { display: table-header-group; }
       tfoot { display: table-footer-group; }
       tr { page-break-inside: avoid; }
     }
-    
-    .inspection-row:nth-child(even) { background-color: #f8fafc; }
-    .col-item { width: 40%; }
-    .col-status { width: 15%; }
-    .col-obs { width: 30%; }
-    .col-anexo { width: 15%; }
-    
-    table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-    th, td { text-align: left; vertical-align: middle; border: 1px solid #e2e8f0; }
-    
-    .avoid-break { break-inside: avoid !important; }
-    body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   </style>
 </head>
-<body class="bg-gray-100 font-sans text-brandDarkGrey antialiased" onload="window.print()">
-  <main class="content-container mx-auto max-w-[1000px] bg-white min-h-screen shadow-2xl my-8 p-10">
-    <header class="grid grid-cols-[1fr_auto_1fr] items-center border-b-2 border-brandBlue pb-6 mb-8">
-      <div class="flex items-center gap-3">
-        <div class="w-[130px] h-[65px] flex items-center justify-center">
-          <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" class="w-full h-full object-contain" alt="Forte Logo" />
+<body>
+  <main class="content-container">
+    <header class="report-header">
+      <div class="header-logo-wrap">
+        <div class="header-logo-box">
+          <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" alt="Forte Logo" />
         </div>
       </div>
-      <div class="flex flex-col gap-1 text-center">
-        <span class="text-2xl font-heading text-brandBlue tracking-tight uppercase font-bold leading-none">FORTE <span class="font-normal opacity-70">ENGENHARIA</span></span>
-        <h1 class="text-[14px] font-heading text-brandBlue uppercase tracking-wide leading-tight whitespace-nowrap">Relatório Técnico de Inspeção ${type === MaintenanceType.CORRETIVA ? 'Corretiva' : 'Preventiva'}</h1>
+      <div class="header-title-wrap">
+        <span class="header-company">FORTE <span class="header-company-light">ENGENHARIA</span></span>
+        <h1 class="header-report-title">Relatório Técnico de Inspeção ${type === MaintenanceType.CORRETIVA ? 'Corretiva' : 'Preventiva'}</h1>
       </div>
-      <div class="flex flex-col items-end gap-0">
-        <p class="text-brandLabel text-[9px] font-semibold uppercase tracking-widest leading-none">OS Nº</p>
-        <p class="text-lg font-heading text-brandBlue leading-tight">#${formattedOs}</p>
+      <div class="header-os-wrap">
+        <p class="header-os-label">OS Nº</p>
+        <p class="header-os-number">#${formattedOs}</p>
       </div>
     </header>
 
-    <section class="grid grid-cols-4 gap-y-6 gap-x-4 mb-10 border-b border-gray-100 pb-8">
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Cliente</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.client}</span>
+    <section class="info-grid">
+      <div class="info-item">
+        <label class="info-label">Cliente</label>
+        <span class="info-value">${selectedAsset.client}</span>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Equipamento</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.name}</span>
+      <div class="info-item">
+        <label class="info-label">Equipamento</label>
+        <span class="info-value">${selectedAsset.name}</span>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Nº Série</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.serialNumber}</span>
+      <div class="info-item">
+        <label class="info-label">Nº Série</label>
+        <span class="info-value">${selectedAsset.serialNumber}</span>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Capacidade</label>
-        <span class="font-bold text-sm text-brandBlue uppercase font-sans">${selectedAsset.capacity}</span>
+      <div class="info-item">
+        <label class="info-label">Capacidade</label>
+        <span class="info-value info-value-blue">${selectedAsset.capacity}</span>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Vão (M)</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.span}</span>
+      <div class="info-item">
+        <label class="info-label">Vão (M)</label>
+        <span class="info-value">${selectedAsset.span}</span>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Localização</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.location}</span>
+      <div class="info-item">
+        <label class="info-label">Localização</label>
+        <span class="info-value">${selectedAsset.location}</span>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Fabricante</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${selectedAsset.manufacturer}</span>
+      <div class="info-item">
+        <label class="info-label">Fabricante</label>
+        <span class="info-value">${selectedAsset.manufacturer}</span>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Data</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${formatDate(record.date)}</span>
+      <div class="info-item">
+        <label class="info-label">Data</label>
+        <span class="info-value">${formatDate(record.date)}</span>
       </div>
     </section>
 
     <section>
-      <table class="w-full">
+      <table>
         <thead>
-          <tr class="bg-brandBlue text-white text-[10px] font-bold uppercase tracking-widest">
-            <th class="col-item px-4 py-3 border-brandBlue">Item / Descrição</th>
-            <th class="col-status text-center border-brandBlue">Status</th>
-            <th class="col-obs px-1 py-3 border-brandBlue">Observações</th>
-            <th class="col-anexo text-center border-brandBlue">Anexo</th>
+          <tr class="table-header">
+            <th class="col-item">Item / Descrição</th>
+            <th class="col-status th-status">Status</th>
+            <th class="col-obs th-obs">Observações</th>
+            <th class="col-anexo th-anexo">Anexo</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200 border-x border-b border-gray-200">
+        <tbody class="table-body">
           ${rowsTableHtml}
         </tbody>
       </table>
     </section>
-    
-    <div class="avoid-break mt-12">
-      <section class="grid grid-cols-2 gap-20">
-        <div class="flex flex-col items-center">
-          <div class="h-16 flex items-end justify-center mb-2">
-             <span style="font-family: 'Manrope', sans-serif; font-size: 16px; color: #004a88; font-weight: 500; font-style: italic; letter-spacing: 1px;">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</span>
+
+    <div class="signatures-section">
+      <section class="signatures-grid">
+        <div class="signature-block">
+          <div class="signature-area">
+             <span class="signature-name">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</span>
           </div>
-          <div class="w-full border-b border-brandDarkGrey"></div>
-          <p class="text-[10px] text-center text-brandLabel uppercase font-bold mt-2">Responsável Técnico</p>
-          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1 font-sans">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</p>
+          <div class="signature-line"></div>
+          <p class="signature-role">Responsável Técnico</p>
+          <p class="signature-person">${record.technician || (record as any).technician_name || 'FORTE ENGENHARIA'}</p>
         </div>
-        <div class="flex flex-col items-center">
-          <div class="h-16 flex items-end justify-center mb-2">
-            ${record.clientSignature ? `<img src="${record.clientSignature}" class="h-full object-contain" />` : ''}
+        <div class="signature-block">
+          <div class="signature-area">
+            ${record.clientSignature ? `<img src="${record.clientSignature}" class="signature-img" />` : ''}
           </div>
-          <div class="w-full border-b border-brandDarkGrey"></div>
-          <p class="text-[10px] text-center text-brandLabel uppercase font-bold mt-2">Responsável Cliente</p>
-          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1 font-sans">${record.clientRepresentative || '---'}</p>
+          <div class="signature-line"></div>
+          <p class="signature-role">Responsável Cliente</p>
+          <p class="signature-person">${record.clientRepresentative || '---'}</p>
         </div>
       </section>
     </div>
 
-    <footer class="mt-12 pt-8 border-t border-gray-100">
-      <div class="space-y-6">
-        <div class="avoid-break">
-          <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-2 text-center border-b border-gray-100 pb-2">Normas e Regulamentações</h4>
-          <p class="text-[9px] text-brandDarkGrey leading-relaxed whitespace-pre-wrap font-sans">${(REPORT_NORMS || '').trim()}</p>
+    <footer class="report-footer">
+      <div class="footer-sections">
+        <div class="footer-block">
+          <h4 class="footer-title">Normas e Regulamentações</h4>
+          <p class="footer-text">${(REPORT_NORMS || '').trim()}</p>
         </div>
-        <div class="avoid-break p-4 bg-brandLightGrey rounded-xl border border-gray-100">
-          <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-2 text-center border-b border-gray-100 pb-2">Atestado de Responsabilidade</h4>
-          <p class="text-[9px] text-brandDarkGrey leading-relaxed whitespace-pre-wrap font-sans">${(REPORT_ATTESTATION || '').trim()}</p>
+        <div class="footer-block-bg">
+          <h4 class="footer-title">Atestado de Responsabilidade</h4>
+          <p class="footer-text">${(REPORT_ATTESTATION || '').trim()}</p>
         </div>
       </div>
     </footer>

@@ -64,12 +64,12 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
     let photosHtml = '';
     if (record.photos && record.photos.length > 0) {
       photosHtml = `
-        <section class="mt-8 avoid-break">
-          <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-4 border-l-4 border-brandBlue pl-3">Registro Fotográfico</h4>
-          <div class="grid grid-cols-2 gap-6">
+        <section class="rdo-photos-section">
+          <h4 class="rdo-section-title">Registro Fotográfico</h4>
+          <div class="photos-grid">
             ${record.photos.map(photo => `
-              <div class="border border-gray-100 rounded-xl p-2 bg-white shadow-sm overflow-hidden h-[220px] flex items-center justify-center">
-                <img src="${photo}" class="max-w-full max-h-full rounded-lg object-contain" />
+              <div class="photo-card">
+                <img src="${photo}" class="photo-img" />
               </div>
             `).join('')}
           </div>
@@ -82,107 +82,300 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
   <meta charset="utf-8"/>
   <meta content="width=1024" name="viewport"/>
   <title>${pdfTitle}</title>
-  <link href="https://fonts.googleapis.com" rel="preconnect"/>
-  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brandBlue: '#004a88',
-            brandLightGrey: '#f8fafc',
-            brandDarkGrey: '#334155',
-            brandLabel: '#64748b',
-          },
-          fontFamily: {
-            sans: ['Manrope', 'sans-serif'],
-            heading: ['Space Grotesk', 'sans-serif'],
-          },
-        },
-      },
-    }
-  </script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap');
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+      color: #334155;
+      background-color: #f1f5f9;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* ===== CONTENT CONTAINER ===== */
+    .content-container {
+      max-width: 1000px;
+      margin: 32px auto;
+      background: #ffffff;
+      min-height: 100vh;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      padding: 40px;
+    }
+
+    /* ===== HEADER ===== */
+    .report-header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      border-bottom: 2px solid #004a88;
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    .header-logo-wrap { display: flex; align-items: center; gap: 12px; }
+    .header-logo-box { width: 130px; height: 65px; display: flex; align-items: center; justify-content: center; }
+    .header-logo-box img { width: 100%; height: 100%; object-fit: contain; }
+    .header-title-wrap { display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .header-company {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #004a88;
+      text-transform: uppercase;
+      letter-spacing: -0.025em;
+      line-height: 1;
+    }
+    .header-company-light { font-weight: 400; opacity: 0.7; }
+    .header-report-title {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 16px;
+      color: #004a88;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.25;
+    }
+    .header-os-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 0; }
+    .header-os-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #64748b;
+      line-height: 1;
+    }
+    .header-os-number {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 18px;
+      color: #004a88;
+      line-height: 1.25;
+    }
+    .header-date {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-top: 4px;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    /* ===== INFO GRID ===== */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px 16px;
+      margin-bottom: 40px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 32px;
+    }
+    .info-item { display: flex; flex-direction: column; }
+    .info-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+    .info-value {
+      font-weight: 700;
+      font-size: 14px;
+      color: #334155;
+      text-transform: uppercase;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    /* ===== SECTIONS ===== */
+    .rdo-section { margin-bottom: 40px; break-inside: avoid; }
+    .rdo-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #004a88;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+      border-left: 4px solid #004a88;
+      padding-left: 12px;
+    }
+    .rdo-content-box {
+      padding: 24px;
+      background-color: #f8fafc;
+      border-radius: 16px;
+      border: 1px solid #f1f5f9;
+      min-height: 120px;
+    }
+    .rdo-content-text {
+      font-size: 11px;
+      color: #334155;
+      line-height: 1.625;
+      text-transform: uppercase;
+      white-space: pre-wrap;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    /* ===== PHOTOS ===== */
+    .rdo-photos-section { margin-top: 32px; break-inside: avoid; }
+    .photos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .photo-card {
+      border: 1px solid #f1f5f9;
+      border-radius: 12px;
+      padding: 8px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      overflow: hidden;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .photo-img { max-width: 100%; max-height: 100%; border-radius: 8px; object-fit: contain; }
+
+    /* ===== SIGNATURE ===== */
+    .rdo-signature-section {
+      margin-top: 64px;
+      padding-top: 40px;
+      border-top: 1px solid #f1f5f9;
+      break-inside: avoid;
+    }
+    .signature-center { display: flex; justify-content: center; }
+    .signature-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 448px;
+      width: 100%;
+    }
+    .signature-area {
+      height: 48px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      margin-bottom: 8px;
+      white-space: nowrap;
+    }
+    .signature-name {
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      color: #004a88;
+      font-weight: 500;
+      font-style: italic;
+      letter-spacing: 0.5px;
+    }
+    .signature-line { width: 100%; border-bottom: 1px solid #334155; }
+    .signature-role {
+      font-size: 10px;
+      text-align: center;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    .signature-person {
+      font-size: 9px;
+      text-align: center;
+      color: #334155;
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-top: 4px;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    /* ===== FOOTER ===== */
+    .rdo-footer {
+      margin-top: 80px;
+      padding-top: 32px;
+      border-top: 1px solid #f1f5f9;
+      text-align: center;
+    }
+    .rdo-footer-text {
+      font-size: 9px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    /* ===== PRINT STYLES ===== */
     @media print {
       body { background-color: white !important; }
       .no-print { display: none !important; }
       .page-break { page-break-after: always; }
-      .content-container { 
-        width: 100% !important; 
-        max-width: 100% !important; 
-        margin: 0 !important; 
-        padding: 5mm !important; 
-        box-shadow: none !important; 
+      .content-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 5mm !important;
+        box-shadow: none !important;
       }
     }
-    .avoid-break { break-inside: avoid !important; }
-    body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   </style>
 </head>
-<body class="bg-gray-100 font-sans text-brandDarkGrey antialiased" onload="window.print()">
-  <main class="content-container mx-auto max-w-[1000px] bg-white min-h-screen shadow-2xl my-8 p-10">
-    <header class="grid grid-cols-[1fr_auto_1fr] items-center border-b-2 border-brandBlue pb-6 mb-8">
-      <div class="flex items-center gap-3">
-        <div class="w-[130px] h-[65px] flex items-center justify-center">
-          <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" class="w-full h-full object-contain" alt="Forte Logo" />
+<body>
+  <main class="content-container">
+    <header class="report-header">
+      <div class="header-logo-wrap">
+        <div class="header-logo-box">
+          <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" alt="Forte Logo" />
         </div>
       </div>
-      <div class="flex flex-col gap-1 text-center">
-        <span class="text-2xl font-heading text-brandBlue tracking-tight uppercase font-bold leading-none">FORTE <span class="font-normal opacity-70">ENGENHARIA</span></span>
-        <h1 class="text-[16px] font-heading text-brandBlue uppercase tracking-wide leading-tight">Relatório Diário de Obra</h1>
+      <div class="header-title-wrap">
+        <span class="header-company">FORTE <span class="header-company-light">ENGENHARIA</span></span>
+        <h1 class="header-report-title">Relatório Diário de Obra</h1>
       </div>
-      <div class="flex flex-col items-end gap-0">
-        <p class="text-brandLabel text-[9px] font-semibold uppercase tracking-widest leading-none">RD Nº</p>
-        <p class="text-lg font-heading text-brandBlue leading-tight">#${String(record.rdoNumber).padStart(4, '0')}</p>
-        <p class="text-[10px] font-bold text-brandLabel uppercase mt-1 font-sans">${formattedDate}</p>
+      <div class="header-os-wrap">
+        <p class="header-os-label">RD Nº</p>
+        <p class="header-os-number">#${String(record.rdoNumber).padStart(4, '0')}</p>
+        <p class="header-date">${formattedDate}</p>
       </div>
     </header>
 
-    <section class="grid grid-cols-4 gap-y-6 gap-x-4 mb-10 border-b border-gray-100 pb-8">
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Cliente</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${record.clientName}</span>
+    <section class="info-grid">
+      <div class="info-item">
+        <label class="info-label">Cliente</label>
+        <span class="info-value">${record.clientName}</span>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Descrição do Serviço</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${record.siteName}</span>
+      <div class="info-item">
+        <label class="info-label">Descrição do Serviço</label>
+        <span class="info-value">${record.siteName}</span>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Horário de Fechamento</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${record.endTime || '--:--'}</span>
+      <div class="info-item">
+        <label class="info-label">Horário de Fechamento</label>
+        <span class="info-value">${record.endTime || '--:--'}</span>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-brandLabel mb-1">Responsável</label>
-        <span class="font-bold text-sm text-brandDarkGrey uppercase font-sans">${record.technicianName}</span>
+      <div class="info-item">
+        <label class="info-label">Responsável</label>
+        <span class="info-value">${record.technicianName}</span>
       </div>
     </section>
 
-    <section class="mb-10 avoid-break">
-      <h4 class="text-[11px] font-bold text-brandBlue uppercase tracking-widest mb-4 border-l-4 border-brandBlue pl-3">Atividades Realizadas</h4>
-      <div class="p-6 bg-brandLightGrey rounded-2xl border border-gray-100 min-h-[120px]">
-        <div class="text-[11px] text-brandDarkGrey leading-relaxed uppercase whitespace-pre-wrap font-sans">${record.activities.join('\n')}</div>
+    <section class="rdo-section">
+      <h4 class="rdo-section-title">Atividades Realizadas</h4>
+      <div class="rdo-content-box">
+        <div class="rdo-content-text">${record.activities.join('\n')}</div>
       </div>
     </section>
 
     ${photosHtml}
 
-    <section class="mt-16 pt-10 border-t border-gray-100 avoid-break">
-      <div class="flex justify-center">
-        <div class="flex flex-col items-center max-w-md w-full">
-          <div class="h-12 flex items-end justify-center mb-2 whitespace-nowrap">
-            <span style="font-family: 'Manrope', sans-serif; font-size: 13px; color: #004a88; font-weight: 500; font-style: italic; letter-spacing: 0.5px;">${record.technicianName}</span>
+    <section class="rdo-signature-section">
+      <div class="signature-center">
+        <div class="signature-block">
+          <div class="signature-area">
+            <span class="signature-name">${record.technicianName}</span>
           </div>
-          <div class="w-full border-b border-brandDarkGrey"></div>
-          <p class="text-[10px] text-center text-brandLabel uppercase font-bold mt-2">Responsável Técnico / Finalização RD</p>
-          <p class="text-[9px] text-center text-brandDarkGrey uppercase font-medium mt-1 font-sans">${record.technicianName}</p>
+          <div class="signature-line"></div>
+          <p class="signature-role">Responsável Técnico / Finalização RD</p>
+          <p class="signature-person">${record.technicianName}</p>
         </div>
       </div>
     </section>
 
-    <footer class="mt-20 pt-8 border-t border-gray-100 text-center">
-      <p class="text-[9px] text-brandLabel uppercase tracking-widest font-bold font-sans">Forte Engenharia - Controle de Campo - Em conformidade com Normas de Segurança</p>
+    <footer class="rdo-footer">
+      <p class="rdo-footer-text">Forte Engenharia - Controle de Campo - Em conformidade com Normas de Segurança</p>
     </footer>
   </main>
 </body>
