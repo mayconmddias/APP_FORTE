@@ -166,16 +166,16 @@ const App: React.FC = () => {
         }
       });
 
+      PushNotifications.removeAllListeners();
+
       PushNotifications.addListener('registration', (token) => {
         console.log('FCM Token:', token.value);
-        if (currentUser?.id) {
-          supabase
-            .from('push_tokens')
-            .upsert({ user_id: currentUser.id, token: token.value })
-            .then(({ error }) => {
-              if (error) console.error('Erro ao salvar token:', error);
-            });
-        }
+        supabase
+          .from('push_tokens')
+          .upsert({ token: token.value, user_id: currentUser?.id || null })
+          .then(({ error }) => {
+            if (error) console.error('Erro ao salvar token:', error);
+          });
       });
 
       PushNotifications.addListener('registrationError', (error) => {
