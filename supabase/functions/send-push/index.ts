@@ -71,12 +71,24 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const { data: documentos, error: docError } = await supabase
       .from('documentos')
-      .select('tipo_documento, data_vencimento, funcionarios(nome)')
+      .select('tipo_documento, data_vencimento, funcionario_id')
       .lte('data_vencimento', today);
 
     if (docError || !documentos || documentos.length === 0) {
-      return new Response(JSON.stringify({ message: "Nenhum documento vencido hoje." }), { status: 200 });
+      if (docError) console.error("Erro ao buscar documentos:", docError);
+      return new Response(JSON.stringify({ message: "Nenhum documento vencido hoje.", error: docError }), { status: 200 });
     }
+
+    // Buscar nomes dos funcionários vinculados separadamente para evitar erro de cache do PostgREST
+    const funcionarioIds = [...new Set(documentos.map(d => d.funcionario_id).filter(Boolean))];
+    const { data: funcionarios, error: funcError } = await supabase
+      .from('funcionarios')
+      .select('id, nome')
+      .in('id', funcionarioIds);
+
+    if (funcError) console.error("Erro ao buscar funcionários:", funcError);
+
+    const funcionarioMap = new Map(funcionarios?.map(f => [f.id, f.nome]) || []);
 
     // 2. Buscar administradores
     const { data: admins } = await supabase
@@ -105,7 +117,7 @@ serve(async (req) => {
     // 4. Enviar notificações
     const results = [];
     for (const doc of documentos) {
-      const nomeFuncionario = (doc.funcionarios as any)?.nome || 'Funcionário';
+      const nomeFuncionario = funcionarioMap.get(doc.funcionario_id) || 'Funcionário';
       const bodyText = `O documento "${doc.tipo_documento}" de ${nomeFuncionario} venceu em ${doc.data_vencimento}.`;
 
       for (const t of tokens) {
