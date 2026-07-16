@@ -68,34 +68,67 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
+function formatDate(dateStr?: string | null): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
 serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // 1. Buscar documentos vencidos
-    const today = new Date().toISOString().split('T')[0];
+    // 1. Calcular data limite (hoje + 30 dias)
+    const limitDate = new Date();
+    limitDate.setDate(limitDate.getDate() + 30);
+    const limitDateStr = limitDate.toISOString().split('T')[0];
+
+    // 2. Buscar documentos vencidos ou a vencer em 30 dias
     const { data: documentos, error: docError } = await supabase
       .from('documentos')
       .select('tipo_documento, data_vencimento, funcionario_id')
-      .lte('data_vencimento', today);
+      .lte('data_vencimento', limitDateStr);
 
-    if (docError || !documentos || documentos.length === 0) {
-      if (docError) console.error("Erro ao buscar documentos:", docError);
-      return new Response(JSON.stringify({ message: "Nenhum documento vencido hoje.", error: docError }), { status: 200 });
+    if (docError) {
+      console.error("Erro ao buscar documentos:", docError);
     }
 
-    // Buscar nomes dos funcionários vinculados separadamente para evitar erro de cache do PostgREST
-    const funcionarioIds = [...new Set(documentos.map(d => d.funcionario_id).filter(Boolean))];
-    const { data: funcionarios, error: funcError } = await supabase
-      .from('funcionarios')
-      .select('id, nome')
+    // 3. Buscar integrações vencidas ou a vencer em 30 dias
+    const { data: integracoes, error: intError } = await supabase
+      .from('funcionario_integracoes')
+      .select('empresa_nome, data_vencimento, funcionario_id')
+      .lte('data_vencimento', limitDateStr);
+
+    if (intError) {
+      console.error("Erro ao buscar integrações:", intError);
+    }
+
+    const hasDocs = documentos && documentos.length > 0;
+    const hasInts = integracoes && integracoes.length > 0;
+
+    if (!hasDocs && !hasInts) {
+      return new Response(JSON.stringify({ message: "Nenhum documento ou integração a vencer nos próximos 30 dias." }), { status: 200 });
+    }
+
+    // Coletar IDs únicos de funcionários/perfis envolvidos
+    const docsFuncIds = documentos?.map(d => d.funcionario_id) || [];
+    const intsFuncIds = integracoes?.map(i => i.funcionario_id) || [];
+    const funcionarioIds = [...new Set([...docsFuncIds, ...intsFuncIds])].filter(Boolean);
+
+    // Buscar nomes dos funcionários a partir da tabela user_profiles (já que a tabela funcionarios não existe no banco)
+    const { data: profiles, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('id, name')
       .in('id', funcionarioIds);
 
-    if (funcError) console.error("Erro ao buscar funcionários:", funcError);
+    if (profileError) {
+      console.error("Erro ao buscar perfis de usuário:", profileError);
+    }
 
-    const funcionarioMap = new Map(funcionarios?.map(f => [f.id, f.nome]) || []);
+    const funcionarioMap = new Map(profiles?.map(p => [p.id, p.name]) || []);
 
-    // 2. Buscar administradores
+    // 4. Buscar administradores cadastrados (role = ADMIN)
     const { data: admins } = await supabase
       .from('user_profiles')
       .select('id')
@@ -105,7 +138,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ message: "Nenhum administrador encontrado." }), { status: 200 });
     }
 
-    // 3. Buscar tokens de push desses administradores
+    // 5. Buscar tokens de push desses administradores
     const adminIds = admins.map(a => a.id);
     const { data: tokens, error: tokensError } = await supabase
       .from('push_tokens')
@@ -119,12 +152,10 @@ serve(async (req) => {
     // Obter Token de Autenticação do Firebase
     const accessToken = await getAccessToken();
 
-    // 4. Enviar notificações
+    // 6. Enviar as notificações
     const results = [];
-    for (const doc of documentos) {
-      const nomeFuncionario = funcionarioMap.get(doc.funcionario_id) || 'Funcionário';
-      const bodyText = `O documento "${doc.tipo_documento}" de ${nomeFuncionario} venceu em ${doc.data_vencimento}.`;
 
+    const sendPush = async (title: string, body: string) => {
       for (const t of tokens) {
         const res = await fetch(`https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`, {
           method: 'POST',
@@ -136,8 +167,8 @@ serve(async (req) => {
             message: {
               token: t.token,
               notification: {
-                title: 'Documento Vencido!',
-                body: bodyText,
+                title,
+                body,
               },
               android: {
                 priority: 'high',
@@ -151,6 +182,26 @@ serve(async (req) => {
           }),
         });
         results.push(await res.json());
+      }
+    };
+
+    // Alertas de documentos
+    if (documentos) {
+      for (const doc of documentos) {
+        const nomeFuncionario = funcionarioMap.get(doc.funcionario_id) || 'Funcionário';
+        const formattedDate = formatDate(doc.data_vencimento);
+        const bodyText = `${doc.tipo_documento} - ${nomeFuncionario} - ${formattedDate}`;
+        await sendPush('Alerta de Vencimento!', bodyText);
+      }
+    }
+
+    // Alertas de integrações
+    if (integracoes) {
+      for (const int of integracoes) {
+        const nomeFuncionario = funcionarioMap.get(int.funcionario_id) || 'Funcionário';
+        const formattedDate = formatDate(int.data_vencimento);
+        const bodyText = `Integração ${int.empresa_nome || 'Cliente'} - ${nomeFuncionario} - ${formattedDate}`;
+        await sendPush('Alerta de Vencimento!', bodyText);
       }
     }
 
