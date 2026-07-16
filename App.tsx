@@ -193,7 +193,10 @@ const App: React.FC = () => {
       console.log('Upserting push token linked to user:', currentUser?.id || 'guest');
       supabase
         .from('push_tokens')
-        .upsert({ token: devicePushToken, user_id: currentUser?.id || null })
+        .upsert(
+          { token: devicePushToken, user_id: currentUser?.id || null },
+          { onConflict: 'token' }
+        )
         .then(({ error }) => {
           if (error) console.error('Erro ao salvar token com usuário:', error);
         });
