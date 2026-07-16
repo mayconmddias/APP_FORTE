@@ -60,9 +60,13 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
 
   const handleShare = async () => {
     const cleanFileName = title.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
-    let tempDiv: HTMLDivElement | null = null;
 
     try {
+      const iframe = iframeRef.current;
+      if (!iframe || !iframe.contentDocument || !iframe.contentDocument.body) {
+        throw new Error("O relatório ainda não foi totalmente carregado na tela.");
+      }
+
       const opt = {
         margin: 10,
         filename: cleanFileName,
@@ -71,22 +75,8 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      // Cria um container temporário para formatar a impressão do HTML
-      tempDiv = document.createElement('div');
-      tempDiv.innerHTML = html;
-      tempDiv.style.position = 'fixed';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '0';
-      tempDiv.style.width = '1024px'; // Mantém proporções do desktop para o PDF
-      document.body.appendChild(tempDiv);
-
-      // Adiciona estilo para garantir formatação correta em folha A4 no PDF
-      const styleElement = document.createElement('style');
-      styleElement.textContent = `
-        body { width: 100% !important; margin: 0 !important; padding: 0 !important; }
-        .bg-white { box-shadow: none !important; border-radius: 0 !important; }
-      `;
-      tempDiv.appendChild(styleElement);
+      // Obtém o elemento body do iframe, que já está com todos os estilos e imagens carregados
+      const targetElement = iframe.contentDocument.body;
 
       // Resolve a referência do html2pdf.js com suporte a ESM/UMD e fallbacks
       const html2pdfFunc = (html2pdf as any).default || html2pdf || (window as any).html2pdf;
@@ -94,14 +84,8 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         throw new Error('Biblioteca html2pdf não foi carregada como função válida.');
       }
 
-      // Converte o HTML para um arquivo PDF Blob usando html2pdf.js
-      const pdfBlob = await html2pdfFunc().from(tempDiv).set(opt).output('blob');
-
-      // Remove do DOM imediatamente após a geração
-      if (tempDiv && tempDiv.parentNode) {
-        tempDiv.parentNode.removeChild(tempDiv);
-        tempDiv = null;
-      }
+      // Converte o elemento já renderizado para um arquivo PDF Blob usando html2pdf.js
+      const pdfBlob = await html2pdfFunc().from(targetElement).set(opt).output('blob');
 
       if (Capacitor.isNativePlatform()) {
         const base64Data = await blobToBase64(pdfBlob);
@@ -132,11 +116,6 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
     } catch (err: any) {
       console.error("Erro no compartilhamento:", err);
       alert("Falha ao gerar e compartilhar PDF: " + (err.message || err));
-      
-      // Cleanup caso tenha travado no meio
-      if (tempDiv && tempDiv.parentNode) {
-        tempDiv.parentNode.removeChild(tempDiv);
-      }
     }
   };
 
