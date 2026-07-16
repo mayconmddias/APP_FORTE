@@ -80,15 +80,27 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
+      const iframe = iframeRef.current;
+      if (!iframe) {
+        throw new Error('Iframe de visualização não encontrado.');
+      }
+
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!iframeDoc || !iframeDoc.body) {
+        throw new Error('Não foi possível acessar o conteúdo do relatório.');
+      }
+
+      // Captura o elemento BODY já renderizado e com estilos CSS computados pelo WebView do celular
+      const elementToRender = iframeDoc.body;
+
       // Resolve a referência do html2pdf.js com suporte a ESM/UMD e fallbacks
       const html2pdfFunc = (html2pdf as any).default || html2pdf || (window as any).html2pdf;
       if (typeof html2pdfFunc !== 'function') {
         throw new Error('Biblioteca html2pdf não foi carregada como função válida.');
       }
 
-      // O HTML do relatório já contém CSS puro embeddido (sem dependência de CDN/Tailwind)
-      // Converte a string HTML diretamente para um arquivo PDF Blob usando html2pdf.js
-      const pdfBlob = await html2pdfFunc().from(html).set(opt).output('blob');
+      // Converte o elemento DOM do iframe diretamente para um arquivo PDF Blob usando html2pdf.js
+      const pdfBlob = await html2pdfFunc().from(elementToRender).set(opt).output('blob');
 
       if (Capacitor.isNativePlatform()) {
         const base64Data = await blobToBase64(pdfBlob);
@@ -167,7 +179,6 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
             srcDoc={html}
             title={title}
             className="w-full h-full border-0"
-            sandbox="allow-scripts allow-modals"
           />
         </div>
       </div>

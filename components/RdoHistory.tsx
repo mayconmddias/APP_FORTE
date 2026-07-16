@@ -69,7 +69,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
           <div class="photos-grid">
             ${record.photos.map(photo => `
               <div class="photo-card">
-                <img src="${photo}" class="photo-img" />
+                <img src="${photo}" class="photo-img" width="440" height="200" style="object-fit: contain; max-width: 100%; max-height: 100%;" />
               </div>
             `).join('')}
           </div>
@@ -86,7 +86,13 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
     @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap');
 
     /* ===== RESET & BASE ===== */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-variant-ligatures: none !important;
+      -webkit-font-variant-ligatures: none !important;
+    }
     body {
       font-family: 'Manrope', system-ui, -apple-system, sans-serif;
       color: #334155;
@@ -319,7 +325,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
     <header class="report-header">
       <div class="header-logo-wrap">
         <div class="header-logo-box">
-          <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" alt="Forte Logo" />
+          <img src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png" width="130" height="65" alt="Forte Logo" />
         </div>
       </div>
       <div class="header-title-wrap">
