@@ -189,12 +189,12 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (devicePushToken) {
-      console.log('Upserting push token linked to user:', currentUser?.id || 'guest');
+    if (devicePushToken && currentUser?.id) {
+      console.log('Upserting push token linked to user:', currentUser.id);
       supabase
         .from('push_tokens')
         .upsert(
-          { token: devicePushToken, user_id: currentUser?.id || null },
+          { token: devicePushToken, user_id: currentUser.id },
           { onConflict: 'token' }
         )
         .then(({ error }) => {
