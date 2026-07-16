@@ -78,13 +78,25 @@ serve(async (req) => {
       return new Response(JSON.stringify({ message: "Nenhum documento vencido hoje." }), { status: 200 });
     }
 
-    // 2. Buscar todos os tokens de push registrados
+    // 2. Buscar administradores
+    const { data: admins } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('role', 'ADMIN');
+
+    if (!admins || admins.length === 0) {
+      return new Response(JSON.stringify({ message: "Nenhum administrador encontrado." }), { status: 200 });
+    }
+
+    // 3. Buscar tokens de push desses administradores
+    const adminIds = admins.map(a => a.id);
     const { data: tokens, error: tokensError } = await supabase
       .from('push_tokens')
-      .select('token');
+      .select('token')
+      .in('user_id', adminIds);
 
     if (tokensError || !tokens || tokens.length === 0) {
-      return new Response(JSON.stringify({ message: "Nenhum token de push encontrado no banco de dados." }), { status: 200 });
+      return new Response(JSON.stringify({ message: "Nenhum token de push encontrado para administradores." }), { status: 200 });
     }
 
     // Obter Token de Autenticação do Firebase
