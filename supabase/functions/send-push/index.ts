@@ -26,9 +26,14 @@ async function getAccessToken(): Promise<string> {
   const claimBase64 = btoa(JSON.stringify(claim));
   const stringToSign = `${headerBase64}.${claimBase64}`;
 
-  const pemHeader = "-----BEGIN PRIVATE KEY-----";
-  const pemFooter = "-----END PRIVATE KEY-----";
-  const pemContents = privateKey.substring(pemHeader.length, privateKey.length - pemFooter.length).replace(/\s/g, '');
+  const pemContents = FIREBASE_PRIVATE_KEY
+    .replace("-----BEGIN PRIVATE KEY-----", "")
+    .replace("-----END PRIVATE KEY-----", "")
+    .replace(/\\n/g, "")
+    .replace(/\n/g, "")
+    .replace(/\r/g, "")
+    .replace(/\"/g, "")
+    .replace(/\s/g, "");
   const binaryDerString = atob(pemContents);
   const binaryDer = new Uint8Array(binaryDerString.length);
   for (let i = 0; i < binaryDerString.length; i++) {
@@ -134,6 +139,14 @@ serve(async (req) => {
                 title: 'Documento Vencido!',
                 body: bodyText,
               },
+              android: {
+                priority: 'high',
+                notification: {
+                  sound: 'default',
+                  click_action: 'FCM_PLUGIN_ACTIVITY',
+                  icon: 'fcm_push_icon'
+                }
+              }
             },
           }),
         });

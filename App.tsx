@@ -181,6 +181,14 @@ const App: React.FC = () => {
       PushNotifications.addListener('registrationError', (error) => {
         console.error('Erro no registro do Push:', error);
       });
+
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('Push recebido em primeiro plano:', notification);
+      });
+
+      PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+        console.log('Ação no push realizada:', notification);
+      });
     }
   }, [currentUser]);
 
