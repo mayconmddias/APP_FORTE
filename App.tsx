@@ -92,6 +92,7 @@ const App: React.FC = () => {
   });
 
   const [pdfPreview, setPdfPreview] = useState<{ html: string; title: string } | null>(null);
+  const [devicePushToken, setDevicePushToken] = useState<string | null>(null);
 
   // Effects to synchronize state changes to localStorage
   useEffect(() => {
@@ -170,12 +171,7 @@ const App: React.FC = () => {
 
       PushNotifications.addListener('registration', (token) => {
         console.log('FCM Token:', token.value);
-        supabase
-          .from('push_tokens')
-          .upsert({ token: token.value, user_id: currentUser?.id || null })
-          .then(({ error }) => {
-            if (error) console.error('Erro ao salvar token:', error);
-          });
+        setDevicePushToken(token.value);
       });
 
       PushNotifications.addListener('registrationError', (error) => {
@@ -190,7 +186,19 @@ const App: React.FC = () => {
         console.log('Ação no push realizada:', notification);
       });
     }
-  }, [currentUser]);
+  }, []);
+
+  useEffect(() => {
+    if (devicePushToken) {
+      console.log('Upserting push token linked to user:', currentUser?.id || 'guest');
+      supabase
+        .from('push_tokens')
+        .upsert({ token: devicePushToken, user_id: currentUser?.id || null })
+        .then(({ error }) => {
+          if (error) console.error('Erro ao salvar token com usuário:', error);
+        });
+    }
+  }, [currentUser, devicePushToken]);
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
