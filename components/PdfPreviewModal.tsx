@@ -25,6 +25,28 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
+const getParentStyles = (): string => {
+  let cssText = '';
+  try {
+    for (let i = 0; i < document.styleSheets.length; i++) {
+      const sheet = document.styleSheets[i];
+      try {
+        const rules = sheet.cssRules || (sheet as any).rules;
+        if (rules) {
+          for (let j = 0; j < rules.length; j++) {
+            cssText += rules[j].cssText + '\n';
+          }
+        }
+      } catch (e) {
+        // Ignora erros de stylesheets cross-origin (ex: fontes externas)
+      }
+    }
+  } catch (e) {
+    console.error('Erro ao ler estilos do parent:', e);
+  }
+  return cssText;
+};
+
 const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
   isOpen,
   onClose,
@@ -66,9 +88,28 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         margin: 10,
         filename: cleanFileName,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          logging: false,
+          width: 1024,
+          windowWidth: 1024
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
+
+      // Obtém os estilos de css pré-compilados do aplicativo principal
+      const parentStyles = getParentStyles();
+
+      // Substitui a tag da CDN do Tailwind pelos estilos locais para suporte offline completo
+      let styledHtml = html;
+      const cdnScriptTag = '<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>';
+      
+      if (html.includes(cdnScriptTag)) {
+        styledHtml = html.replace(cdnScriptTag, `<style>${parentStyles}</style>`);
+      } else {
+        styledHtml = html.replace('</head>', `<style>${parentStyles}</style></head>`);
+      }
 
       // Resolve a referência do html2pdf.js com suporte a ESM/UMD e fallbacks
       const html2pdfFunc = (html2pdf as any).default || html2pdf || (window as any).html2pdf;
@@ -77,7 +118,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
       }
 
       // Converte a string HTML diretamente para um arquivo PDF Blob usando html2pdf.js
-      const pdfBlob = await html2pdfFunc().from(html).set(opt).output('blob');
+      const pdfBlob = await html2pdfFunc().from(styledHtml).set(opt).output('blob');
 
       if (Capacitor.isNativePlatform()) {
         const base64Data = await blobToBase64(pdfBlob);
