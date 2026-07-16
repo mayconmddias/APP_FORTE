@@ -15,6 +15,7 @@ import RdoForm from './components/RdoForm';
 import RdoHistory from './components/RdoHistory';
 import DocumentManagement from './components/DocumentManagement';
 import GenericModal from './components/GenericModal';
+import PdfPreviewModal from './components/PdfPreviewModal';
 import { MaintenanceRecord, UserProfile, CraneAsset, RdoRecord } from './types';
 import { supabase } from './supabaseClient';
 import { Loader2 } from 'lucide-react';
@@ -89,6 +90,8 @@ const App: React.FC = () => {
   const [selectedAssetIdForAction, setSelectedAssetIdForAction] = useState<string | null>(() => {
     return localStorage.getItem('forte_selected_asset_id_action');
   });
+
+  const [pdfPreview, setPdfPreview] = useState<{ html: string; title: string } | null>(null);
 
   // Effects to synchronize state changes to localStorage
   useEffect(() => {
@@ -955,6 +958,7 @@ const App: React.FC = () => {
             userRole={role}
             onTitleChange={setDynamicTitle}
             initialAssetId={preselectedAssetId}
+            onPreviewPdf={(html, title) => setPdfPreview({ html, title })}
           />
         );
       case 'users':
@@ -990,6 +994,7 @@ const App: React.FC = () => {
             onDelete={handleDeleteRdo}
             onGeneratePdf={(rec) => { /* handleGeneratePdf is inside RdoHistory */ }}
             onTitleChange={setDynamicTitle}
+            onPreviewPdf={(html, title) => setPdfPreview({ html, title })}
           />
         );
       case 'rdo-form':
@@ -1078,6 +1083,13 @@ const App: React.FC = () => {
         description={modalState.description}
         type={modalState.type}
         onConfirm={modalState.onConfirm}
+      />
+
+      <PdfPreviewModal
+        isOpen={pdfPreview !== null}
+        onClose={() => setPdfPreview(null)}
+        html={pdfPreview?.html || ''}
+        title={pdfPreview?.title || ''}
       />
     </Layout>
   );

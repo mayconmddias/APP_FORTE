@@ -217,9 +217,8 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
     hasSubmitted.current = true;
     if (!selectedAsset || !currentUser) { hasSubmitted.current = false; return; }
     setIsSubmitting(true);
-    const isEditingWithTechnician = editingRecord && editingRecord.technician;
-    const finalTechnician = isEditingWithTechnician ? editingRecord.technician : currentUser.name;
-    const finalTechnicianId = isEditingWithTechnician ? editingRecord.technicianId : currentUser.id;
+    const finalTechnician = currentUser.name;
+    const finalTechnicianId = currentUser.id;
     const newRecord: MaintenanceRecord = {
       id: recordId,
       local_id: localId,

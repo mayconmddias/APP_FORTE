@@ -15,6 +15,7 @@ interface RdoHistoryProps {
   onGeneratePdf: (record: RdoRecord) => void;
   onTitleChange?: (title: string | null) => void;
   loading?: boolean;
+  onPreviewPdf?: (html: string, title: string) => void;
 }
 
 const formatDate = (dateStr: string) => {
@@ -34,7 +35,8 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
   onNew,
   onGeneratePdf,
   onTitleChange,
-  loading
+  loading,
+  onPreviewPdf
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -186,44 +188,48 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
 </body>
 </html>`;
 
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
-
-    if (isMobile) {
-      // Estilos específicos para forçar repetição de cabeçalho no mobile (iOS/Android)
-      const mobileHtml = html.replace('</head>', `
-  <style>
-    @page { margin: 10mm 5mm !important; }
-    .content-container { min-height: auto !important; box-shadow: none !important; margin: 0 !important; padding: 8mm 4mm !important; }
-    body { background-color: white !important; }
-  </style>
-</head>`);
-      
-      const win = window.open('', '_blank');
-      if (win) {
-        win.document.write(mobileHtml);
-        win.document.close();
-      }
+    if (onPreviewPdf) {
+      onPreviewPdf(html, pdfTitle);
     } else {
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = '0';
-      document.body.appendChild(iframe);
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
 
-      const doc = iframe.contentWindow?.document || iframe.contentDocument;
-      if (doc) {
-        doc.open();
-        doc.write(html);
-        doc.close();
+      if (isMobile) {
+        // Estilos específicos para forçar repetição de cabeçalho no mobile (iOS/Android)
+        const mobileHtml = html.replace('</head>', `
+    <style>
+      @page { margin: 10mm 5mm !important; }
+      .content-container { min-height: auto !important; box-shadow: none !important; margin: 0 !important; padding: 8mm 4mm !important; }
+      body { background-color: white !important; }
+    </style>
+  </head>`);
+        
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.write(mobileHtml);
+          win.document.close();
+        }
+      } else {
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
 
-        setTimeout(() => {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-          setTimeout(() => document.body.removeChild(iframe), 1000);
-        }, 1000);
+        const doc = iframe.contentWindow?.document || iframe.contentDocument;
+        if (doc) {
+          doc.open();
+          doc.write(html);
+          doc.close();
+
+          setTimeout(() => {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+            setTimeout(() => document.body.removeChild(iframe), 1000);
+          }, 1000);
+        }
       }
     }
   };

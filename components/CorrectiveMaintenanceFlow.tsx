@@ -200,9 +200,8 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
     
     setIsSubmitting(true);
     setLastOsNumber(nextOsNumber);
-    const isEditingWithTechnician = editingRecord && editingRecord.technician;
-    const finalTechnician = isEditingWithTechnician ? editingRecord.technician! : currentUser.name;
-    const finalTechnicianId = isEditingWithTechnician ? editingRecord.technicianId! : currentUser.id;
+    const finalTechnician = currentUser.name;
+    const finalTechnicianId = currentUser.id;
     const isTalhaType = ['Talha', 'Elevador de Carga', 'Encaixotadora', 'Desencaixotadora'].includes(selectedAsset.equipmentType || '');
     const newRecord: MaintenanceRecord = {
       id: recordId, local_id: localId,
