@@ -25,24 +25,23 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-const getParentStyles = (): string => {
+const getOfflineStyles = async (): Promise<string> => {
   let cssText = '';
   try {
-    for (let i = 0; i < document.styleSheets.length; i++) {
-      const sheet = document.styleSheets[i];
-      try {
-        const rules = sheet.cssRules || (sheet as any).rules;
-        if (rules) {
-          for (let j = 0; j < rules.length; j++) {
-            cssText += rules[j].cssText + '\n';
-          }
+    const links = document.querySelectorAll('link[rel="stylesheet"]');
+    for (let i = 0; i < links.length; i++) {
+      const href = links[i].getAttribute('href');
+      if (href) {
+        try {
+          const response = await fetch(href);
+          cssText += (await response.text()) + '\n';
+        } catch (e) {
+          console.error(`Erro ao buscar stylesheet ${href}:`, e);
         }
-      } catch (e) {
-        // Ignora erros de stylesheets cross-origin (ex: fontes externas)
       }
     }
   } catch (e) {
-    console.error('Erro ao ler estilos do parent:', e);
+    console.error('Erro ao ler link stylesheets:', e);
   }
   return cssText;
 };
@@ -93,13 +92,14 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           useCORS: true, 
           logging: false,
           width: 1024,
-          windowWidth: 1024
+          windowWidth: 1024,
+          delay: 300
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      // Obtém os estilos de css pré-compilados do aplicativo principal
-      const parentStyles = getParentStyles();
+      // Obtém os estilos de css pré-compilados do aplicativo de forma segura e offline
+      const parentStyles = await getOfflineStyles();
 
       // Substitui a tag da CDN do Tailwind pelos estilos locais para suporte offline completo
       let styledHtml = html;
