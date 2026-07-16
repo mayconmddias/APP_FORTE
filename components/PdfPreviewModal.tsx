@@ -62,11 +62,6 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
     const cleanFileName = title.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
 
     try {
-      const iframe = iframeRef.current;
-      if (!iframe || !iframe.contentDocument || !iframe.contentDocument.body) {
-        throw new Error("O relatório ainda não foi totalmente carregado na tela.");
-      }
-
       const opt = {
         margin: 10,
         filename: cleanFileName,
@@ -75,17 +70,14 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      // Obtém o elemento body do iframe, que já está com todos os estilos e imagens carregados
-      const targetElement = iframe.contentDocument.body;
-
       // Resolve a referência do html2pdf.js com suporte a ESM/UMD e fallbacks
       const html2pdfFunc = (html2pdf as any).default || html2pdf || (window as any).html2pdf;
       if (typeof html2pdfFunc !== 'function') {
         throw new Error('Biblioteca html2pdf não foi carregada como função válida.');
       }
 
-      // Converte o elemento já renderizado para um arquivo PDF Blob usando html2pdf.js
-      const pdfBlob = await html2pdfFunc().from(targetElement).set(opt).output('blob');
+      // Converte a string HTML diretamente para um arquivo PDF Blob usando html2pdf.js
+      const pdfBlob = await html2pdfFunc().from(html).set(opt).output('blob');
 
       if (Capacitor.isNativePlatform()) {
         const base64Data = await blobToBase64(pdfBlob);
