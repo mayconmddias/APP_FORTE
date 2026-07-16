@@ -75,7 +75,20 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           width: 1024,
           windowWidth: 1024,
           delay: 500,
-          letterRendering: true
+          letterRendering: true,
+          onclone: (clonedDoc: Document) => {
+            // Copia todos os blocos de estilos do iframe original para o head do documento clonado
+            const iframe = iframeRef.current;
+            if (iframe) {
+              const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+              if (iframeDoc) {
+                const styles = iframeDoc.querySelectorAll('style');
+                styles.forEach(style => {
+                  clonedDoc.head.appendChild(style.cloneNode(true));
+                });
+              }
+            }
+          }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };

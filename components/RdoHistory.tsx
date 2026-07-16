@@ -115,17 +115,18 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
 
     /* ===== HEADER ===== */
     .report-header {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      display: flex;
+      justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid #004a88;
       padding-bottom: 24px;
       margin-bottom: 32px;
+      width: 100%;
     }
-    .header-logo-wrap { display: flex; align-items: center; gap: 12px; }
+    .header-logo-wrap { flex: 1; display: flex; align-items: center; gap: 12px; }
     .header-logo-box { width: 130px; height: 65px; display: flex; align-items: center; justify-content: center; }
     .header-logo-box img { width: 100%; height: 100%; object-fit: contain; }
-    .header-title-wrap { display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .header-title-wrap { flex: 2; display: flex; flex-direction: column; gap: 4px; text-align: center; }
     .header-company {
       font-family: 'Space Grotesk', system-ui, sans-serif;
       font-size: 24px;
@@ -144,7 +145,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
       letter-spacing: 0.05em;
       line-height: 1.25;
     }
-    .header-os-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 0; }
+    .header-os-wrap { flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 0; text-align: right; }
     .header-os-label {
       font-size: 9px;
       font-weight: 600;
@@ -170,14 +171,21 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
 
     /* ===== INFO GRID ===== */
     .info-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px 16px;
+      display: flex;
+      flex-wrap: wrap;
       margin-bottom: 40px;
       border-bottom: 1px solid #f1f5f9;
       padding-bottom: 32px;
+      width: 100%;
     }
-    .info-item { display: flex; flex-direction: column; }
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      width: 25%;
+      margin-bottom: 24px;
+      box-sizing: border-box;
+      padding-right: 16px;
+    }
     .info-label {
       font-size: 10px;
       font-weight: 700;
@@ -224,7 +232,12 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
 
     /* ===== PHOTOS ===== */
     .rdo-photos-section { margin-top: 32px; break-inside: avoid; }
-    .photos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .photos-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      width: 100%;
+    }
     .photo-card {
       border: 1px solid #f1f5f9;
       border-radius: 12px;
@@ -236,6 +249,9 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
       display: flex;
       align-items: center;
       justify-content: center;
+      width: 48%;
+      margin-bottom: 24px;
+      box-sizing: border-box;
     }
     .photo-img { max-width: 100%; max-height: 100%; border-radius: 8px; object-fit: contain; }
 

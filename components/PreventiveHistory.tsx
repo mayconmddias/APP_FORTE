@@ -176,17 +176,18 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
 
     /* ===== HEADER ===== */
     .report-header {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      display: flex;
+      justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid #004a88;
       padding-bottom: 24px;
       margin-bottom: 32px;
+      width: 100%;
     }
-    .header-logo-wrap { display: flex; align-items: center; gap: 12px; }
+    .header-logo-wrap { flex: 1; display: flex; align-items: center; gap: 12px; }
     .header-logo-box { width: 130px; height: 65px; display: flex; align-items: center; justify-content: center; }
     .header-logo-box img { width: 100%; height: 100%; object-fit: contain; }
-    .header-title-wrap { display: flex; flex-direction: column; gap: 4px; text-align: center; }
+    .header-title-wrap { flex: 2; display: flex; flex-direction: column; gap: 4px; text-align: center; }
     .header-company {
       font-family: 'Space Grotesk', system-ui, sans-serif;
       font-size: 24px;
@@ -206,7 +207,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       line-height: 1.25;
       white-space: nowrap;
     }
-    .header-os-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 0; }
+    .header-os-wrap { flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 0; text-align: right; }
     .header-os-label {
       font-size: 9px;
       font-weight: 600;
@@ -224,14 +225,21 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
 
     /* ===== INFO GRID ===== */
     .info-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px 16px;
+      display: flex;
+      flex-wrap: wrap;
       margin-bottom: 40px;
       border-bottom: 1px solid #f1f5f9;
       padding-bottom: 32px;
+      width: 100%;
     }
-    .info-item { display: flex; flex-direction: column; }
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      width: 25%;
+      margin-bottom: 24px;
+      box-sizing: border-box;
+      padding-right: 16px;
+    }
     .info-label {
       font-size: 10px;
       font-weight: 700;
@@ -332,8 +340,12 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
 
     /* ===== SIGNATURES ===== */
     .signatures-section { margin-top: 48px; break-inside: avoid; }
-    .signatures-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; }
-    .signature-block { display: flex; flex-direction: column; align-items: center; }
+    .signatures-grid {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .signature-block { display: flex; flex-direction: column; align-items: center; width: 45%; }
     .signature-area { height: 64px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 8px; width: 100%; }
     .signature-name {
       font-family: 'Manrope', sans-serif;
