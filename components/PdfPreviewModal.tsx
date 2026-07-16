@@ -2,7 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import html2pdf from 'html2pdf.js';
 
 interface PdfPreviewModalProps {
   isOpen: boolean;
@@ -10,6 +11,19 @@ interface PdfPreviewModalProps {
   html: string;
   title: string;
 }
+
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64data = reader.result as string;
+      const base64 = base64data.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
 
 const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
   isOpen,
@@ -45,42 +59,57 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
   if (!isOpen) return null;
 
   const handleShare = async () => {
-    const cleanFileName = title.replace(/[^a-zA-Z0-9]/g, '_') + '.html';
+    const cleanFileName = title.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
 
     try {
+      const opt = {
+        margin: 10,
+        filename: cleanFileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      // Cria um container temporário para formatar a impressão do HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+
+      // Adiciona estilo para garantir formatação correta em folha A4 no PDF
+      const styleElement = document.createElement('style');
+      styleElement.textContent = `
+        body { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        .bg-white { box-shadow: none !important; border-radius: 0 !important; }
+      `;
+      tempDiv.appendChild(styleElement);
+
+      // Converte o HTML para um arquivo PDF Blob usando html2pdf.js
+      const pdfBlob = await html2pdf().from(tempDiv).set(opt).output('blob');
+
       if (Capacitor.isNativePlatform()) {
-        // Grava o arquivo HTML temporariamente no cache nativo do celular
+        const base64Data = await blobToBase64(pdfBlob);
+
+        // Grava o arquivo PDF temporariamente no cache nativo do celular
         const writeResult = await Filesystem.writeFile({
           path: cleanFileName,
-          data: html,
+          data: base64Data,
           directory: Directory.Cache,
-          encoding: Encoding.UTF8,
         });
 
         // Compartilha o arquivo utilizando a URI nativa
         await Share.share({
           title: title,
-          text: `Segue o relatório: ${title}`,
+          text: `Segue o relatório PDF: ${title}`,
           url: writeResult.uri,
           dialogTitle: 'Compartilhar Relatório',
         });
       } else {
-        // Fallback para navegador web
-        const file = new File([html], cleanFileName, { type: 'text/html' });
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: title,
-            text: `Segue o relatório: ${title}`
-          });
-        } else if (navigator.share) {
-          await navigator.share({
-            title: title,
-            text: `Relatório de Inspeção: ${title}`
-          });
-        } else {
-          alert("O compartilhamento não é suportado neste navegador. Tente copiar o conteúdo ou enviar manualmente.");
-        }
+        // Fallback para navegador web (Download direto do PDF)
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = cleanFileName;
+        a.click();
+        URL.revokeObjectURL(url);
       }
     } catch (err) {
       console.error("Erro no compartilhamento:", err);
@@ -123,6 +152,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
             height: scale < 1 ? `calc(100% / ${scale})` : '100%',
             transform: `scale(${scale})`,
             transformOrigin: 'top center',
+            flexShrink: 0,
           }} 
           className="bg-white rounded-2xl shadow-xl overflow-hidden"
         >
