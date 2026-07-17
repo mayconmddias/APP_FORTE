@@ -106,46 +106,50 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         const tableSection = table.closest('section');
 
         if (thead && rows.length > 0 && tableSection) {
+          const containerRect = container.getBoundingClientRect();
+          const getRelativeTop = (el: HTMLElement) => {
+            return el.getBoundingClientRect().top - containerRect.top;
+          };
+          const getRelativeBottom = (el: HTMLElement) => {
+            return el.getBoundingClientRect().bottom - containerRect.top;
+          };
+
+          const rowHeights = rows.map(row => {
+            let h = getRelativeBottom(row) - getRelativeTop(row);
+            if (!h || h <= 0) {
+              h = row.querySelector('img') ? 110 : 55;
+            }
+            return h;
+          });
+
+          const theadHeight = getRelativeBottom(thead) - getRelativeTop(thead) || 50;
+          const firstPageOffset = getRelativeTop(thead) + theadHeight;
+
           const rowGroups: HTMLElement[][] = [[]];
-          const groupHeights: number[] = [];
           let currentGroupIndex = 0;
 
-          const header = iframeDoc.querySelector('.report-header') as HTMLElement;
-          const infoGrid = iframeDoc.querySelector('.info-grid') as HTMLElement;
-
-          let firstPageOffset = 40; // padding superior
-          if (header) firstPageOffset += header.offsetHeight || 120;
-          if (infoGrid) firstPageOffset += infoGrid.offsetHeight || 150;
-          firstPageOffset += thead.offsetHeight || 50;
-
-          // Altura de uma folha A4 no DOM (com fatiamento real correspondente a 1466px para 210mm de largura A4)
-          const PAGE_HEIGHT_PX = 1466;
+          // Altura de uma folha A4 no fatiador real do jsPDF correspondente a 1496px
+          const PAGE_HEIGHT_PX = 1496;
           
-          // Orçamentos conservadores para evitar quebras naturais de folha sem cabeçalho repetido
+          // Orçamentos conservadores baseados nas alturas reais do DOM
           const BUDGET_PAGE_1 = 1200;
           const BUDGET_OTHER_PAGES = 1250;
 
           let currentGroupHeight = firstPageOffset;
 
-          rows.forEach(row => {
-            let rowHeight = row.offsetHeight;
-            if (!rowHeight || rowHeight <= 0) {
-              rowHeight = row.querySelector('img') ? 110 : 55;
-            }
-
+          rows.forEach((row, index) => {
+            const rowHeight = rowHeights[index];
             const pageBudget = currentGroupIndex === 0 ? BUDGET_PAGE_1 : BUDGET_OTHER_PAGES;
 
             if (currentGroupHeight + rowHeight > pageBudget) {
-              groupHeights[currentGroupIndex] = currentGroupHeight;
               currentGroupIndex++;
               rowGroups[currentGroupIndex] = [row];
-              currentGroupHeight = 50 + rowHeight; // thead repetido (50px) + linha
+              currentGroupHeight = theadHeight + rowHeight;
             } else {
               rowGroups[currentGroupIndex].push(row);
               currentGroupHeight += rowHeight;
             }
           });
-          groupHeights[currentGroupIndex] = currentGroupHeight;
 
           // Remove a tabela única original
           tableSection.remove();
@@ -154,7 +158,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
 
           rowGroups.forEach((pageRows, index) => {
             if (index > 0) {
-              // Início exato da próxima página
+              // Início exato da próxima página no fatiamento do jsPDF
               const nextPageStart = index * PAGE_HEIGHT_PX;
               // Altura necessária para empurrar o início do conteúdo da página para (nextPageStart + 40px de recuo superior)
               const spacerHeight = (nextPageStart + 40) - cumulativeHeight;
@@ -192,8 +196,13 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
             newSection.appendChild(newTable);
             container.insertBefore(newSection, signatures);
 
-            const tableHeight = groupHeights[index];
-            cumulativeHeight += tableHeight;
+            // Calcula a altura real deste bloco adicionado à página atual
+            const sectionHeight = (index === 0 ? getRelativeTop(thead) : 0) + theadHeight + pageRows.reduce((sum, _, rIndex) => {
+              const rHeight = rowHeights[rows.indexOf(pageRows[rIndex])];
+              return sum + rHeight;
+            }, 0);
+
+            cumulativeHeight += sectionHeight;
           });
 
           // Adiciona classe de controle para evitar re-split
