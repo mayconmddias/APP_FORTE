@@ -178,7 +178,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
             newTable.appendChild(newThead);
 
             // Adiciona o tbody e as linhas desta página
-            const newTbody = clonedDoc ? clonedDoc.createElement('tbody') : iframeDoc.createElement('tbody');
+            const newTbody = iframeDoc.createElement('tbody');
             newTbody.className = 'table-body';
             pageRows.forEach(r => {
               newTbody.appendChild(r);
