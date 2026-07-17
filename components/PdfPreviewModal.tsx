@@ -146,11 +146,15 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
               pageBreak.className = 'html2pdf__page-break';
               pageBreak.style.pageBreakBefore = 'always';
               pageBreak.style.breakBefore = 'always';
+              pageBreak.style.height = '0px';
+              pageBreak.style.margin = '0px';
+              pageBreak.style.padding = '0px';
+              pageBreak.style.overflow = 'hidden';
               container.insertBefore(pageBreak, signatures);
 
               // Espaçador no topo da nova página
               const spacer = iframeDoc.createElement('div');
-              spacer.style.height = '20px';
+              spacer.style.height = '40px';
               container.insertBefore(spacer, signatures);
             }
 
