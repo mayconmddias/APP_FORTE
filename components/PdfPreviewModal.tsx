@@ -97,7 +97,8 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
       const table = iframeDoc.querySelector('table');
       const signatures = (iframeDoc.querySelector('.signatures-section') || iframeDoc.querySelector('.report-footer')) as HTMLElement;
       
-      const alreadySplit = container ? container.querySelector('.html2pdf__page-break') !== null : false;
+      // Verificamos a presença de uma classe customizada para idempotência
+      const alreadySplit = container ? container.classList.contains('pdf-table-split-done') : false;
 
       if (!alreadySplit && table && container && signatures) {
         const rows = Array.from(table.querySelectorAll('tbody tr')) as HTMLElement[];
@@ -105,9 +106,9 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         const tableSection = table.closest('section');
 
         if (thead && rows.length > 0 && tableSection) {
-          const pages: HTMLElement[][] = [[]];
-          let currentPageIndex = 0;
-          let currentPageHeight = 0;
+          const rowGroups: HTMLElement[][] = [[]];
+          const groupHeights: number[] = [];
+          let currentGroupIndex = 0;
 
           const header = iframeDoc.querySelector('.report-header') as HTMLElement;
           const infoGrid = iframeDoc.querySelector('.info-grid') as HTMLElement;
@@ -117,8 +118,12 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           if (infoGrid) firstPageOffset += infoGrid.offsetHeight || 150;
           firstPageOffset += thead.offsetHeight || 50;
 
-          const maxPageHeight = 1350; // Altura máxima permitida para o conteúdo A4
-          currentPageHeight = firstPageOffset;
+          // Altura de uma página A4 útil no DOM (com container de 1024px de largura escalado para 190mm de largura útil A4)
+          // 277mm de altura útil A4 * (1024px / 190mm) = 1493px
+          const PAGE_HEIGHT_PX = 1493;
+          const BUDGET_PER_PAGE = 1450; // Deixa margem de segurança no rodapé
+
+          let currentGroupHeight = firstPageOffset;
 
           rows.forEach(row => {
             let rowHeight = row.offsetHeight;
@@ -126,31 +131,39 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
               rowHeight = row.querySelector('img') ? 110 : 55;
             }
 
-            if (currentPageHeight + rowHeight > maxPageHeight) {
-              currentPageIndex++;
-              pages[currentPageIndex] = [row];
-              currentPageHeight = 50 + rowHeight; // 50px aproximado para thead repetido
+            if (currentGroupHeight + rowHeight > BUDGET_PER_PAGE) {
+              groupHeights[currentGroupIndex] = currentGroupHeight;
+              currentGroupIndex++;
+              rowGroups[currentGroupIndex] = [row];
+              currentGroupHeight = 50 + rowHeight; // thead repetido (50px) + linha
             } else {
-              pages[currentPageIndex].push(row);
-              currentPageHeight += rowHeight;
+              rowGroups[currentGroupIndex].push(row);
+              currentGroupHeight += rowHeight;
             }
           });
+          groupHeights[currentGroupIndex] = currentGroupHeight;
 
           // Remove a tabela única original
           tableSection.remove();
 
-          pages.forEach((pageRows, index) => {
+          let cumulativeHeight = 0;
+
+          rowGroups.forEach((pageRows, index) => {
             if (index > 0) {
-              // Injeta a quebra de página diretamente no container (como filho direto)
-              const pageBreak = iframeDoc.createElement('div');
-              pageBreak.className = 'html2pdf__page-break';
-              pageBreak.style.pageBreakBefore = 'always';
-              pageBreak.style.breakBefore = 'always';
-              pageBreak.style.height = '0px';
-              pageBreak.style.margin = '0px';
-              pageBreak.style.padding = '0px';
-              pageBreak.style.overflow = 'hidden';
-              container.insertBefore(pageBreak, signatures);
+              // Início exato da próxima página
+              const nextPageStart = index * PAGE_HEIGHT_PX;
+              // Altura necessária para empurrar o início do conteúdo da página para (nextPageStart + 40px de recuo superior)
+              const spacerHeight = (nextPageStart + 40) - cumulativeHeight;
+
+              if (spacerHeight > 0) {
+                const spacer = iframeDoc.createElement('div');
+                spacer.className = 'html2pdf__page-break-spacer';
+                spacer.style.height = `${spacerHeight}px`;
+                spacer.style.margin = '0';
+                spacer.style.padding = '0';
+                container.insertBefore(spacer, signatures);
+                cumulativeHeight += spacerHeight;
+              }
             }
 
             // Cria uma nova section e table
@@ -165,7 +178,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
             newTable.appendChild(newThead);
 
             // Adiciona o tbody e as linhas desta página
-            const newTbody = iframeDoc.createElement('tbody');
+            const newTbody = clonedDoc ? clonedDoc.createElement('tbody') : iframeDoc.createElement('tbody');
             newTbody.className = 'table-body';
             pageRows.forEach(r => {
               newTbody.appendChild(r);
@@ -174,10 +187,17 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
 
             newSection.appendChild(newTable);
             container.insertBefore(newSection, signatures);
+
+            const tableHeight = groupHeights[index];
+            cumulativeHeight += tableHeight;
           });
+
+          // Adiciona classe de controle para evitar re-split
+          container.classList.add('pdf-table-split-done');
         }
       }
 
+      const hasTable = iframeDoc.querySelector('table') !== null;
       const opt = {
         margin: 10,
         filename: cleanFileName,
@@ -206,7 +226,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] }
+        pagebreak: hasTable ? { mode: [] } : { mode: ['css', 'legacy'] }
       };
 
       // Captura o elemento CONTENT-CONTAINER para ser renderizado diretamente
