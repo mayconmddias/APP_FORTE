@@ -76,6 +76,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           windowWidth: 1024,
           delay: 500,
           letterRendering: true,
+          backgroundColor: '#ffffff',
           onclone: (clonedDoc: Document) => {
             // Copia todos os blocos de estilos do iframe original para o head do documento clonado
             const iframe = iframeRef.current;
@@ -88,9 +89,109 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
                 });
               }
             }
+
+            // Forçar largura fixa e resetar margens/fundo no documento clonado
+            const body = clonedDoc.body;
+            if (body) {
+              body.style.width = '1024px';
+              body.style.backgroundColor = 'white';
+              body.style.margin = '0';
+              body.style.padding = '0';
+            }
+
+            const container = clonedDoc.querySelector('.content-container') as HTMLElement;
+            if (container) {
+              container.style.width = '1024px';
+              container.style.maxWidth = '1024px';
+              container.style.margin = '0';
+              container.style.padding = '40px';
+              container.style.boxShadow = 'none';
+              container.style.backgroundColor = 'white';
+            }
+
+            // Particionamento dinâmico de tabelas para repetir o cabeçalho (thead) e forçar quebras limpas
+            const table = clonedDoc.querySelector('table');
+            if (table) {
+              const rows = Array.from(table.querySelectorAll('tbody tr')) as HTMLElement[];
+              const thead = table.querySelector('thead');
+              const tableParent = table.parentNode;
+
+              if (thead && tableParent && rows.length > 0) {
+                const pages: HTMLElement[][] = [[]];
+                let currentPageIndex = 0;
+                let currentPageHeight = 0;
+
+                const header = clonedDoc.querySelector('.report-header') as HTMLElement;
+                const infoGrid = clonedDoc.querySelector('.info-grid') as HTMLElement;
+
+                let firstPageOffset = 40; // padding superior
+                if (header) firstPageOffset += header.offsetHeight || 120;
+                if (infoGrid) firstPageOffset += infoGrid.offsetHeight || 150;
+                firstPageOffset += thead.offsetHeight || 50;
+
+                const maxPageHeight = 1350; // Altura máxima permitida para o conteúdo A4
+                currentPageHeight = firstPageOffset;
+
+                rows.forEach(row => {
+                  let rowHeight = row.offsetHeight;
+                  if (!rowHeight || rowHeight <= 0) {
+                    rowHeight = row.querySelector('img') ? 110 : 55;
+                  }
+
+                  if (currentPageHeight + rowHeight > maxPageHeight) {
+                    currentPageIndex++;
+                    pages[currentPageIndex] = [row];
+                    currentPageHeight = 50 + rowHeight; // 50px aproximado para thead repetido
+                  } else {
+                    pages[currentPageIndex].push(row);
+                    currentPageHeight += rowHeight;
+                  }
+                });
+
+                // Remove a tabela única original
+                table.remove();
+
+                pages.forEach((pageRows, index) => {
+                  if (index > 0) {
+                    // Injeta a quebra de página
+                    const pageBreak = clonedDoc.createElement('div');
+                    pageBreak.className = 'html2pdf__page-break';
+                    pageBreak.style.pageBreakBefore = 'always';
+                    pageBreak.style.breakBefore = 'always';
+                    tableParent.appendChild(pageBreak);
+
+                    // Espaçador no topo da nova página
+                    const spacer = clonedDoc.createElement('div');
+                    spacer.style.height = '20px';
+                    tableParent.appendChild(spacer);
+                  }
+
+                  // Cria a nova tabela
+                  const newTable = clonedDoc.createElement('table');
+                  newTable.style.width = '100%';
+                  newTable.style.tableLayout = 'fixed';
+                  newTable.style.borderCollapse = 'collapse';
+
+                  // Clona o thead original
+                  const newThead = thead.cloneNode(true);
+                  newTable.appendChild(newThead);
+
+                  // Adiciona o tbody e as linhas desta página
+                  const newTbody = clonedDoc.createElement('tbody');
+                  newTbody.className = 'table-body';
+                  pageRows.forEach(r => {
+                    newTbody.appendChild(r);
+                  });
+                  newTable.appendChild(newTbody);
+
+                  tableParent.appendChild(newTable);
+                });
+              }
+            }
           }
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
       };
 
       const iframe = iframeRef.current;
@@ -163,13 +264,15 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           {title}
         </h2>
 
-        <button
-          onClick={handleShare}
-          className="flex items-center justify-center w-10 h-10 bg-white text-[#004a88] hover:bg-slate-100 rounded-full shadow-sm transition-all active:scale-95"
-          title="Compartilhar"
-        >
-          <span className="material-symbols-outlined select-none notranslate">share</span>
-        </button>
+        {Capacitor.isNativePlatform() && (
+          <button
+            onClick={handleShare}
+            className="flex items-center justify-center w-10 h-10 bg-white text-[#004a88] hover:bg-slate-100 rounded-full shadow-sm transition-all active:scale-95"
+            title="Compartilhar"
+          >
+            <span className="material-symbols-outlined select-none notranslate">share</span>
+          </button>
+        )}
       </div>
 
       {/* PDF Content Area */}
