@@ -118,13 +118,13 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           if (infoGrid) firstPageOffset += infoGrid.offsetHeight || 150;
           firstPageOffset += thead.offsetHeight || 50;
 
-          // Altura de uma página A4 útil no DOM (com container de 1024px de largura escalado para 190mm de largura útil A4)
-          // 277mm de altura útil A4 * (1024px / 190mm) = 1493px
-          const PAGE_HEIGHT_PX = 1493;
+          // Altura de uma folha A4 no DOM (com container de 1024px de largura correspondente a 210mm de largura A4)
+          // 297mm de altura A4 * (1024px / 210mm) = 1448px
+          const PAGE_HEIGHT_PX = 1448;
           
           // Orçamentos conservadores para evitar quebras naturais de folha sem cabeçalho repetido
-          const BUDGET_PAGE_1 = 1250;
-          const BUDGET_OTHER_PAGES = 1300;
+          const BUDGET_PAGE_1 = 1200;
+          const BUDGET_OTHER_PAGES = 1250;
 
           let currentGroupHeight = firstPageOffset;
 
