@@ -151,11 +151,6 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
               pageBreak.style.padding = '0px';
               pageBreak.style.overflow = 'hidden';
               container.insertBefore(pageBreak, signatures);
-
-              // Espaçador no topo da nova página
-              const spacer = iframeDoc.createElement('div');
-              spacer.style.height = '40px';
-              container.insertBefore(spacer, signatures);
             }
 
             // Cria uma nova section e table
