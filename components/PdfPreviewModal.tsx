@@ -111,12 +111,13 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
 
             // Particionamento dinâmico de tabelas para repetir o cabeçalho (thead) e forçar quebras limpas
             const table = clonedDoc.querySelector('table');
-            if (table) {
+            const signatures = (clonedDoc.querySelector('.signatures-section') || clonedDoc.querySelector('.report-footer')) as HTMLElement;
+            if (table && container && signatures) {
               const rows = Array.from(table.querySelectorAll('tbody tr')) as HTMLElement[];
               const thead = table.querySelector('thead');
-              const tableParent = table.parentNode;
+              const tableSection = table.closest('section');
 
-              if (thead && tableParent && rows.length > 0) {
+              if (thead && rows.length > 0 && tableSection) {
                 const pages: HTMLElement[][] = [[]];
                 let currentPageIndex = 0;
                 let currentPageHeight = 0;
@@ -149,24 +150,25 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
                 });
 
                 // Remove a tabela única original
-                table.remove();
+                tableSection.remove();
 
                 pages.forEach((pageRows, index) => {
                   if (index > 0) {
-                    // Injeta a quebra de página
+                    // Injeta a quebra de página diretamente no container (como filho direto)
                     const pageBreak = clonedDoc.createElement('div');
                     pageBreak.className = 'html2pdf__page-break';
                     pageBreak.style.pageBreakBefore = 'always';
                     pageBreak.style.breakBefore = 'always';
-                    tableParent.appendChild(pageBreak);
+                    container.insertBefore(pageBreak, signatures);
 
                     // Espaçador no topo da nova página
                     const spacer = clonedDoc.createElement('div');
                     spacer.style.height = '20px';
-                    tableParent.appendChild(spacer);
+                    container.insertBefore(spacer, signatures);
                   }
 
-                  // Cria a nova tabela
+                  // Cria uma nova section e table
+                  const newSection = clonedDoc.createElement('section');
                   const newTable = clonedDoc.createElement('table');
                   newTable.style.width = '100%';
                   newTable.style.tableLayout = 'fixed';
@@ -184,7 +186,8 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
                   });
                   newTable.appendChild(newTbody);
 
-                  tableParent.appendChild(newTable);
+                  newSection.appendChild(newTable);
+                  container.insertBefore(newSection, signatures);
                 });
               }
             }
@@ -204,8 +207,8 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         throw new Error('Não foi possível acessar o conteúdo do relatório.');
       }
 
-      // Captura o elemento BODY já renderizado e com estilos CSS computados pelo WebView do celular
-      const elementToRender = iframeDoc.body;
+      // Captura o elemento CONTENT-CONTAINER para ser renderizado diretamente
+      const elementToRender = iframeDoc.querySelector('.content-container') || iframeDoc.body;
 
       // Resolve a referência do html2pdf.js com suporte a ESM/UMD e fallbacks
       const html2pdfFunc = (html2pdf as any).default || html2pdf || (window as any).html2pdf;
