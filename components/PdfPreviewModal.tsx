@@ -64,6 +64,121 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
     const cleanFileName = title.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
 
     try {
+      const iframe = iframeRef.current;
+      if (!iframe) {
+        throw new Error('Iframe de visualização não encontrado.');
+      }
+
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!iframeDoc || !iframeDoc.body) {
+        throw new Error('Não foi possível acessar o conteúdo do relatório.');
+      }
+
+      // Modificar o DOM do iframe original diretamente para que a biblioteca html2pdf processe as quebras antes de renderizar
+      const body = iframeDoc.body;
+      if (body) {
+        body.style.width = '1024px';
+        body.style.backgroundColor = 'white';
+        body.style.margin = '0';
+        body.style.padding = '0';
+      }
+
+      const container = iframeDoc.querySelector('.content-container') as HTMLElement;
+      if (container) {
+        container.style.width = '1024px';
+        container.style.maxWidth = '1024px';
+        container.style.margin = '0';
+        container.style.padding = '40px';
+        container.style.boxShadow = 'none';
+        container.style.backgroundColor = 'white';
+      }
+
+      // Particionamento dinâmico de tabelas diretamente no iframe original para forçar quebras de página e repetir o cabeçalho (thead)
+      const table = iframeDoc.querySelector('table');
+      const signatures = (iframeDoc.querySelector('.signatures-section') || iframeDoc.querySelector('.report-footer')) as HTMLElement;
+      
+      const alreadySplit = container ? container.querySelector('.html2pdf__page-break') !== null : false;
+
+      if (!alreadySplit && table && container && signatures) {
+        const rows = Array.from(table.querySelectorAll('tbody tr')) as HTMLElement[];
+        const thead = table.querySelector('thead');
+        const tableSection = table.closest('section');
+
+        if (thead && rows.length > 0 && tableSection) {
+          const pages: HTMLElement[][] = [[]];
+          let currentPageIndex = 0;
+          let currentPageHeight = 0;
+
+          const header = iframeDoc.querySelector('.report-header') as HTMLElement;
+          const infoGrid = iframeDoc.querySelector('.info-grid') as HTMLElement;
+
+          let firstPageOffset = 40; // padding superior
+          if (header) firstPageOffset += header.offsetHeight || 120;
+          if (infoGrid) firstPageOffset += infoGrid.offsetHeight || 150;
+          firstPageOffset += thead.offsetHeight || 50;
+
+          const maxPageHeight = 1350; // Altura máxima permitida para o conteúdo A4
+          currentPageHeight = firstPageOffset;
+
+          rows.forEach(row => {
+            let rowHeight = row.offsetHeight;
+            if (!rowHeight || rowHeight <= 0) {
+              rowHeight = row.querySelector('img') ? 110 : 55;
+            }
+
+            if (currentPageHeight + rowHeight > maxPageHeight) {
+              currentPageIndex++;
+              pages[currentPageIndex] = [row];
+              currentPageHeight = 50 + rowHeight; // 50px aproximado para thead repetido
+            } else {
+              pages[currentPageIndex].push(row);
+              currentPageHeight += rowHeight;
+            }
+          });
+
+          // Remove a tabela única original
+          tableSection.remove();
+
+          pages.forEach((pageRows, index) => {
+            if (index > 0) {
+              // Injeta a quebra de página diretamente no container (como filho direto)
+              const pageBreak = iframeDoc.createElement('div');
+              pageBreak.className = 'html2pdf__page-break';
+              pageBreak.style.pageBreakBefore = 'always';
+              pageBreak.style.breakBefore = 'always';
+              container.insertBefore(pageBreak, signatures);
+
+              // Espaçador no topo da nova página
+              const spacer = iframeDoc.createElement('div');
+              spacer.style.height = '20px';
+              container.insertBefore(spacer, signatures);
+            }
+
+            // Cria uma nova section e table
+            const newSection = iframeDoc.createElement('section');
+            const newTable = iframeDoc.createElement('table');
+            newTable.style.width = '100%';
+            newTable.style.tableLayout = 'fixed';
+            newTable.style.borderCollapse = 'collapse';
+
+            // Clona o thead original
+            const newThead = thead.cloneNode(true);
+            newTable.appendChild(newThead);
+
+            // Adiciona o tbody e as linhas desta página
+            const newTbody = iframeDoc.createElement('tbody');
+            newTbody.className = 'table-body';
+            pageRows.forEach(r => {
+              newTbody.appendChild(r);
+            });
+            newTable.appendChild(newTbody);
+
+            newSection.appendChild(newTable);
+            container.insertBefore(newSection, signatures);
+          });
+        }
+      }
+
       const opt = {
         margin: 10,
         filename: cleanFileName,
@@ -89,126 +204,14 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
                 });
               }
             }
-
-            // Forçar largura fixa e resetar margens/fundo no documento clonado
-            const body = clonedDoc.body;
-            if (body) {
-              body.style.width = '1024px';
-              body.style.backgroundColor = 'white';
-              body.style.margin = '0';
-              body.style.padding = '0';
-            }
-
-            const container = clonedDoc.querySelector('.content-container') as HTMLElement;
-            if (container) {
-              container.style.width = '1024px';
-              container.style.maxWidth = '1024px';
-              container.style.margin = '0';
-              container.style.padding = '40px';
-              container.style.boxShadow = 'none';
-              container.style.backgroundColor = 'white';
-            }
-
-            // Particionamento dinâmico de tabelas para repetir o cabeçalho (thead) e forçar quebras limpas
-            const table = clonedDoc.querySelector('table');
-            const signatures = (clonedDoc.querySelector('.signatures-section') || clonedDoc.querySelector('.report-footer')) as HTMLElement;
-            if (table && container && signatures) {
-              const rows = Array.from(table.querySelectorAll('tbody tr')) as HTMLElement[];
-              const thead = table.querySelector('thead');
-              const tableSection = table.closest('section');
-
-              if (thead && rows.length > 0 && tableSection) {
-                const pages: HTMLElement[][] = [[]];
-                let currentPageIndex = 0;
-                let currentPageHeight = 0;
-
-                const header = clonedDoc.querySelector('.report-header') as HTMLElement;
-                const infoGrid = clonedDoc.querySelector('.info-grid') as HTMLElement;
-
-                let firstPageOffset = 40; // padding superior
-                if (header) firstPageOffset += header.offsetHeight || 120;
-                if (infoGrid) firstPageOffset += infoGrid.offsetHeight || 150;
-                firstPageOffset += thead.offsetHeight || 50;
-
-                const maxPageHeight = 1350; // Altura máxima permitida para o conteúdo A4
-                currentPageHeight = firstPageOffset;
-
-                rows.forEach(row => {
-                  let rowHeight = row.offsetHeight;
-                  if (!rowHeight || rowHeight <= 0) {
-                    rowHeight = row.querySelector('img') ? 110 : 55;
-                  }
-
-                  if (currentPageHeight + rowHeight > maxPageHeight) {
-                    currentPageIndex++;
-                    pages[currentPageIndex] = [row];
-                    currentPageHeight = 50 + rowHeight; // 50px aproximado para thead repetido
-                  } else {
-                    pages[currentPageIndex].push(row);
-                    currentPageHeight += rowHeight;
-                  }
-                });
-
-                // Remove a tabela única original
-                tableSection.remove();
-
-                pages.forEach((pageRows, index) => {
-                  if (index > 0) {
-                    // Injeta a quebra de página diretamente no container (como filho direto)
-                    const pageBreak = clonedDoc.createElement('div');
-                    pageBreak.className = 'html2pdf__page-break';
-                    pageBreak.style.pageBreakBefore = 'always';
-                    pageBreak.style.breakBefore = 'always';
-                    container.insertBefore(pageBreak, signatures);
-
-                    // Espaçador no topo da nova página
-                    const spacer = clonedDoc.createElement('div');
-                    spacer.style.height = '20px';
-                    container.insertBefore(spacer, signatures);
-                  }
-
-                  // Cria uma nova section e table
-                  const newSection = clonedDoc.createElement('section');
-                  const newTable = clonedDoc.createElement('table');
-                  newTable.style.width = '100%';
-                  newTable.style.tableLayout = 'fixed';
-                  newTable.style.borderCollapse = 'collapse';
-
-                  // Clona o thead original
-                  const newThead = thead.cloneNode(true);
-                  newTable.appendChild(newThead);
-
-                  // Adiciona o tbody e as linhas desta página
-                  const newTbody = clonedDoc.createElement('tbody');
-                  newTbody.className = 'table-body';
-                  pageRows.forEach(r => {
-                    newTbody.appendChild(r);
-                  });
-                  newTable.appendChild(newTbody);
-
-                  newSection.appendChild(newTable);
-                  container.insertBefore(newSection, signatures);
-                });
-              }
-            }
           }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
       };
 
-      const iframe = iframeRef.current;
-      if (!iframe) {
-        throw new Error('Iframe de visualização não encontrado.');
-      }
-
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDoc || !iframeDoc.body) {
-        throw new Error('Não foi possível acessar o conteúdo do relatório.');
-      }
-
       // Captura o elemento CONTENT-CONTAINER para ser renderizado diretamente
-      const elementToRender = iframeDoc.querySelector('.content-container') || iframeDoc.body;
+      const elementToRender = container || body;
 
       // Resolve a referência do html2pdf.js com suporte a ESM/UMD e fallbacks
       const html2pdfFunc = (html2pdf as any).default || html2pdf || (window as any).html2pdf;
