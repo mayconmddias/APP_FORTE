@@ -121,7 +121,10 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           // Altura de uma página A4 útil no DOM (com container de 1024px de largura escalado para 190mm de largura útil A4)
           // 277mm de altura útil A4 * (1024px / 190mm) = 1493px
           const PAGE_HEIGHT_PX = 1493;
-          const BUDGET_PER_PAGE = 1450; // Deixa margem de segurança no rodapé
+          
+          // Orçamentos conservadores para evitar quebras naturais de folha sem cabeçalho repetido
+          const BUDGET_PAGE_1 = 1250;
+          const BUDGET_OTHER_PAGES = 1300;
 
           let currentGroupHeight = firstPageOffset;
 
@@ -131,7 +134,9 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
               rowHeight = row.querySelector('img') ? 110 : 55;
             }
 
-            if (currentGroupHeight + rowHeight > BUDGET_PER_PAGE) {
+            const pageBudget = currentGroupIndex === 0 ? BUDGET_PAGE_1 : BUDGET_OTHER_PAGES;
+
+            if (currentGroupHeight + rowHeight > pageBudget) {
               groupHeights[currentGroupIndex] = currentGroupHeight;
               currentGroupIndex++;
               rowGroups[currentGroupIndex] = [row];
