@@ -93,10 +93,15 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         container.style.backgroundColor = 'white';
       }
 
-      // Particionamento dinâmico de tabelas diretamente no iframe original para forçar quebras de página e repetir o cabeçalho (thead)
+      // ─── Particionamento de tabela por estimativas estáticas de altura ───
+      // Não usamos getBoundingClientRect pois na WebView do Android as medições
+      // divergem do espaço real do jsPDF, causando espaçadores errados.
+      // Em vez disso usamos alturas estimadas por tipo de linha + marcadores CSS
+      // de quebra de página (page-break-before: always) que o html2pdf respeita
+      // de forma uniforme em qualquer ambiente (desktop, WebView, Chrome Android).
       const table = iframeDoc.querySelector('table');
       const signatures = (iframeDoc.querySelector('.signatures-section') || iframeDoc.querySelector('.report-footer')) as HTMLElement;
-      
+
       // Verificamos a presença de uma classe customizada para idempotência
       const alreadySplit = container ? container.classList.contains('pdf-table-split-done') : false;
 
@@ -106,118 +111,91 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         const tableSection = table.closest('section');
 
         if (thead && rows.length > 0 && tableSection) {
-          const containerRect = container.getBoundingClientRect();
-          const getRelativeTop = (el: HTMLElement) => {
-            return el.getBoundingClientRect().top - containerRect.top;
-          };
-          const getRelativeBottom = (el: HTMLElement) => {
-            return el.getBoundingClientRect().bottom - containerRect.top;
-          };
 
-          const rowHeights = rows.map(row => {
-            let h = getRelativeBottom(row) - getRelativeTop(row);
-            if (!h || h <= 0) {
-              h = row.querySelector('img') ? 110 : 55;
-            }
-            return h;
-          });
+          // Estimativas estáticas de altura por linha (em px, coordenadas do DOM a 1x):
+          // Independentes de DPI/zoom — funcionam igual no desktop e na WebView Android.
+          const ROW_HEIGHT_NORMAL = 62;   // linha sem imagem
+          const ROW_HEIGHT_IMAGE  = 120;  // linha com imagem anexada
+          const THEAD_HEIGHT      = 44;   // cabeçalho da tabela (thead)
 
-          const theadHeight = getRelativeBottom(thead) - getRelativeTop(thead) || 50;
-          const firstPageOffset = getRelativeTop(thead) + theadHeight;
+          // Espaço disponível para linhas de tabela por página (estimativa conservadora):
+          // Página 1 tem menos espaço pois ocupa o cabeçalho do relatório + info-grid.
+          const BUDGET_PAGE_1    = 880;  // px — após logo + cabeçalho + info-grid
+          const BUDGET_OTHER     = 1260; // px — páginas seguintes, margem leve de segurança
 
+          // Estima a altura de cada linha com base na presença de imagem
+          const rowHeights = rows.map(row =>
+            row.querySelector('img') ? ROW_HEIGHT_IMAGE : ROW_HEIGHT_NORMAL
+          );
+
+          // Distribui as linhas em grupos, um grupo por página
           const rowGroups: HTMLElement[][] = [[]];
           let currentGroupIndex = 0;
-
-          // Altura de uma folha A4 no fatiador real do jsPDF correspondente a 1496px
-          const PAGE_HEIGHT_PX = 1496;
-          
-          // Orçamentos conservadores baseados nas alturas reais do DOM
-          const BUDGET_PAGE_1 = 1200;
-          const BUDGET_OTHER_PAGES = 1250;
-
-          let currentGroupHeight = firstPageOffset;
+          let currentGroupHeight = THEAD_HEIGHT; // pág. 1 começa já contando o thead
 
           rows.forEach((row, index) => {
             const rowHeight = rowHeights[index];
-            const pageBudget = currentGroupIndex === 0 ? BUDGET_PAGE_1 : BUDGET_OTHER_PAGES;
+            const budget = currentGroupIndex === 0 ? BUDGET_PAGE_1 : BUDGET_OTHER;
 
-            if (currentGroupHeight + rowHeight > pageBudget) {
+            if (currentGroupHeight + rowHeight > budget) {
               currentGroupIndex++;
               rowGroups[currentGroupIndex] = [row];
-              currentGroupHeight = theadHeight + rowHeight;
+              currentGroupHeight = THEAD_HEIGHT + rowHeight;
             } else {
               rowGroups[currentGroupIndex].push(row);
               currentGroupHeight += rowHeight;
             }
           });
 
-          // Remove a tabela única original
+          // Remove a tabela única original do DOM
           tableSection.remove();
 
-          let cumulativeHeight = 0;
-
           rowGroups.forEach((pageRows, index) => {
+            // Insere marcador CSS de quebra de página ANTES de cada grupo
+            // (exceto o primeiro, que continua na página 1 logo após o info-grid)
             if (index > 0) {
-              // Início exato da próxima página no fatiamento do jsPDF
-              const nextPageStart = index * PAGE_HEIGHT_PX;
-              // Altura necessária para empurrar o início do conteúdo da página para (nextPageStart + 40px de recuo superior)
-              const spacerHeight = (nextPageStart + 40) - cumulativeHeight;
-
-              if (spacerHeight > 0) {
-                const spacer = iframeDoc.createElement('div');
-                spacer.className = 'html2pdf__page-break-spacer';
-                spacer.style.height = `${spacerHeight}px`;
-                spacer.style.margin = '0';
-                spacer.style.padding = '0';
-                container.insertBefore(spacer, signatures);
-                cumulativeHeight += spacerHeight;
-              }
+              const breakEl = iframeDoc.createElement('div');
+              breakEl.className = 'pdf-page-break';
+              breakEl.style.pageBreakBefore = 'always';
+              breakEl.style.breakBefore = 'page';
+              breakEl.style.height = '0';
+              breakEl.style.margin = '0';
+              breakEl.style.padding = '0';
+              container.insertBefore(breakEl, signatures);
             }
 
-            // Cria uma nova section e table
+            // Cria uma nova section com thead clonado + linhas deste grupo
             const newSection = iframeDoc.createElement('section');
             const newTable = iframeDoc.createElement('table');
             newTable.style.width = '100%';
             newTable.style.tableLayout = 'fixed';
             newTable.style.borderCollapse = 'collapse';
 
-            // Clona o thead original
+            // Clona o thead original para repetir o cabeçalho em cada página
             const newThead = thead.cloneNode(true);
             newTable.appendChild(newThead);
 
-            // Adiciona o tbody e as linhas desta página
             const newTbody = iframeDoc.createElement('tbody');
             newTbody.className = 'table-body';
-            pageRows.forEach(r => {
-              newTbody.appendChild(r);
-            });
+            pageRows.forEach(r => newTbody.appendChild(r));
             newTable.appendChild(newTbody);
 
             newSection.appendChild(newTable);
             container.insertBefore(newSection, signatures);
-
-            // Calcula a altura real deste bloco adicionado à página atual
-            const sectionHeight = (index === 0 ? getRelativeTop(thead) : 0) + theadHeight + pageRows.reduce((sum, _, rIndex) => {
-              const rHeight = rowHeights[rows.indexOf(pageRows[rIndex])];
-              return sum + rHeight;
-            }, 0);
-
-            cumulativeHeight += sectionHeight;
           });
 
-          // Adiciona classe de controle para evitar re-split
+          // Marca o container como já processado para evitar re-split
           container.classList.add('pdf-table-split-done');
         }
       }
 
-      const hasTable = iframeDoc.querySelector('table') !== null;
       const opt = {
         margin: 10,
         filename: cleanFileName,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
           logging: false,
           width: 1024,
           windowWidth: 1024,
@@ -239,7 +217,10 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: hasTable ? { mode: [] } : { mode: ['css', 'legacy'] }
+        // Usa marcadores CSS (.pdf-page-break) para quebras de página.
+        // Isso é robusto entre ambientes (desktop, WebView Android, Chrome mobile)
+        // pois não depende de medições absolutas de pixel.
+        pagebreak: { mode: ['css'], before: '.pdf-page-break' }
       };
 
       // Captura o elemento CONTENT-CONTAINER para ser renderizado diretamente
