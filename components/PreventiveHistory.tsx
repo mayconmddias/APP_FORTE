@@ -405,17 +405,33 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       font-family: 'Manrope', sans-serif;
     }
 
+    /* ===== PAGE SETUP ===== */
+    @page {
+      size: A4;
+      margin: 20mm 15mm 20mm 15mm;
+    }
+
     /* ===== PRINT STYLES ===== */
     @media print {
-      body { background-color: white !important; }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        background-color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
       .no-print { display: none !important; }
       .page-break { page-break-after: always; }
       .content-container {
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 !important;
-        padding: 5mm !important;
+        margin-top: 0 !important;
+        padding: 0 !important;
+        padding-top: 0 !important;
         box-shadow: none !important;
+        min-height: auto !important;
       }
       thead { display: table-header-group; }
       tfoot { display: table-footer-group; }

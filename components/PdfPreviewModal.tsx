@@ -254,6 +254,22 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
       // Converte o elemento DOM do iframe diretamente para um arquivo PDF Blob usando html2pdf.js
       const pdfBlob = await html2pdfFunc().from(elementToRender).set(opt).output('blob');
 
+      // ─── CAMADA 1: Web Share API com arquivo (funciona em WebViews Android modernas) ───
+      const pdfFile = new File([pdfBlob], cleanFileName, { type: 'application/pdf' });
+      if (
+        typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({ files: [pdfFile] })
+      ) {
+        await navigator.share({
+          title: title,
+          text: `Segue o relatório PDF: ${title}`,
+          files: [pdfFile],
+        });
+        return;
+      }
+
+      // ─── CAMADA 2: Capacitor Filesystem + Share (fallback nativo APK) ───
       if (Capacitor.isNativePlatform()) {
         const base64Data = await blobToBase64(pdfBlob);
 
@@ -271,15 +287,17 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           url: writeResult.uri,
           dialogTitle: 'Compartilhar Relatório',
         });
-      } else {
-        // Fallback para navegador web (Download direto do PDF)
-        const url = URL.createObjectURL(pdfBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = cleanFileName;
-        a.click();
-        URL.revokeObjectURL(url);
+        return;
       }
+
+      // ─── CAMADA 3: Fallback navegador web (Download direto do PDF) ───
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = cleanFileName;
+      a.click();
+      URL.revokeObjectURL(url);
+
     } catch (err: any) {
       console.error("Erro no compartilhamento:", err);
       alert("Falha ao gerar e compartilhar PDF: " + (err.message || err));
@@ -302,7 +320,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           {title}
         </h2>
 
-        {Capacitor.isNativePlatform() && (
+        {(Capacitor.isNativePlatform() || typeof navigator.share === 'function') && (
           <button
             onClick={handleShare}
             className="flex items-center justify-center w-10 h-10 bg-white text-[#004a88] hover:bg-slate-100 rounded-full shadow-sm transition-all active:scale-95"
