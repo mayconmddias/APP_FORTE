@@ -349,6 +349,11 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
         box-shadow: none !important;
         min-height: auto !important;
       }
+      thead { display: table-header-group !important; }
+      tfoot { display: table-footer-group !important; }
+      tr { page-break-inside: avoid !important; }
+      .signatures-section { page-break-inside: avoid !important; }
+      .rdo-footer { page-break-inside: avoid !important; }
     }
   </style>
 </head>

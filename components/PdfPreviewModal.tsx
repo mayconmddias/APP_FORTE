@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import html2pdf from 'html2pdf.js/dist/html2pdf.min.js';
+import HtmlPdf from '../services/HtmlPdf';
 
 interface PdfPreviewModalProps {
   isOpen: boolean;
@@ -72,6 +73,27 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       if (!iframeDoc || !iframeDoc.body) {
         throw new Error('Não foi possível acessar o conteúdo do relatório.');
+      }
+
+      // ─── CAMADA NATIVA (Capacitor): WebView Print Engine ───
+      if (Capacitor.isNativePlatform()) {
+        // Captura o HTML completo e original do iframe (sem nenhuma alteração de DOM do jsPDF)
+        const htmlContent = iframeDoc.documentElement.outerHTML;
+
+        // O plugin nativo gera o PDF direto no cache do Android usando o motor de impressão Chrome da WebView
+        const result = await HtmlPdf.generatePdf({
+          html: htmlContent,
+          fileName: cleanFileName
+        });
+
+        // Compartilha o arquivo utilizando a URI nativa do arquivo salvo
+        await Share.share({
+          title: title,
+          text: `Segue o relatório PDF: ${title}`,
+          url: result.uri,
+          dialogTitle: 'Compartilhar Relatório',
+        });
+        return;
       }
 
       // Modificar o DOM do iframe original diretamente para que a biblioteca html2pdf processe as quebras antes de renderizar

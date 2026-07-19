@@ -433,9 +433,13 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
         box-shadow: none !important;
         min-height: auto !important;
       }
-      thead { display: table-header-group; }
-      tfoot { display: table-footer-group; }
-      tr { page-break-inside: avoid; }
+      thead { display: table-header-group !important; }
+      tfoot { display: table-footer-group !important; }
+      tr { page-break-inside: avoid !important; }
+      .signatures-section { page-break-inside: avoid !important; }
+      .report-footer { page-break-inside: avoid !important; }
+      .footer-block { page-break-inside: avoid !important; }
+      .footer-block-bg { page-break-inside: avoid !important; }
     }
   </style>
 </head>
