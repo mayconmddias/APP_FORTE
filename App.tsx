@@ -217,6 +217,23 @@ const App: React.FC = () => {
     }
   }, [isAuthenticated]);
 
+  // Controle de acesso reativo para abas baseado no perfil do usuário
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser) return;
+    
+    if (currentUser.role === 'TECNICO') {
+      const allowedTabs = ['rdo', 'rdo-form', 'sync-pendencies', 'instructions'];
+      if (!allowedTabs.includes(activeTab)) {
+        setActiveTab('rdo');
+      }
+    } else if (currentUser.role === 'TECNICO_EQUIPAMENTO') {
+      const forbiddenTabs = ['documents', 'users'];
+      if (forbiddenTabs.includes(activeTab)) {
+        setActiveTab('assets');
+      }
+    }
+  }, [isAuthenticated, currentUser, activeTab]);
+
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -1029,7 +1046,8 @@ const App: React.FC = () => {
               if (currentUser?.role === 'ADMIN') return true;
               return r.technicianId === currentUser?.id;
             })}
-            userRole={currentUser?.role}
+            userRole={role}
+            currentUser={currentUser}
             selectedClient={rdoSelectedClient}
             onSelectClient={setRdoSelectedClient}
             onNew={() => { setRdoSourceTab('rdo'); setActiveTab('rdo-form'); }}
@@ -1059,7 +1077,26 @@ const App: React.FC = () => {
           />
         );
       case 'documents':
-        if (role !== 'ADMIN') return <AssetManagement {...commonProps} />;
+        if (role !== 'ADMIN') {
+          return (
+            <AssetManagement
+              history={history}
+              userRole={role}
+              assets={assets}
+              onInspect={(id) => { setPreselectedAssetId(id); setActiveTab('preventive'); }}
+              onCorrective={(id) => { setPreselectedAssetId(id); setActiveTab('corrective'); }}
+              onTitleChange={setDynamicTitle}
+              onHeaderActionChange={setHeaderAction}
+              selectedClient={selectedClient}
+              setSelectedClient={setSelectedClient}
+              selectedAssetIdForAction={selectedAssetIdForAction}
+              setSelectedAssetIdForAction={setSelectedAssetIdForAction}
+              onSaveAsset={handleSaveAsset}
+              onDeleteAsset={handleDeleteAsset}
+              onDeleteClient={handleDeleteClient}
+            />
+          );
+        }
         return (
           <DocumentManagement 
             onTitleChange={setDynamicTitle}

@@ -13,7 +13,7 @@ interface PreventiveHistoryProps {
   onEdit?: (record: MaintenanceRecord) => void;
   onDelete?: (recordId: string) => void;
   assets: CraneAsset[];
-  userRole: 'ADMIN' | 'TECNICO';
+  userRole: 'ADMIN' | 'TECNICO' | 'TECNICO_EQUIPAMENTO';
   onTitleChange?: (title: string | null) => void;
   initialAssetId?: string | null;
   onPreviewPdf?: (html: string, title: string) => void;
@@ -26,6 +26,26 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
   const [recordToDelete, setRecordToDelete] = useState<MaintenanceRecord | null>(null);
 
   const isAdmin = userRole === 'ADMIN';
+
+  const canEditRecord = (record: MaintenanceRecord) => {
+    if (userRole === 'ADMIN') return true;
+    if (userRole === 'TECNICO_EQUIPAMENTO') {
+      if (!record.date) return false;
+      try {
+        const recordDate = new Date(record.date + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const diffInTime = today.getTime() - recordDate.getTime();
+        const diffInDays = diffInTime / (1000 * 3600 * 24);
+        
+        return diffInDays <= 3;
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  };
 
   useEffect(() => {
     if (selectedAssetId) {
@@ -724,7 +744,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    {onEdit && (
+                    {onEdit && canEditRecord(record) && (
                       <button onClick={() => onEdit(record)} className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
                         <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>edit</span>
                       </button>

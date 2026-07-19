@@ -118,10 +118,11 @@ class SyncEngine {
         try {
             // 1. Fetch current versions from server to detect conflicts
             const hasVersion = !['documentos', 'funcionario_integracoes', 'usuarios'].includes(localTable);
-            const { data: serverRecords, error: fetchError } = await supabase
+            const { data: serverRecordsData, error: fetchError } = await supabase
                 .from(serverTable)
                 .select(`id${hasVersion ? ', version' : ''}`)
                 .in('id', batch.map(r => r.server_id || r.local_id));
+            const serverRecords = serverRecordsData as any[] | null;
 
             if (fetchError) throw fetchError;
 

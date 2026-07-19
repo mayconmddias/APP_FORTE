@@ -9,7 +9,7 @@ import GenericModal from './GenericModal';
 
 interface AssetManagementProps {
   history: MaintenanceRecord[];
-  userRole: 'ADMIN' | 'TECNICO';
+  userRole: 'ADMIN' | 'TECNICO' | 'TECNICO_EQUIPAMENTO';
   assets: CraneAsset[];
   onInspect: (assetId: string) => void;
   onCorrective: (assetId: string) => void;

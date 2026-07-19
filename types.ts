@@ -27,9 +27,10 @@ export type ChecklistType = 'PONTE_PRINCIPAL' | 'TALHA_PRINCIPAL';
 
 export interface UserProfile {
   id: string; // Formato FE-001, FE-002, etc.
+  server_id?: string;
   name: string;
   email: string;
-  role: 'ADMIN' | 'TECNICO';
+  role: 'ADMIN' | 'TECNICO' | 'TECNICO_EQUIPAMENTO';
   password?: string;
   funcao?: string;
 }
@@ -144,6 +145,7 @@ export interface FuncionarioIntegracao {
   id: string;
   funcionario_id: string;
   empresa_id: string;
+  empresa_nome?: string;
   data_vencimento: string;
   status?: string | null;
   created_at?: string;

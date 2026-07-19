@@ -6,7 +6,8 @@ import { RdoRecord, UserProfile } from '../types';
 interface RdoHistoryProps {
   records: RdoRecord[];
   mode: 'COMPLETED' | 'OPEN';
-  userRole?: 'ADMIN' | 'TECNICO';
+  userRole?: 'ADMIN' | 'TECNICO' | 'TECNICO_EQUIPAMENTO';
+  currentUser?: UserProfile | null;
   selectedClient?: string | null;
   onSelectClient?: (client: string | null) => void;
   onEdit: (record: RdoRecord) => void;
@@ -28,6 +29,7 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
   records,
   mode,
   userRole,
+  currentUser,
   selectedClient,
   onSelectClient,
   onEdit,
@@ -632,14 +634,16 @@ const RdoHistory: React.FC<RdoHistoryProps> = ({
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => onEdit(rdo)}
-                  className={`p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all ${rdo.status === 'COMPLETED' && userRole !== 'ADMIN' ? 'hidden' : ''}`}
+                  className={`p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all ${
+                    rdo.status === 'COMPLETED' && userRole !== 'ADMIN' && userRole !== 'TECNICO_EQUIPAMENTO' ? 'hidden' : ''
+                  }`}
                 >
                   <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '16px' }}>edit</span>
                 </button>
                 <button onClick={() => handleGeneratePdf(rdo)} className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
                   <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '16px' }}>description</span>
                 </button>
-                {userRole === 'ADMIN' && (
+                {(userRole === 'ADMIN' || (userRole === 'TECNICO_EQUIPAMENTO' && rdo.technicianId === currentUser?.id)) && (
                   <button onClick={() => onDelete(rdo.local_id || rdo.id)} className="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-full transition-all">
                     <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '16px' }}>delete</span>
                   </button>

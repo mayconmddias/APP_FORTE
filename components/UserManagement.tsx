@@ -42,7 +42,7 @@ interface UserManagementProps {
   users: UserProfile[];
   onSave: (user: UserProfile, docs?: any[], integrations?: any[]) => Promise<void>;
   onDelete: (userId: string) => Promise<void>;
-  userRole: 'ADMIN' | 'TECNICO';
+  userRole: 'ADMIN' | 'TECNICO' | 'TECNICO_EQUIPAMENTO';
   onTitleChange?: (title: string | null) => void;
   onHeaderActionChange?: (action: React.ReactNode) => void;
 }
@@ -469,10 +469,11 @@ const UserManagement: React.FC<UserManagementProps> = ({
                       <select
                         className={`${inputClasses} appearance-none pr-10 cursor-pointer`}
                         value={form.role || 'TECNICO'}
-                        onChange={e => setForm({ ...form, role: e.target.value as 'ADMIN' | 'TECNICO' })}
+                        onChange={e => setForm({ ...form, role: e.target.value as 'ADMIN' | 'TECNICO' | 'TECNICO_EQUIPAMENTO' })}
                         disabled={!isAdmin}
                       >
                         <option value="TECNICO">TÉCNICO DE CAMPO</option>
+                        <option value="TECNICO_EQUIPAMENTO">TÉCNICO DE EQUIPAMENTO</option>
                         <option value="ADMIN">ADMINISTRADOR GERAL</option>
                       </select>
                       <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none select-none notranslate" style={{ fontSize: '20px' }}>expand_more</span>
@@ -764,9 +765,11 @@ const UserManagement: React.FC<UserManagementProps> = ({
                     <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
                       user.role === 'ADMIN'
                         ? 'bg-blue-50 text-[#004a88]'
+                        : user.role === 'TECNICO_EQUIPAMENTO'
+                        ? 'bg-amber-50 text-amber-700'
                         : 'bg-slate-50 text-slate-500'
                     }`}>
-                      {user.role === 'ADMIN' ? 'ADMIN' : 'TÉCNICO'}
+                      {user.role === 'ADMIN' ? 'ADMIN' : user.role === 'TECNICO_EQUIPAMENTO' ? 'TÉCNICO EQUIPAMENTO' : 'TÉCNICO CAMPO'}
                     </span>
                   </td>
                 </tr>

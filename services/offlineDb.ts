@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { MaintenanceRecord, UserProfile, CraneAsset, RdoRecord } from '../types';
+import { MaintenanceRecord, UserProfile, CraneAsset, RdoRecord, Documento, FuncionarioIntegracao } from '../types';
 
 export type SyncStatus = 'PENDING' | 'SYNCED' | 'ERROR';
 
