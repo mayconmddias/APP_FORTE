@@ -128,12 +128,13 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
       // de PAGE_HEIGHT_PX, alinhado com o início de uma nova página no jsPDF.
 
       // ─── Geometria determinística da página ───
-      const PDF_MARGIN_MM  = 10;
-      const PAGE_H_MM      = 297 - 2 * PDF_MARGIN_MM; // 277mm usable
-      const PAGE_W_MM      = 210 - 2 * PDF_MARGIN_MM; // 190mm usable
-      const DOM_WIDTH_PX   = 1024;                     // html2canvas.windowWidth
-      const PX_PER_MM      = DOM_WIDTH_PX / PAGE_W_MM; // 5.389 px/mm
-      const PAGE_HEIGHT_PX = Math.floor(PAGE_H_MM * PX_PER_MM); // 1492px
+      const PDF_MARGIN_TOP_BOTTOM_MM = 20;
+      const PDF_MARGIN_LEFT_RIGHT_MM = 15;
+      const PAGE_H_MM      = 297 - 2 * PDF_MARGIN_TOP_BOTTOM_MM; // 257mm usable
+      const PAGE_W_MM      = 210 - 2 * PDF_MARGIN_LEFT_RIGHT_MM; // 180mm usable
+      const DOM_WIDTH_PX   = 1024;                               // html2canvas.windowWidth
+      const PX_PER_MM      = DOM_WIDTH_PX / PAGE_W_MM;           // 5.6888 px/mm
+      const PAGE_HEIGHT_PX = Math.floor(PAGE_H_MM * PX_PER_MM);  // 1462px
 
       // ─── Alturas fixas dos elementos CSS do relatório (px a 1x) ───
       // Derivadas das propriedades CSS do relatório — não variam entre ambientes.
@@ -235,7 +236,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
       }
 
       const opt = {
-        margin: PDF_MARGIN_MM,
+        margin: [20, 15, 20, 15],
         filename: cleanFileName,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
