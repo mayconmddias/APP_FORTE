@@ -203,6 +203,20 @@ const App: React.FC = () => {
     }
   }, [currentUser, devicePushToken]);
 
+  // Garante que qualquer scroll residual do teclado virtual do Android seja redefinido ao logar,
+  // trazendo a barra superior (Header e Hamburguer) de volta à área visível da WebView do APK.
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.scrollTo(0, 0);
+      if (document.body) {
+        document.body.scrollTop = 0;
+      }
+      if (document.documentElement) {
+        document.documentElement.scrollTop = 0;
+      }
+    }
+  }, [isAuthenticated]);
+
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -561,6 +575,16 @@ const App: React.FC = () => {
     setIsAuthenticated(true);
     fetchData();
     setActiveTab('assets');
+    
+    // Força o scroll para o topo imediatamente no momento do login
+    window.scrollTo(0, 0);
+    if (document.body) {
+      document.body.scrollTop = 0;
+    }
+    if (document.documentElement) {
+      document.documentElement.scrollTop = 0;
+    }
+    
     console.log("App: Authentication state updated.");
   };
 
