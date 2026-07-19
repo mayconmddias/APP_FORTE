@@ -308,30 +308,40 @@ const App: React.FC = () => {
             await db.ativos.bulkDelete(assetsToDelete.map(a => a.local_id));
           }
 
-          const mappedAssets = await Promise.all(assetsData.map(async a => {
+          // Get local pending/error assets to preserve them
+          const localPendingAssets = await db.ativos.where('sync_status').anyOf(['PENDING', 'ERROR']).toArray();
+          const pendingAssetServerIds = new Set(localPendingAssets.map(a => a.server_id).filter(Boolean));
+
+          const mappedAssets: LocalAsset[] = [];
+          for (const a of assetsData) {
             const existing = await db.ativos.where('server_id').equals(a.id).first();
             const local_id = existing?.local_id || uuidv4();
             assetServerToLocalMap[a.id] = local_id;
-            return {
-              id: local_id,
-              local_id: local_id,
-              server_id: a.id,
-              client: a.client,
-              name: a.name,
-              serialNumber: a.serial_number || a.serialNumber,
-              manufacturer: a.manufacturer,
-              capacity: a.capacity,
-              span: a.span,
-              location: a.location,
-              commissioningDate: a.commissioning_date || a.commissioningDate,
-              status: a.status,
-              equipmentType: a.equipment_type || a.equipmentType,
-              sync_status: 'SYNCED',
-              updated_at: new Date().toISOString(),
-              version: 1
-            } as LocalAsset;
-          }));
-          await db.ativos.bulkPut(mappedAssets);
+            
+            if (!pendingAssetServerIds.has(a.id)) {
+              mappedAssets.push({
+                id: local_id,
+                local_id: local_id,
+                server_id: a.id,
+                client: a.client,
+                name: a.name,
+                serialNumber: a.serial_number || a.serialNumber,
+                manufacturer: a.manufacturer,
+                capacity: a.capacity,
+                span: a.span,
+                location: a.location,
+                commissioningDate: a.commissioning_date || a.commissioningDate,
+                status: a.status,
+                equipmentType: a.equipment_type || a.equipmentType,
+                sync_status: 'SYNCED',
+                updated_at: new Date().toISOString(),
+                version: 1
+              } as LocalAsset);
+            }
+          }
+          if (mappedAssets.length > 0) {
+            await db.ativos.bulkPut(mappedAssets);
+          }
         }
 
         // Users
@@ -347,19 +357,29 @@ const App: React.FC = () => {
             await db.usuarios.bulkDelete(usersToDelete.map(u => u.local_id));
           }
 
-          const mappedUsers = usersData.map(u => {
+          // Get local pending/error users to preserve them
+          const localPendingUsers = await db.usuarios.where('sync_status').anyOf(['PENDING', 'ERROR']).toArray();
+          const pendingUserIds = new Set(localPendingUsers.map(u => u.id));
+
+          const mappedUsers: any[] = [];
+          for (const u of usersData) {
             userServerToLocalMap[u.id] = u.id;
-            return {
-              ...u,
-              id: u.id, // logical ID (FE-001)
-              local_id: u.id,
-              server_id: u.id,
-              sync_status: 'SYNCED' as const,
-              updated_at: new Date().toISOString(),
-              version: 1
-            };
-          });
-          await db.usuarios.bulkPut(mappedUsers as any);
+            
+            if (!pendingUserIds.has(u.id)) {
+              mappedUsers.push({
+                ...u,
+                id: u.id, // logical ID (FE-001)
+                local_id: u.id,
+                server_id: u.id,
+                sync_status: 'SYNCED' as const,
+                updated_at: new Date().toISOString(),
+                version: 1
+              });
+            }
+          }
+          if (mappedUsers.length > 0) {
+            await db.usuarios.bulkPut(mappedUsers as any);
+          }
         }
 
         // -- REPAIR: Deduplicate and cleanup statuses (REGULAR -> APTO) --
@@ -432,42 +452,49 @@ const App: React.FC = () => {
           
           if (duplicatesToRemove.length > 0) {
             await db.ordens_servico.bulkDelete(duplicatesToRemove);
-            console.log(`Deduplication: Removed ${duplicatesToRemove.length} local duplicates.`);
           }
+          // Get local pending/error history to preserve them
+          const localPendingHistory = await db.ordens_servico.where('sync_status').anyOf(['PENDING', 'ERROR']).toArray();
+          const pendingHistoryServerIds = new Set(localPendingHistory.map(h => h.server_id).filter(Boolean));
 
-          const mappedHistory = await Promise.all(historyData.map(async h => {
+          const mappedHistory: LocalMaintenanceRecord[] = [];
+          for (const h of historyData) {
             const existing = await db.ordens_servico.where('server_id').equals(h.id).first();
             const local_id = existing?.local_id || uuidv4();
 
-            // CRITICAL FIX: Map server IDs to local IDs
-            const localAssetId = assetServerToLocalMap[h.asset_id] || h.asset_id;
-            const localTechnicianId = userServerToLocalMap[h.technician_id] || h.technician_id;
+            if (!pendingHistoryServerIds.has(h.id)) {
+              // CRITICAL FIX: Map server IDs to local IDs
+              const localAssetId = assetServerToLocalMap[h.asset_id] || h.asset_id;
+              const localTechnicianId = userServerToLocalMap[h.technician_id] || h.technician_id;
 
-            return {
-              id: local_id,
-              local_id: local_id,
-              server_id: h.id,
-              inspectionNumber: h.inspection_number,
-              assetId: localAssetId,
-              type: h.type,
-              checklistType: h.checklist_type,
-              frequency: h.frequency,
-              date: h.date,
-              technician: h.technician,
-              technicianId: localTechnicianId,
-              downtimeHours: h.downtime_hours,
-              criticality: h.criticality,
-              checklists: h.checklists,
-              clientRepresentative: h.client_representative,
-              clientSignature: h.client_signature || h.clientSignature,
-              signature: h.signature,
-              status: h.status,
-              sync_status: 'SYNCED',
-              updated_at: new Date().toISOString(),
-              version: 1
-            } as LocalMaintenanceRecord;
-          }));
-          await db.ordens_servico.bulkPut(mappedHistory);
+              mappedHistory.push({
+                id: local_id,
+                local_id: local_id,
+                server_id: h.id,
+                inspectionNumber: h.inspection_number,
+                assetId: localAssetId,
+                type: h.type,
+                checklistType: h.checklist_type,
+                frequency: h.frequency,
+                date: h.date,
+                technician: h.technician,
+                technicianId: localTechnicianId,
+                downtimeHours: h.downtime_hours,
+                criticality: h.criticality,
+                checklists: h.checklists,
+                clientRepresentative: h.client_representative,
+                clientSignature: h.client_signature || h.clientSignature,
+                signature: h.signature,
+                status: h.status,
+                sync_status: 'SYNCED',
+                updated_at: new Date().toISOString(),
+                version: 1
+              } as LocalMaintenanceRecord);
+            }
+          }
+          if (mappedHistory.length > 0) {
+            await db.ordens_servico.bulkPut(mappedHistory);
+          }
         }
 
         // RDO
@@ -480,38 +507,47 @@ const App: React.FC = () => {
                 await db.rdo.bulkDelete(rdosToDelete.map(r => r.local_id));
             }
 
-            const mappedRdos = await Promise.all(rdoData.map(async r => {
+            // Get local pending/error RDOs to preserve them
+            const localPendingRdos = await db.rdo.where('sync_status').anyOf(['PENDING', 'ERROR']).toArray();
+            const pendingRdoServerIds = new Set(localPendingRdos.map(r => r.server_id).filter(Boolean));
+
+            const mappedRdos: any[] = [];
+            for (const r of rdoData) {
                 const existing = await db.rdo.where('server_id').equals(r.id).first();
                 const local_id = existing?.local_id || uuidv4();
 
-                return {
-                    id: local_id,
-                    local_id: local_id,
-                    server_id: r.id,
-                    date: r.date,
-                    arrivalTime: r.arrival_time,
-                    startTime: r.start_time,
-                    siteName: r.site_name,
-                    clientName: r.client_name,
-                    weather: r.weather,
-                    teamDescription: r.team_description,
-                    activities: r.activities,
-                    materials: r.materials,
-                    equipment: r.equipment,
-                    occurrences: r.occurrences,
-                    photos: r.photos,
-                    technicianId: r.technician_id,
-                    technicianName: r.technician_name,
-                    signature: r.signature,
-                    status: r.status,
-                    endTime: r.end_time,
-                    rdoNumber: r.rdo_number,
-                    sync_status: 'SYNCED',
-                    updated_at: new Date().toISOString(),
-                    version: 1
-                } as any;
-            }));
-            await db.rdo.bulkPut(mappedRdos);
+                if (!pendingRdoServerIds.has(r.id)) {
+                    mappedRdos.push({
+                        id: local_id,
+                        local_id: local_id,
+                        server_id: r.id,
+                        date: r.date,
+                        arrivalTime: r.arrival_time,
+                        startTime: r.start_time,
+                        siteName: r.site_name,
+                        clientName: r.client_name,
+                        weather: r.weather,
+                        teamDescription: r.team_description,
+                        activities: r.activities,
+                        materials: r.materials,
+                        equipment: r.equipment,
+                        occurrences: r.occurrences,
+                        photos: r.photos,
+                        technicianId: r.technician_id,
+                        technicianName: r.technician_name,
+                        signature: r.signature,
+                        status: r.status,
+                        endTime: r.end_time,
+                        rdoNumber: r.rdo_number,
+                        sync_status: 'SYNCED',
+                        updated_at: new Date().toISOString(),
+                        version: 1
+                    } as any);
+                }
+            }
+            if (mappedRdos.length > 0) {
+                await db.rdo.bulkPut(mappedRdos);
+            }
         }
 
         // -- DEEP CLEANUP: Purge all invalid RDOs and clear error logs (Applied to all devices on load) --
@@ -853,7 +889,8 @@ const App: React.FC = () => {
       };
 
       await db.usuarios.put(localUser as any);
-      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, ...user } : u));
+      await loadLocalData();
+      syncEngine.triggerSync();
     } catch (err) {
       console.error('Erro ao salvar usuário:', err);
     }
