@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2 } from 'lucide-react';
@@ -6,6 +8,8 @@ import ClientList from './ClientList';
 import AssetList from './AssetList';
 import AssetFormModal from './AssetFormModal';
 import GenericModal from './GenericModal';
+import { Capacitor } from '@capacitor/core';
+import MobileActionBottomSheet from './MobileActionBottomSheet';
 
 interface AssetManagementProps {
   history: MaintenanceRecord[];
@@ -45,6 +49,7 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteSelectionModal, setShowDeleteSelectionModal] = useState(false);
+  const [showActionMenu, setShowActionMenu] = useState(false);
   const [clientToDeleteName, setClientToDeleteName] = useState<string | null>(null);
   const [assetToDelete, setAssetToDelete] = useState<CraneAsset | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,33 +92,42 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
     }
     setSearchTerm('');
   }, [selectedClient, onTitleChange, setSelectedAssetIdForAction]);
-
   useEffect(() => {
     if (isAdmin) {
-      onHeaderActionChange?.(
-        <div className="flex items-center gap-1">
-          {!selectedClient && (
-            <button
-              onClick={() => setShowDeleteSelectionModal(true)}
-              className="text-[#004a88] hover:bg-slate-100 transition-colors p-2 rounded-full active:scale-95 duration-200"
-            >
-              <span className="material-symbols-outlined font-bold">delete</span>
-            </button>
-          )}
+      if (Capacitor.isNativePlatform()) {
+        onHeaderActionChange?.(
           <button
-            onClick={handleOpenAdd}
+            onClick={() => setShowActionMenu(true)}
             className="text-[#004a88] hover:bg-slate-100 transition-colors p-2 rounded-full active:scale-95 duration-200"
           >
-            <span className="material-symbols-outlined font-bold">add</span>
+            <span className="material-symbols-outlined font-bold" style={{ fontSize: '24px' }}>add</span>
           </button>
-        </div>
-      );
+        );
+      } else {
+        onHeaderActionChange?.(
+          <div className="flex items-center gap-1">
+            {!selectedClient && (
+              <button
+                onClick={() => setShowDeleteSelectionModal(true)}
+                className="text-[#004a88] hover:bg-slate-100 transition-colors p-2 rounded-full active:scale-95 duration-200"
+              >
+                <span className="material-symbols-outlined font-bold">delete</span>
+              </button>
+            )}
+            <button
+              onClick={handleOpenAdd}
+              className="text-[#004a88] hover:bg-slate-100 transition-colors p-2 rounded-full active:scale-95 duration-200"
+            >
+              <span className="material-symbols-outlined font-bold">add</span>
+            </button>
+          </div>
+        );
+      }
     } else {
       onHeaderActionChange?.(null);
     }
     return () => onHeaderActionChange?.(null);
   }, [isAdmin, handleOpenAdd, onHeaderActionChange, selectedClient]);
-
   const clientGroups = useMemo(() => {
     const groups: Record<string, { name: string; count: number }> = {};
     if (!Array.isArray(assets)) return [];
@@ -362,7 +376,6 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
         onSave={handleSaveAssetLocal}
         onFormChange={setAssetForm}
       />
-
       <GenericModal 
         isOpen={showAlert}
         onClose={() => setShowAlert(false)}
@@ -372,6 +385,14 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
       />
 
       {renderOverlays()}
+
+      <MobileActionBottomSheet 
+        isOpen={showActionMenu}
+        onClose={() => setShowActionMenu(false)}
+        onNewClient={handleOpenAdd}
+        onDelete={() => setShowDeleteSelectionModal(true)}
+        showDeleteOption={!selectedClient}
+      />
     </div>
   );
 };

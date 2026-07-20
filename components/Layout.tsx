@@ -1,24 +1,14 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Construction,
-  LogOut,
-  ShieldCheck,
-  History,
-  Users,
-  Clock,
-  Menu,
-  X,
-  Wrench,
-  RefreshCw,
-  FileText,
-  ShieldAlert
-} from 'lucide-react';
 import { UserProfile } from '../types';
 import { db } from '../services/offlineDb';
 import { alertService, DOCS_CHANGED_EVENT } from '../services/alertService';
 import { useLiveQuery } from 'dexie-react-hooks';
 import InstructionsModal from './InstructionsModal';
+import { Capacitor } from '@capacitor/core';
+import MobileBottomNav from './MobileBottomNav';
+import MobileMoreBottomSheet from './MobileMoreBottomSheet';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,6 +22,8 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLogout, currentUser, pageTitle, headerAction }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const isMobile = Capacitor.isNativePlatform();
   const [criticalAlerts, setCriticalAlerts] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -100,6 +92,67 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
     ] : []),
     { id: 'instructions', label: 'INSTRUÇÕES', icon: 'menu_book' }
   ];
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-screen bg-surface overflow-hidden font-body relative">
+        {/* Header Mobile */}
+        <header className="w-full top-0 sticky z-40 bg-white flex justify-between items-center px-5 py-3 border-b border-slate-100/50 shadow-sm">
+          {/* Logo do PowerPoint */}
+          <div className="flex items-center gap-2">
+            <img 
+              src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png" 
+              alt="Logo Desenho Forte" 
+              className="w-7 h-7 object-contain"
+            />
+            <img 
+              src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_texto_forte.png" 
+              alt="Logo Texto Forte" 
+              className="h-5 object-contain"
+            />
+          </div>
+
+          {/* Ações (botão +) */}
+          <div className="flex items-center gap-1">
+            {headerAction}
+          </div>
+        </header>
+
+        {/* Conteúdo Principal */}
+        <main className="flex-1 overflow-y-auto p-4 pb-20">
+          <div className="max-w-4xl mx-auto">
+            {children}
+          </div>
+        </main>
+
+        {/* Navegação Inferior Mobile */}
+        <MobileBottomNav 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          currentUser={currentUser}
+          openDraftsCount={openDraftsCount}
+          pendingSyncCount={pendingSyncCount}
+          onOpenMoreMenu={() => setShowMoreMenu(true)}
+        />
+
+        {/* Menu deslizante Mais */}
+        <MobileMoreBottomSheet 
+          isOpen={showMoreMenu}
+          onClose={() => setShowMoreMenu(false)}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          currentUser={currentUser}
+          criticalAlerts={criticalAlerts}
+          onLogout={onLogout}
+          onOpenInstructions={() => {
+            setShowMoreMenu(false);
+            setShowInstructions(true);
+          }}
+        />
+
+        <InstructionsModal isOpen={showInstructions} onClose={() => setShowInstructions(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-surface overflow-hidden font-body">
