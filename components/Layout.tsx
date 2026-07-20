@@ -95,28 +95,30 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
   if (isMobile) {
     return (
       <div className="flex flex-col h-screen bg-surface overflow-hidden font-body relative">
-        {/* Header Mobile */}
         <header className="w-full top-0 sticky z-40 bg-white flex justify-between items-center px-5 py-3 border-b border-slate-100/50 shadow-sm">
-          {/* Logo do PowerPoint */}
-          <div className="flex items-center gap-2">
+          {/* Logo Desenho no lado esquerdo */}
+          <div className="w-12 flex justify-start">
             <img 
               src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png" 
               alt="Logo Desenho Forte" 
-              className="w-7 h-7 object-contain"
+              className="w-8 h-8 object-contain"
             />
+          </div>
+
+          {/* Logo Texto centralizado e maior */}
+          <div className="flex-1 flex justify-center">
             <img 
               src="https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_texto_forte.png" 
               alt="Logo Texto Forte" 
-              className="h-5 object-contain"
+              className="h-8 object-contain"
             />
           </div>
 
-          {/* Ações (botão +) */}
-          <div className="flex items-center gap-1">
+          {/* Ações (botão +) alinhado à direita */}
+          <div className="w-12 flex justify-end">
             {headerAction}
           </div>
         </header>
-
         {/* Conteúdo Principal */}
         <main className="flex-1 overflow-y-auto p-4 pb-20">
           <div className="max-w-4xl mx-auto">
