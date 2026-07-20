@@ -42,7 +42,10 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [step, setStep] = useState<FlowStep>(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
-      if (saved) return JSON.parse(saved).step;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.step !== undefined) return parsed.step;
+      }
     } catch {}
     return editingRecord ? FlowStep.FILL_CHECKLIST : FlowStep.SELECT_CLIENT;
   });
@@ -50,14 +53,20 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [selectedClient, setSelectedClient] = useState<string | null>(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
-      if (saved) return JSON.parse(saved).selectedClient;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.selectedClient !== undefined) return parsed.selectedClient;
+      }
     } catch {}
     return null;
   });
   const [selectedAsset, setSelectedAsset] = useState<CraneAsset | null>(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
-      if (saved) return JSON.parse(saved).selectedAsset;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.selectedAsset !== undefined) return parsed.selectedAsset;
+      }
     } catch {}
     return null;
   });
@@ -65,7 +74,10 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [selectedItemsTemplate, setSelectedItemsTemplate] = useState<ChecklistItem[]>(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
-      if (saved) return JSON.parse(saved).selectedItemsTemplate;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed.selectedItemsTemplate)) return parsed.selectedItemsTemplate;
+      }
     } catch {}
     return editingRecord?.checklists || [];
   });
@@ -79,14 +91,20 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [clientName, setClientName] = useState(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
-      if (saved) return JSON.parse(saved).clientName;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.clientName === 'string') return parsed.clientName;
+      }
     } catch {}
     return editingRecord?.clientRepresentative || '';
   });
   const [clientSignature, setClientSignature] = useState(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
-      if (saved) return JSON.parse(saved).clientSignature;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.clientSignature === 'string') return parsed.clientSignature;
+      }
     } catch {}
     return editingRecord?.clientSignature || '';
   });
@@ -95,7 +113,10 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
   const [inspectionDate, setInspectionDate] = useState(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_corrective_${recordId}`);
-      if (saved) return JSON.parse(saved).inspectionDate;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.inspectionDate) return parsed.inspectionDate;
+      }
     } catch {}
     return editingRecord?.date || new Date().toISOString().split('T')[0];
   });

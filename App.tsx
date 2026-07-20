@@ -295,6 +295,10 @@ const App: React.FC = () => {
       // 2. Se online, buscar novidades do Supabase
       const status = networkManager.getStatus();
       if (status.online) {
+        // Obter ids pendentes de exclusão para evitar recriação temporária durante o sync
+        const pendingDeletions = await db.exclusoes_pendentes.toArray();
+        const deletedServerIds = new Set(pendingDeletions.map(d => d.server_id).filter(Boolean));
+
         // Assets
         const { data: assetsData } = await supabase.from('crane_assets').select('*');
         let assetServerToLocalMap: Record<string, string> = {};
@@ -314,6 +318,8 @@ const App: React.FC = () => {
 
           const mappedAssets: LocalAsset[] = [];
           for (const a of assetsData) {
+            if (deletedServerIds.has(a.id)) continue; // Evitar recriar ativo deletado
+
             const existing = await db.ativos.where('server_id').equals(a.id).first();
             const local_id = existing?.local_id || uuidv4();
             assetServerToLocalMap[a.id] = local_id;
@@ -459,6 +465,8 @@ const App: React.FC = () => {
 
           const mappedHistory: LocalMaintenanceRecord[] = [];
           for (const h of historyData) {
+            if (deletedServerIds.has(h.id)) continue; // Evitar recriar registro deletado
+
             const existing = await db.ordens_servico.where('server_id').equals(h.id).first();
             const local_id = existing?.local_id || uuidv4();
 
@@ -513,6 +521,8 @@ const App: React.FC = () => {
 
             const mappedRdos: any[] = [];
             for (const r of rdoData) {
+                if (deletedServerIds.has(r.id)) continue; // Evitar recriar RDO deletado
+                
                 const existing = await db.rdo.where('server_id').equals(r.id).first();
                 const local_id = existing?.local_id || uuidv4();
 
@@ -994,7 +1004,11 @@ const App: React.FC = () => {
             onSave={handleAddRecord}
             onCancel={() => {
               if (editingRecord) {
-                setActiveTab('history');
+                if (editingRecord.status === 'OPEN') {
+                  setActiveTab('open-orders');
+                } else {
+                  setActiveTab('history');
+                }
                 setEditingRecord(null);
               } else {
                 setActiveTab('assets');
@@ -1021,9 +1035,19 @@ const App: React.FC = () => {
             onTitleChange={setDynamicTitle}
             initialAssetId={preselectedAssetId}
             onCancel={() => {
-              setPreselectedAssetId(null);
-              setActiveTab('assets');
+              if (editingRecord) {
+                if (editingRecord.status === 'OPEN') {
+                  setActiveTab('open-orders');
+                } else {
+                  setActiveTab('assets');
+                }
+                setEditingRecord(null);
+              } else {
+                setPreselectedAssetId(null);
+                setActiveTab('assets');
+              }
               setDynamicTitle(null);
+              setHeaderAction?.(null);
             }}
             editingRecord={editingRecord}
           />

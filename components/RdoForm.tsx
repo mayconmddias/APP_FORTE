@@ -49,28 +49,40 @@ const RdoForm: React.FC<RdoFormProps> = ({
   const [siteName, setSiteName] = useState(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_rdo_${recordId}`);
-      if (saved) return JSON.parse(saved).siteName;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.siteName === 'string') return parsed.siteName;
+      }
     } catch {}
     return editingRdo?.siteName || '';
   });
   const [clientName, setClientName] = useState(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_rdo_${recordId}`);
-      if (saved) return JSON.parse(saved).clientName;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.clientName === 'string') return parsed.clientName;
+      }
     } catch {}
     return editingRdo?.clientName || '';
   });
   const [activities, setActivities] = useState<string>(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_rdo_${recordId}`);
-      if (saved) return JSON.parse(saved).activities;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.activities === 'string') return parsed.activities;
+      }
     } catch {}
     return editingRdo?.activities?.join('\n') || '';
   });
   const [photos, setPhotos] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_rdo_${recordId}`);
-      if (saved) return JSON.parse(saved).photos;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed.photos)) return parsed.photos;
+      }
     } catch {}
     return editingRdo?.photos || [];
   });

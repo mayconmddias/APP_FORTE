@@ -39,28 +39,40 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [clientName, setClientName] = useState(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_checklist_${recordId}`);
-      if (saved) return JSON.parse(saved).clientName;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.clientName === 'string') return parsed.clientName;
+      }
     } catch {}
     return editingRecord?.clientRepresentative || '';
   });
   const [clientSignature, setClientSignature] = useState(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_checklist_${recordId}`);
-      if (saved) return JSON.parse(saved).clientSignature;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.clientSignature === 'string') return parsed.clientSignature;
+      }
     } catch {}
     return editingRecord?.clientSignature || '';
   });
   const [frequency, setFrequency] = useState<Frequency>(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_checklist_${recordId}`);
-      if (saved) return JSON.parse(saved).frequency;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.frequency) return parsed.frequency;
+      }
     } catch {}
     return editingRecord?.frequency || Frequency.MENSAL;
   });
   const [inspectionDate, setInspectionDate] = useState(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_checklist_${recordId}`);
-      if (saved) return JSON.parse(saved).inspectionDate;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.inspectionDate) return parsed.inspectionDate;
+      }
     } catch {}
     return editingRecord?.date || new Date().toISOString().split('T')[0];
   });
@@ -84,7 +96,10 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
   const [items, setItems] = useState<ChecklistItem[]>(() => {
     try {
       const saved = localStorage.getItem(`forte_draft_checklist_${recordId}`);
-      if (saved) return JSON.parse(saved).items;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed.items)) return parsed.items;
+      }
     } catch {}
     return editingRecord?.checklists || [];
   });
@@ -201,7 +216,6 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       await onSave(draftRecord);
       setIsSavingProgress(false);
       clearDraft();
-      onCancel();
     } catch (error: any) {
       console.error('Error saving draft:', error);
       hasSubmitted.current = false;
@@ -276,7 +290,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
               : 'INSPEÇÃO PREVENTIVA'}
           </h3>
           <p className="font-headline text-[10px] font-bold text-[#004a88] uppercase tracking-widest">
-            {selectedAsset?.name} · {selectedAsset?.client}
+            {selectedAsset ? `${selectedAsset.name} · ${selectedAsset.client}` : 'Carregando equipamento...'}
           </p>
         </div>
         <div className="w-10" />
