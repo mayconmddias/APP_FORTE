@@ -96,66 +96,102 @@ const App: React.FC = () => {
 
   // Effects to synchronize state changes to localStorage
   useEffect(() => {
-    localStorage.setItem('forte_session', JSON.stringify({ isAuthenticated, user: currentUser }));
+    try {
+      localStorage.setItem('forte_session', JSON.stringify({ isAuthenticated, user: currentUser }));
+    } catch (e) {
+      console.warn('[App] Erro ao salvar forte_session no localStorage:', e);
+    }
   }, [isAuthenticated, currentUser]);
 
   useEffect(() => {
-    localStorage.setItem('forte_active_tab', activeTab);
+    try {
+      localStorage.setItem('forte_active_tab', activeTab);
+    } catch (e) {
+      console.warn('[App] Erro ao salvar forte_active_tab no localStorage:', e);
+    }
   }, [activeTab]);
 
   useEffect(() => {
-    if (preselectedAssetId) {
-      localStorage.setItem('forte_preselected_asset_id', preselectedAssetId);
-    } else {
-      localStorage.removeItem('forte_preselected_asset_id');
+    try {
+      if (preselectedAssetId) {
+        localStorage.setItem('forte_preselected_asset_id', preselectedAssetId);
+      } else {
+        localStorage.removeItem('forte_preselected_asset_id');
+      }
+    } catch (e) {
+      console.warn('[App] Erro ao salvar/remover forte_preselected_asset_id no localStorage:', e);
     }
   }, [preselectedAssetId]);
 
   useEffect(() => {
-    if (editingRecord) {
-      localStorage.setItem('forte_editing_record', JSON.stringify(editingRecord));
-    } else {
-      localStorage.removeItem('forte_editing_record');
+    try {
+      if (editingRecord) {
+        localStorage.setItem('forte_editing_record', JSON.stringify(editingRecord));
+      } else {
+        localStorage.removeItem('forte_editing_record');
+      }
+    } catch (e) {
+      console.warn('[App] Erro ao salvar/remover forte_editing_record no localStorage:', e);
     }
   }, [editingRecord]);
 
   useEffect(() => {
-    if (editingRdo) {
-      localStorage.setItem('forte_editing_rdo', JSON.stringify(editingRdo));
-    } else {
-      localStorage.removeItem('forte_editing_rdo');
+    try {
+      if (editingRdo) {
+        localStorage.setItem('forte_editing_rdo', JSON.stringify(editingRdo));
+      } else {
+        localStorage.removeItem('forte_editing_rdo');
+      }
+    } catch (e) {
+      console.warn('[App] Erro ao salvar/remover forte_editing_rdo no localStorage:', e);
     }
   }, [editingRdo]);
 
   useEffect(() => {
-    if (rdoSelectedClient) {
-      localStorage.setItem('forte_rdo_selected_client', rdoSelectedClient);
-    } else {
-      localStorage.removeItem('forte_rdo_selected_client');
+    try {
+      if (rdoSelectedClient) {
+        localStorage.setItem('forte_rdo_selected_client', rdoSelectedClient);
+      } else {
+        localStorage.removeItem('forte_rdo_selected_client');
+      }
+    } catch (e) {
+      console.warn('[App] Erro ao salvar/remover forte_rdo_selected_client no localStorage:', e);
     }
   }, [rdoSelectedClient]);
 
   useEffect(() => {
-    if (rdoSourceTab) {
-      localStorage.setItem('forte_rdo_source_tab', rdoSourceTab);
-    } else {
-      localStorage.removeItem('forte_rdo_source_tab');
+    try {
+      if (rdoSourceTab) {
+        localStorage.setItem('forte_rdo_source_tab', rdoSourceTab);
+      } else {
+        localStorage.removeItem('forte_rdo_source_tab');
+      }
+    } catch (e) {
+      console.warn('[App] Erro ao salvar/remover forte_rdo_source_tab no localStorage:', e);
     }
   }, [rdoSourceTab]);
 
   useEffect(() => {
-    if (selectedClient) {
-      localStorage.setItem('forte_selected_client', selectedClient);
-    } else {
-      localStorage.removeItem('forte_selected_client');
+    try {
+      if (selectedClient) {
+        localStorage.setItem('forte_selected_client', selectedClient);
+      } else {
+        localStorage.removeItem('forte_selected_client');
+      }
+    } catch (e) {
+      console.warn('[App] Erro ao salvar/remover forte_selected_client no localStorage:', e);
     }
   }, [selectedClient]);
 
   useEffect(() => {
-    if (selectedAssetIdForAction) {
-      localStorage.setItem('forte_selected_asset_id_action', selectedAssetIdForAction);
-    } else {
-      localStorage.removeItem('forte_selected_asset_id_action');
+    try {
+      if (selectedAssetIdForAction) {
+        localStorage.setItem('forte_selected_asset_id_action', selectedAssetIdForAction);
+      } else {
+        localStorage.removeItem('forte_selected_asset_id_action');
+      }
+    } catch (e) {
+      console.warn('[App] Erro ao salvar/remover forte_selected_asset_id_action no localStorage:', e);
     }
   }, [selectedAssetIdForAction]);
 

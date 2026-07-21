@@ -106,14 +106,18 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
 
   // Auto-save form state to localStorage
   useEffect(() => {
-    const state = {
-      clientName,
-      clientSignature,
-      frequency,
-      inspectionDate,
-      items
-    };
-    localStorage.setItem(`forte_draft_checklist_${recordId}`, JSON.stringify(state));
+    try {
+      const state = {
+        clientName,
+        clientSignature,
+        frequency,
+        inspectionDate,
+        items
+      };
+      localStorage.setItem(`forte_draft_checklist_${recordId}`, JSON.stringify(state));
+    } catch (error) {
+      console.warn('[ChecklistForm] Limite do localStorage excedido ao salvar rascunho:', error);
+    }
   }, [clientName, clientSignature, frequency, inspectionDate, items, recordId]);
 
   const clearDraft = () => {
@@ -302,10 +306,19 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
         if (file && activePhotoItemId) {
           const reader = new FileReader();
           reader.onloadend = async () => {
-            const compressed = await compressImage(reader.result as string);
-            updateItem(activePhotoItemId, { photos: [compressed] });
-            setActivePhotoItemId(null);
-            e.target.value = '';
+            try {
+              if (typeof reader.result === 'string') {
+                const compressed = await compressImage(reader.result);
+                const item = items.find(i => i.id === activePhotoItemId);
+                const currentPhotos = item?.photos || [];
+                updateItem(activePhotoItemId, { photos: [...currentPhotos, compressed] });
+              }
+            } catch (err) {
+              console.error('[ChecklistForm] Erro ao anexar imagem da galeria:', err);
+            } finally {
+              setActivePhotoItemId(null);
+              e.target.value = '';
+            }
           };
           reader.readAsDataURL(file);
         }
@@ -315,10 +328,19 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
         if (file && activePhotoItemId) {
           const reader = new FileReader();
           reader.onloadend = async () => {
-            const compressed = await compressImage(reader.result as string);
-            updateItem(activePhotoItemId, { photos: [compressed] });
-            setActivePhotoItemId(null);
-            e.target.value = '';
+            try {
+              if (typeof reader.result === 'string') {
+                const compressed = await compressImage(reader.result);
+                const item = items.find(i => i.id === activePhotoItemId);
+                const currentPhotos = item?.photos || [];
+                updateItem(activePhotoItemId, { photos: [...currentPhotos, compressed] });
+              }
+            } catch (err) {
+              console.error('[ChecklistForm] Erro ao anexar imagem da câmera:', err);
+            } finally {
+              setActivePhotoItemId(null);
+              e.target.value = '';
+            }
           };
           reader.readAsDataURL(file);
         }

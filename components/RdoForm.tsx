@@ -91,13 +91,17 @@ const RdoForm: React.FC<RdoFormProps> = ({
 
   // Auto-save form state to localStorage
   useEffect(() => {
-    const state = {
-      siteName,
-      clientName,
-      activities,
-      photos
-    };
-    localStorage.setItem(`forte_draft_rdo_${recordId}`, JSON.stringify(state));
+    try {
+      const state = {
+        siteName,
+        clientName,
+        activities,
+        photos
+      };
+      localStorage.setItem(`forte_draft_rdo_${recordId}`, JSON.stringify(state));
+    } catch (error) {
+      console.warn('[RdoForm] Limite do localStorage excedido ao salvar rascunho de RDO:', error);
+    }
   }, [siteName, clientName, activities, photos, recordId]);
 
   const clearDraft = () => {

@@ -149,8 +149,8 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
           </td>
           <td class="col-anexo td-anexo">
             <div class="anexo-wrap">
-              ${(i.photos && i.photos[0]) 
-                ? `<img alt="Anexo" class="anexo-img" width="56" height="56" src="${i.photos[0]}" />` 
+              ${(i.photos && i.photos.length > 0) 
+                ? i.photos.map(photo => `<img alt="Anexo" class="anexo-img" width="56" height="56" src="${photo}" />`).join('') 
                 : '<span class="anexo-empty">-</span>'}
             </div>
           </td>
@@ -347,7 +347,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     }
 
     .td-anexo { padding: 12px 16px 12px 4px; text-align: center; }
-    .anexo-wrap { display: flex; justify-content: center; }
+    .anexo-wrap { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; }
     .anexo-img {
       height: 56px;
       width: 56px;

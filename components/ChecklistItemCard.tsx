@@ -83,18 +83,23 @@ const ChecklistItemCard: React.FC<ChecklistItemCardProps> = ({
                     </div>
                 </div>
 
-                {/* Thumbnail da foto (Restrito a uma) */}
+                {/* Thumbnail das fotos (Múltiplas) */}
                 {item.photos && item.photos.length > 0 && (
-                    <div className="mt-2">
-                        <div className="relative inline-block">
-                            <img src={item.photos[0]} className="w-16 h-16 object-cover rounded-xl border-2 border-white shadow-sm" />
-                            <button 
-                                onClick={() => onUpdate(item.id, { photos: [] })} 
-                                className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all"
-                            >
-                                <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '12px' }}>close</span>
-                            </button>
-                        </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                        {item.photos.map((photo, pIdx) => (
+                            <div key={pIdx} className="relative inline-block">
+                                <img src={photo} className="w-16 h-16 object-cover rounded-xl border-2 border-white shadow-sm" />
+                                <button 
+                                    onClick={() => {
+                                        const newPhotos = item.photos ? item.photos.filter((_, idx) => idx !== pIdx) : [];
+                                        onUpdate(item.id, { photos: newPhotos });
+                                    }} 
+                                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all"
+                                >
+                                    <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '12px' }}>close</span>
+                                </button>
+                            </div>
+                        ))}
                     </div>
                 )}
 

@@ -124,16 +124,20 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
 
   // Auto-save form state to localStorage
   useEffect(() => {
-    const state = {
-      step,
-      selectedClient,
-      selectedAsset,
-      selectedItemsTemplate,
-      clientName,
-      clientSignature,
-      inspectionDate
-    };
-    localStorage.setItem(`forte_draft_corrective_${recordId}`, JSON.stringify(state));
+    try {
+      const state = {
+        step,
+        selectedClient,
+        selectedAsset,
+        selectedItemsTemplate,
+        clientName,
+        clientSignature,
+        inspectionDate
+      };
+      localStorage.setItem(`forte_draft_corrective_${recordId}`, JSON.stringify(state));
+    } catch (error) {
+      console.warn('[CorrectiveMaintenanceFlow] Limite do localStorage excedido ao salvar rascunho:', error);
+    }
   }, [step, selectedClient, selectedAsset, selectedItemsTemplate, clientName, clientSignature, inspectionDate, recordId]);
 
   const clearDraft = () => {
@@ -488,9 +492,18 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
           if (file && activePhotoItemId) {
             const reader = new FileReader();
             reader.onloadend = async () => {
-              const compressed = await compressImage(reader.result as string);
-              updateItem(activePhotoItemId, { photos: [compressed] });
-              setActivePhotoItemId(null); e.target.value = '';
+              try {
+                if (typeof reader.result === 'string') {
+                  const compressed = await compressImage(reader.result);
+                  const item = selectedItemsTemplate.find(i => i.id === activePhotoItemId);
+                  const currentPhotos = item?.photos || [];
+                  updateItem(activePhotoItemId, { photos: [...currentPhotos, compressed] });
+                }
+              } catch (err) {
+                console.error('[CorrectiveFlow] Erro ao anexar imagem da galeria:', err);
+              } finally {
+                setActivePhotoItemId(null); e.target.value = '';
+              }
             };
             reader.readAsDataURL(file);
           }
@@ -500,9 +513,18 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
           if (file && activePhotoItemId) {
             const reader = new FileReader();
             reader.onloadend = async () => {
-              const compressed = await compressImage(reader.result as string);
-              updateItem(activePhotoItemId, { photos: [compressed] });
-              setActivePhotoItemId(null); e.target.value = '';
+              try {
+                if (typeof reader.result === 'string') {
+                  const compressed = await compressImage(reader.result);
+                  const item = selectedItemsTemplate.find(i => i.id === activePhotoItemId);
+                  const currentPhotos = item?.photos || [];
+                  updateItem(activePhotoItemId, { photos: [...currentPhotos, compressed] });
+                }
+              } catch (err) {
+                console.error('[CorrectiveFlow] Erro ao anexar imagem da câmera:', err);
+              } finally {
+                setActivePhotoItemId(null); e.target.value = '';
+              }
             };
             reader.readAsDataURL(file);
           }
@@ -535,18 +557,23 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
                     </button>
                   </div>
                 </div>
-                {/* Thumbnails (Restrito a uma foto) */}
+                {/* Thumbnails (Múltiplas fotos) */}
                 {item.photos && item.photos.length > 0 && (
-                  <div className="mt-2 mb-3">
-                    <div className="relative inline-block">
-                      <img src={item.photos[0]} className="w-16 h-16 object-cover rounded-xl border-2 border-white shadow-sm" />
-                      <button 
-                        onClick={() => updateItem(item.id, { photos: [] })} 
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
-                      >
-                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '14px' }}>close</span>
-                      </button>
-                    </div>
+                  <div className="mt-2 mb-3 flex flex-wrap gap-2">
+                    {item.photos.map((photo, pIdx) => (
+                      <div key={pIdx} className="relative inline-block">
+                        <img src={photo} className="w-16 h-16 object-cover rounded-xl border-2 border-white shadow-sm" />
+                        <button 
+                          onClick={() => {
+                            const newPhotos = item.photos ? item.photos.filter((_, idx) => idx !== pIdx) : [];
+                            updateItem(item.id, { photos: newPhotos });
+                          }} 
+                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all"
+                        >
+                          <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '12px' }}>close</span>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
 
