@@ -487,25 +487,34 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
         </header>
 
         {/* Inputs ocultos */}
-        <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file && activePhotoItemId) {
+        <input type="file" accept="image/*" multiple className="hidden" ref={fileInputRef} onChange={(e) => {
+          const files = e.target.files;
+          if (files && files.length > 0 && activePhotoItemId) {
             const reader = new FileReader();
-            reader.onloadend = async () => {
+            // Since we need to read multiple files sequentially, we can create a promise loop or process them
+            const processFiles = async () => {
               try {
-                if (typeof reader.result === 'string') {
-                  const compressed = await compressImage(reader.result);
-                  const item = selectedItemsTemplate.find(i => i.id === activePhotoItemId);
-                  const currentPhotos = item?.photos || [];
-                  updateItem(activePhotoItemId, { photos: [...currentPhotos, compressed] });
+                const newPhotos: string[] = [];
+                for (let i = 0; i < files.length; i++) {
+                  const file = files[i];
+                  const base64 = await new Promise<string>((resolve) => {
+                    const r = new FileReader();
+                    r.onloadend = () => resolve(r.result as string);
+                    r.readAsDataURL(file);
+                  });
+                  const compressed = await compressImage(base64);
+                  newPhotos.push(compressed);
                 }
+                const item = selectedItemsTemplate.find(i => i.id === activePhotoItemId);
+                const currentPhotos = item?.photos || [];
+                updateItem(activePhotoItemId, { photos: [...currentPhotos, ...newPhotos] });
               } catch (err) {
-                console.error('[CorrectiveFlow] Erro ao anexar imagem da galeria:', err);
+                console.error('[CorrectiveFlow] Erro ao anexar múltiplas imagens da galeria:', err);
               } finally {
                 setActivePhotoItemId(null); e.target.value = '';
               }
             };
-            reader.readAsDataURL(file);
+            processFiles();
           }
         }} />
         <input type="file" accept="image/*" capture="environment" className="hidden" ref={cameraInputRef} onChange={(e) => {

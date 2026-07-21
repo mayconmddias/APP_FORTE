@@ -301,26 +301,30 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       </header>
 
       {/* Inputs de câmera/galeria — ocultos */}
-      <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={async (e) => {
-        const file = e.target.files?.[0];
-        if (file && activePhotoItemId) {
-          const reader = new FileReader();
-          reader.onloadend = async () => {
-            try {
-              if (typeof reader.result === 'string') {
-                const compressed = await compressImage(reader.result);
-                const item = items.find(i => i.id === activePhotoItemId);
-                const currentPhotos = item?.photos || [];
-                updateItem(activePhotoItemId, { photos: [...currentPhotos, compressed] });
-              }
-            } catch (err) {
-              console.error('[ChecklistForm] Erro ao anexar imagem da galeria:', err);
-            } finally {
-              setActivePhotoItemId(null);
-              e.target.value = '';
+      <input type="file" accept="image/*" multiple className="hidden" ref={fileInputRef} onChange={async (e) => {
+        const files = e.target.files;
+        if (files && files.length > 0 && activePhotoItemId) {
+          try {
+            const newPhotos: string[] = [];
+            for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              const base64 = await new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(file);
+              });
+              const compressed = await compressImage(base64);
+              newPhotos.push(compressed);
             }
-          };
-          reader.readAsDataURL(file);
+            const item = items.find(i => i.id === activePhotoItemId);
+            const currentPhotos = item?.photos || [];
+            updateItem(activePhotoItemId, { photos: [...currentPhotos, ...newPhotos] });
+          } catch (err) {
+            console.error('[ChecklistForm] Erro ao anexar múltiplas imagens da galeria:', err);
+          } finally {
+            setActivePhotoItemId(null);
+            e.target.value = '';
+          }
         }
       }} />
       <input type="file" accept="image/*" capture="environment" className="hidden" ref={cameraInputRef} onChange={async (e) => {

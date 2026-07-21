@@ -476,24 +476,40 @@ const App: React.FC = () => {
             await db.ordens_servico.bulkDelete(historyToDelete.map(h => h.local_id));
           }
 
-          // LOCAL DEDUPLICATION: Remove duplicates sharing the same logical id
+          // LOCAL DEDUPLICATION: Remove duplicates sharing the same logical id or inspection number
           const allLocal = await db.ordens_servico.toArray();
           const seenIds = new Set<string>();
+          const seenInspectionNumbers = new Set<number>();
           const duplicatesToRemove: string[] = [];
+          const duplicatesToServerDelete: string[] = [];
           
           // Sort by updated_at descending to keep the most recent
           allLocal.sort((a, b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
           
           allLocal.forEach(rec => {
-            if (seenIds.has(rec.id)) {
+            const isDup = seenIds.has(rec.id) || (rec.inspectionNumber && seenInspectionNumbers.has(rec.inspectionNumber));
+            if (isDup) {
               duplicatesToRemove.push(rec.local_id);
+              if (rec.server_id) {
+                duplicatesToServerDelete.push(rec.server_id);
+              }
             } else {
               seenIds.add(rec.id);
+              if (rec.inspectionNumber) {
+                seenInspectionNumbers.add(rec.inspectionNumber);
+              }
             }
           });
           
           if (duplicatesToRemove.length > 0) {
             await db.ordens_servico.bulkDelete(duplicatesToRemove);
+            for (const serverId of duplicatesToServerDelete) {
+              await db.exclusoes_pendentes.add({
+                server_id: serverId,
+                table_name: 'maintenance_records',
+                timestamp: new Date().toISOString()
+              });
+            }
           }
           // Get local pending/error history to preserve them
           const localPendingHistory = await db.ordens_servico.where('sync_status').anyOf(['PENDING', 'ERROR']).toArray();
@@ -703,6 +719,12 @@ const App: React.FC = () => {
       // 1. Salvar localmente primeiro (Offline-First)
       const localId = record.local_id || (record as any).local_id || uuidv4();
 
+      // Preservar server_id, last_server_version e version para evitar duplicação em edição
+      const existing = await db.ordens_servico.get(localId);
+      const serverId = existing?.server_id || (record as any).server_id || null;
+      const lastServerVersion = existing?.last_server_version;
+      const existingVersion = existing?.version || 0;
+
       // Deduplicação extra (Correção 4) - Evitar múltiplos toques salvando duplicatas
       if (record.inspectionNumber && record.assetId && record.date) {
         const existingForAsset = await db.ordens_servico
@@ -734,12 +756,14 @@ const App: React.FC = () => {
 
       const localRecord: LocalMaintenanceRecord = {
         ...record,
-        id: record.id?.startsWith('h-') ? localId : (record.id || localId), // Prefer UUID over temporary h- format
+        id: serverId || (record.id?.startsWith('h-') ? localId : (record.id || localId)), // Prefer serverId or UUID over temporary h- format
         local_id: localId,
+        server_id: serverId,
+        last_server_version: lastServerVersion,
         sync_status: 'PENDING',
         status: record.status || 'COMPLETED', // GARANTIR STATUS
         updated_at: new Date().toISOString(),
-        version: ((record as any).version || 0) + 1
+        version: existingVersion + 1
       };
 
       await db.ordens_servico.put(localRecord);
@@ -802,13 +826,22 @@ const App: React.FC = () => {
   const handleSaveRdo = async (record: RdoRecord) => {
     try {
       const localId = record.local_id || uuidv4();
+
+      // Preservar server_id, last_server_version e version para evitar duplicação em edição
+      const existing = await db.rdo.get(localId);
+      const serverId = existing?.server_id || (record as any).server_id || null;
+      const lastServerVersion = existing?.last_server_version;
+      const existingVersion = existing?.version || 0;
+
       const localRecord = {
         ...record,
-        id: localId, // Always use localId (which is a UUID) to avoid format errors on Supabase
+        id: serverId || localId, // Prefer serverId or localId to avoid format errors on Supabase
         local_id: localId,
+        server_id: serverId,
+        last_server_version: lastServerVersion,
         sync_status: 'PENDING',
         updated_at: new Date().toISOString(),
-        version: ((record as any).version || 0) + 1
+        version: existingVersion + 1
       };
 
       await db.rdo.put(localRecord as any);
@@ -876,10 +909,14 @@ const App: React.FC = () => {
       console.log("App: Saving asset", asset.id);
       const assetId = asset.id || uuidv4();
 
+      const existing = await db.ativos.get(assetId);
+      const serverId = existing?.server_id || (asset as any).server_id || null;
+
       const localAsset: LocalAsset = {
         ...asset,
         id: assetId,
         local_id: assetId,
+        server_id: serverId,
         sync_status: 'PENDING',
         updated_at: new Date().toISOString(),
         version: 1
@@ -926,9 +963,13 @@ const App: React.FC = () => {
     try {
       // Use logical ID (FE-XXX) as the primary key
       const userId = user.id; 
+      const existing = await db.usuarios.get(userId);
+      const serverId = existing?.server_id || user.server_id || null;
+
       const localUser = {
         ...user,
         local_id: userId,
+        server_id: serverId,
         sync_status: 'PENDING',
         updated_at: new Date().toISOString(),
         version: 1
