@@ -306,7 +306,9 @@ const App: React.FC = () => {
           if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
             new Notification(payload.title || 'Forte Engenharia', {
               body: payload.body || 'Nova notificação do sistema',
-              icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png'
+              icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
+              tag: payload.tag || ('rt-' + Date.now() + '-' + Math.random()),
+              renotify: true
             });
           }
         })

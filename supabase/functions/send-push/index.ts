@@ -102,13 +102,15 @@ serve(async (req) => {
 
     const results: any[] = [];
 
-    const sendPush = async (title: string, body: string) => {
+    const sendPush = async (title: string, body: string, customTag?: string) => {
+      const tag = customTag || `push-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
       // 1. Transmitir via Supabase Realtime Broadcast (Tempo real para clientes Web/Desktop conectados)
       try {
         await supabase.channel('desktop-push-notifications').send({
           type: 'broadcast',
           event: 'push_notification',
-          payload: { title, body }
+          payload: { title, body, tag }
         });
       } catch (e) {
         console.warn('Erro ao transmitir via Supabase Realtime:', e);
@@ -129,12 +131,18 @@ serve(async (req) => {
                 title,
                 body,
               },
+              data: {
+                title,
+                body,
+                tag
+              },
               android: {
                 priority: 'high',
                 notification: {
                   sound: 'default',
                   click_action: 'FCM_PLUGIN_ACTIVITY',
-                  icon: 'fcm_push_icon'
+                  icon: 'fcm_push_icon',
+                  tag
                 }
               },
               webpush: {
@@ -145,7 +153,9 @@ serve(async (req) => {
                   title,
                   body,
                   icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
-                  badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png'
+                  badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
+                  tag,
+                  renotify: true
                 },
                 fcm_options: {
                   link: '/'

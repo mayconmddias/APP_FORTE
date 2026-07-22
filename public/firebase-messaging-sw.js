@@ -16,10 +16,15 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Notificação recebida em segundo plano:', payload);
   const title = payload.notification?.title || payload.data?.title || 'Forte Engenharia';
+  const body = payload.notification?.body || payload.data?.body || 'Nova notificação do sistema';
+  const tag = payload.notification?.tag || payload.data?.tag || ('push-' + Date.now() + '-' + Math.random());
+
   const options = {
-    body: payload.notification?.body || payload.data?.body || 'Nova notificação do sistema',
+    body,
     icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
     badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
+    tag: tag,
+    renotify: true,
     data: payload.data?.url || '/'
   };
 
