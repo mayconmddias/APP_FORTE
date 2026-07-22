@@ -8,64 +8,86 @@ const FIREBASE_CLIENT_EMAIL = Deno.env.get('FIREBASE_CLIENT_EMAIL') || '';
 const FIREBASE_PRIVATE_KEY = Deno.env.get('FIREBASE_PRIVATE_KEY') || '';
 
 // Função simples para assinar JWT e obter token do Google OAuth2
-async function getAccessToken(): Promise<string> {
-  const privateKey = FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
-  const tokenUrl = 'https://oauth2.googleapis.com/token';
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const now = Math.floor(Date.now() / 1000);
-  const claim = {
-    iss: FIREBASE_CLIENT_EMAIL,
-    scope: 'https://www.googleapis.com/auth/firebase.messaging',
-    aud: tokenUrl,
-    exp: now + 3600,
-    iat: now,
-  };
+async function getAccessToken(): Promise<string | null> {
+  try {
+    const rawKey = Deno.env.get('FIREBASE_PRIVATE_KEY') || '';
+    const clientEmail = Deno.env.get('FIREBASE_CLIENT_EMAIL') || '';
+    if (!rawKey || !clientEmail) {
+      console.error('[send-push] FIREBASE_PRIVATE_KEY ou FIREBASE_CLIENT_EMAIL ausente');
+      return null;
+    }
 
-  const textEncoder = new TextEncoder();
-  const headerBase64 = btoa(JSON.stringify(header));
-  const claimBase64 = btoa(JSON.stringify(claim));
-  const stringToSign = `${headerBase64}.${claimBase64}`;
+    const tokenUrl = 'https://oauth2.googleapis.com/token';
+    const header = { alg: 'RS256', typ: 'JWT' };
+    const now = Math.floor(Date.now() / 1000);
+    const claim = {
+      iss: clientEmail,
+      scope: 'https://www.googleapis.com/auth/firebase.messaging',
+      aud: tokenUrl,
+      exp: now + 3600,
+      iat: now,
+    };
 
-  const pemContents = FIREBASE_PRIVATE_KEY
-    .replace("-----BEGIN PRIVATE KEY-----", "")
-    .replace("-----END PRIVATE KEY-----", "")
-    .replace(/\\n/g, "")
-    .replace(/\n/g, "")
-    .replace(/\r/g, "")
-    .replace(/\"/g, "")
-    .replace(/\s/g, "");
-  const binaryDerString = atob(pemContents);
-  const binaryDer = new Uint8Array(binaryDerString.length);
-  for (let i = 0; i < binaryDerString.length; i++) {
-    binaryDer[i] = binaryDerString.charCodeAt(i);
+    const textEncoder = new TextEncoder();
+    const headerBase64 = btoa(JSON.stringify(header)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const claimBase64 = btoa(JSON.stringify(claim)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const stringToSign = `${headerBase64}.${claimBase64}`;
+
+    const pemContents = rawKey
+      .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+      .replace(/-----END PRIVATE KEY-----/g, '')
+      .replace(/\\n/g, '')
+      .replace(/\n/g, '')
+      .replace(/\r/g, '')
+      .replace(/\"/g, '')
+      .replace(/\s/g, '');
+
+    const binaryDerString = atob(pemContents);
+    const binaryDer = new Uint8Array(binaryDerString.length);
+    for (let i = 0; i < binaryDerString.length; i++) {
+      binaryDer[i] = binaryDerString.charCodeAt(i);
+    }
+
+    const cryptoKey = await crypto.subtle.importKey(
+      "pkcs8",
+      binaryDer,
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    const signature = await crypto.subtle.sign(
+      "RSASSA-PKCS1-v1_5",
+      cryptoKey,
+      textEncoder.encode(stringToSign)
+    );
+
+    const signatureBytes = new Uint8Array(signature);
+    let binaryStr = '';
+    for (let i = 0; i < signatureBytes.byteLength; i++) {
+      binaryStr += String.fromCharCode(signatureBytes[i]);
+    }
+    const signatureBase64 = btoa(binaryStr).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+    const jwt = `${headerBase64}.${claimBase64}.${signatureBase64}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    const data = await response.json();
+    return data.access_token || null;
+  } catch (e: any) {
+    console.error('[send-push] Erro ao obter access token do Firebase Google OAuth2:', e);
+    return null;
   }
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "pkcs8",
-    binaryDer,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-
-  const signature = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5",
-    cryptoKey,
-    textEncoder.encode(stringToSign)
-  );
-
-  const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-  const jwt = `${headerBase64}.${claimBase64}.${signatureBase64}`;
-
-  const response = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
-  });
-  const data = await response.json();
-  return data.access_token;
 }
 
 function formatDate(dateStr?: string | null): string {
@@ -101,6 +123,10 @@ serve(async (req) => {
 
     // Obter Token de Autenticação do Firebase
     const accessToken = await getAccessToken();
+
+    if (!accessToken) {
+      return new Response(JSON.stringify({ error: "Falha na autenticação OAuth2 do Firebase (verifique as credenciais no Supabase Secrets)." }), { status: 200 });
+    }
 
     const results: any[] = [];
     const sendPushPromises: Promise<void>[] = [];
