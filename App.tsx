@@ -2,6 +2,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { initializeApp, getApps } from 'firebase/app';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import Layout from './components/Layout';
 import Login from './components/Login';
 import AssetManagement from './components/AssetManagement';
@@ -222,7 +224,7 @@ const App: React.FC = () => {
         console.log('Ação no push realizada:', notification);
       });
     } else {
-      // Suporte a Web Push no Desktop / Web (PWA)
+      // Suporte a FCM Web Push no Desktop / Web (PWA)
       if (typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator) {
         const initWebPush = async () => {
           try {
@@ -231,20 +233,46 @@ const App: React.FC = () => {
               perm = await Notification.requestPermission();
             }
             if (perm === 'granted') {
-              const reg = await navigator.serviceWorker.ready;
-              let sub = await reg.pushManager.getSubscription();
-              if (!sub) {
-                sub = await reg.pushManager.subscribe({
-                  userVisibleOnly: true,
-                  applicationServerKey: undefined
-                }).catch(() => null);
+              const firebaseConfig = {
+                apiKey: "AIzaSyBFgUpjKe8XzR6J1JTK7hjyuHx4LZFIWkc",
+                authDomain: "app-forte-6f756.firebaseapp.com",
+                projectId: "app-forte-6f756",
+                storageBucket: "app-forte-6f756.firebasestorage.app",
+                messagingSenderId: "271847567425",
+                appId: "1:271847567425:web:32c758ea6d9ecb672c56c0"
+              };
+
+              const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+              const messaging = getMessaging(app);
+
+              const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(() => null);
+
+              const token = await getToken(messaging, {
+                serviceWorkerRegistration: swRegistration || undefined
+              }).catch(err => {
+                console.warn('[FCM Web] Erro ao obter FCM Web token:', err);
+                return null;
+              });
+
+              if (token) {
+                console.log('[FCM Web] FCM Registration Token obtido para Desktop:', token);
+                setDevicePushToken(token);
               }
-              const webToken = sub ? JSON.stringify(sub) : `web-push-${currentUser?.id || 'browser'}`;
-              console.log('[WebPush] Token Web Desktop gerado:', webToken);
-              setDevicePushToken(webToken);
+
+              onMessage(messaging, (payload) => {
+                console.log('[FCM Web] Mensagem recebida em primeiro plano:', payload);
+                const title = payload.notification?.title || payload.data?.title || 'Forte Engenharia';
+                const body = payload.notification?.body || payload.data?.body || 'Nova notificação do sistema';
+                if ('Notification' in window && Notification.permission === 'granted') {
+                  new Notification(title, {
+                    body,
+                    icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png'
+                  });
+                }
+              });
             }
           } catch (e) {
-            console.warn('[WebPush] Falha ao obter permissão ou token no browser:', e);
+            console.warn('[FCM Web] Falha ao obter permissão ou token no browser:', e);
           }
         };
         initWebPush();
