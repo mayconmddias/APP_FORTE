@@ -115,6 +115,18 @@ serve(async (req) => {
     const results: any[] = [];
 
     const sendPush = async (title: string, body: string) => {
+      // 1. Transmitir via Supabase Realtime Broadcast (Tempo real para clientes Web/Desktop conectados)
+      try {
+        await supabase.channel('desktop-push-notifications').send({
+          type: 'broadcast',
+          event: 'push_notification',
+          payload: { title, body }
+        });
+      } catch (e) {
+        console.warn('Erro ao transmitir via Supabase Realtime:', e);
+      }
+
+      // 2. Transmitir via FCM API (Android Push & FCM Web Push)
       for (const t of tokens) {
         const res = await fetch(`https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`, {
           method: 'POST',
@@ -135,6 +147,20 @@ serve(async (req) => {
                   sound: 'default',
                   click_action: 'FCM_PLUGIN_ACTIVITY',
                   icon: 'fcm_push_icon'
+                }
+              },
+              webpush: {
+                headers: {
+                  Urgency: 'high'
+                },
+                notification: {
+                  title,
+                  body,
+                  icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
+                  badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png'
+                },
+                fcm_options: {
+                  link: '/'
                 }
               }
             },
