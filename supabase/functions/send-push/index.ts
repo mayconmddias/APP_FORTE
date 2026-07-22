@@ -89,90 +89,87 @@ serve(async (req) => {
     const isTest = reqBody.test === true;
 
     // 1. Buscar todos os tokens de push cadastrados na tabela push_tokens
-    const { data: tokens, error: tokensError } = await supabase
+    const { data: tokensData, error: tokensError } = await supabase
       .from('push_tokens')
       .select('token, user_id');
 
-    if (tokensError || !tokens || tokens.length === 0) {
+    if (tokensError || !tokensData || tokensData.length === 0) {
       return new Response(JSON.stringify({ message: "Nenhum token de push encontrado no banco." }), { status: 200 });
     }
+
+    const uniqueTokens = [...new Set(tokensData.map(t => t.token).filter(Boolean))];
 
     // Obter Token de Autenticação do Firebase
     const accessToken = await getAccessToken();
 
     const results: any[] = [];
+    const sendPushPromises: Promise<void>[] = [];
 
-    const sendPush = async (title: string, body: string, customTag?: string) => {
+    const queuePush = (title: string, body: string, customTag?: string) => {
       const tag = customTag || `push-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-
-      // 1. Transmitir via Supabase Realtime Broadcast (Tempo real para abas abertas no Desktop em primeiro plano)
-      try {
-        await supabase.channel('desktop-push-notifications').send({
-          type: 'broadcast',
-          event: 'push_notification',
-          payload: { title, body, tag }
-        });
-      } catch (e) {
-        console.warn('Erro ao transmitir via Supabase Realtime:', e);
-      }
-
-      // 2. Transmitir via FCM API (Android Push & FCM Web Push)
-      for (const t of tokens) {
-        const res = await fetch(`https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: {
-              token: t.token,
-              notification: {
-                title,
-                body,
+      
+      sendPushPromises.push((async () => {
+        for (const t of uniqueTokens) {
+          try {
+            const res = await fetch(`https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
               },
-              data: {
-                title,
-                body,
-                tag
-              },
-              android: {
-                priority: 'high',
-                notification: {
-                  sound: 'default',
-                  click_action: 'FCM_PLUGIN_ACTIVITY',
-                  icon: 'fcm_push_icon',
-                  tag
-                }
-              },
-              webpush: {
-                headers: {
-                  Urgency: 'high'
+              body: JSON.stringify({
+                message: {
+                  token: t,
+                  notification: {
+                    title,
+                    body,
+                  },
+                  data: {
+                    title,
+                    body,
+                    tag
+                  },
+                  android: {
+                    priority: 'high',
+                    notification: {
+                      sound: 'default',
+                      click_action: 'FCM_PLUGIN_ACTIVITY',
+                      icon: 'fcm_push_icon',
+                      tag
+                    }
+                  },
+                  webpush: {
+                    headers: {
+                      Urgency: 'high'
+                    },
+                    notification: {
+                      title,
+                      body,
+                      icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
+                      badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
+                      tag
+                    },
+                    fcm_options: {
+                      link: '/'
+                    }
+                  }
                 },
-                notification: {
-                  title,
-                  body,
-                  icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
-                  badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
-                  tag,
-                  renotify: true
-                },
-                fcm_options: {
-                  link: '/'
-                }
-              }
-            },
-          }),
-        });
-        results.push(await res.json());
-      }
+              }),
+            });
+            results.push(await res.json());
+          } catch (e: any) {
+            console.error('Erro ao enviar push FCM:', e);
+          }
+        }
+      })());
     };
 
     // MODO TESTE DIRETO
     if (isTest) {
       const testTitle = reqBody.title || '🔔 Teste de Notificação Push';
       const testBody = reqBody.body || 'Notificação de teste enviada com sucesso para o sistema Desktop e Mobile!';
-      await sendPush(testTitle, testBody);
+      queuePush(testTitle, testBody);
+      await Promise.all(sendPushPromises);
       return new Response(JSON.stringify({ success: true, test: true, results }), { status: 200 });
     }
 
@@ -213,7 +210,8 @@ serve(async (req) => {
     const hasInts = integracoes.length > 0;
 
     if (!hasDocs && !hasInts) {
-      await sendPush('🔔 Teste de Notificação Push', 'Sistema verificado: Nenhum documento ou integração vencida/pendente no banco.');
+      queuePush('🔔 Teste de Notificação Push', 'Sistema verificado: Nenhum documento ou integração vencida/pendente no banco.');
+      await Promise.all(sendPushPromises);
       return new Response(JSON.stringify({ success: true, message: "Disparo de teste realizado (sem pendências no banco).", results }), { status: 200 });
     }
 
@@ -229,8 +227,6 @@ serve(async (req) => {
 
     const funcionarioMap = new Map(profiles?.map(p => [p.id, p.name]) || []);
 
-    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-
     // 6. Alertas de documentos
     if (documentos) {
       let docIdx = 0;
@@ -239,9 +235,8 @@ serve(async (req) => {
         const nomeFuncionario = funcionarioMap.get(doc.funcionario_id) || 'Funcionário';
         const formattedDate = formatDate(doc.data_vencimento);
         const bodyText = `${doc.tipo_documento} - ${nomeFuncionario} - ${formattedDate}`;
-        const tag = `doc-${doc.funcionario_id}-${docIdx}-${Date.now()}`;
-        await sendPush('🚨 Documento!', bodyText, tag);
-        await sleep(600);
+        const tag = `doc-${doc.funcionario_id}-${docIdx}`;
+        queuePush('🚨 Documento!', bodyText, tag);
       }
     }
 
@@ -253,11 +248,12 @@ serve(async (req) => {
         const nomeFuncionario = funcionarioMap.get(int.funcionario_id) || 'Funcionário';
         const formattedDate = formatDate(int.data_vencimento);
         const bodyText = `${int.empresa_nome || 'Cliente'} - ${nomeFuncionario} - ${formattedDate}`;
-        const tag = `int-${int.funcionario_id}-${intIdx}-${Date.now()}`;
-        await sendPush('🚨 Integração!', bodyText, tag);
-        await sleep(600);
+        const tag = `int-${int.funcionario_id}-${intIdx}`;
+        queuePush('🚨 Integração!', bodyText, tag);
       }
     }
+
+    await Promise.all(sendPushPromises);
 
     return new Response(JSON.stringify({ success: true, results }), { status: 200 });
   } catch (error: any) {
