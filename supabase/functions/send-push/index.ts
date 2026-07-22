@@ -173,7 +173,8 @@ serve(async (req) => {
                       body,
                       icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
                       badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
-                      tag
+                      tag,
+                      renotify: true
                     },
                     fcm_options: {
                       link: '/'
@@ -182,7 +183,12 @@ serve(async (req) => {
                 },
               }),
             });
-            results.push(await res.json());
+            const resData = await res.json();
+            results.push(resData);
+            if (resData.error && (resData.error.code === 404 || resData.error.status === 'NOT_FOUND')) {
+              console.log('[send-push] Removendo token expirado/desregistrado:', t);
+              await supabase.from('push_tokens').delete().eq('token', t);
+            }
           } catch (e: any) {
             console.error('Erro ao enviar push FCM:', e);
           }
