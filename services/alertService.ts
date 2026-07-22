@@ -23,30 +23,31 @@ export const alertService = {
       // Buscar todos os documentos que têm data de vencimento
       const { data: docs, error: docError } = await supabase
         .from('documentos')
-        .select(`
-          id,
-          tipo_documento,
-          data_vencimento,
-          funcionario_id,
-          funcionarios!inner (
-            nome
-          )
-        `)
+        .select('id, tipo_documento, data_vencimento, funcionario_id')
         .not('data_vencimento', 'is', null);
 
       if (docError) throw docError;
+      if (!docs || docs.length === 0) return [];
+
+      const funcIds = [...new Set(docs.map(d => d.funcionario_id).filter(Boolean))];
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('id, name')
+        .in('id', funcIds);
+
+      const nameMap = new Map(profiles?.map(p => [p.id, p.name]) || []);
 
       const alerts: AlertItem[] = [];
       const today = new Date();
 
-      docs?.forEach((doc: any) => {
+      docs.forEach((doc: any) => {
         const expiryDate = parseISO(doc.data_vencimento);
         const days = differenceInDays(expiryDate, today);
 
         // Apenas conta documentos que vencem em 40 dias ou já venceram (dias <= 0)
         if (days <= 40) {
           alerts.push({
-            funcionarioNome: doc.funcionarios.nome,
+            funcionarioNome: nameMap.get(doc.funcionario_id) || 'Funcionário',
             documentoTipo: doc.tipo_documento,
             diasParaVencer: days,
             status: days <= 0 ? 'CRITICO' : 'ALERTA'

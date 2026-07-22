@@ -262,12 +262,15 @@ const App: React.FC = () => {
 
               onMessage(messaging, (payload) => {
                 console.log('[FCM Web] Mensagem recebida em primeiro plano:', payload);
-                const title = payload.notification?.title || payload.data?.title || 'Forte Engenharia';
-                const body = payload.notification?.body || payload.data?.body || 'Nova notificação do sistema';
+                const title = payload.notification?.title || payload.data?.title || '🚨 Notificação Forte';
+                const body = payload.notification?.body || payload.data?.body || payload.data?.message || 'Novo alerta de vencimento';
+                const tag = payload.notification?.tag || payload.data?.tag || ('push-' + Date.now() + '-' + Math.random());
                 if ('Notification' in window && Notification.permission === 'granted') {
                   new Notification(title, {
                     body,
-                    icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png'
+                    icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
+                    tag,
+                    renotify: true
                   });
                 }
               });
@@ -295,33 +298,6 @@ const App: React.FC = () => {
         });
     }
   }, [currentUser, devicePushToken]);
-
-  // Escuta no canal Supabase Realtime para exibir notificação nativa quando a aba estiver ABERTA/VISÍVEL no Desktop
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform() && currentUser?.id) {
-      const channel = supabase.channel('desktop-push-notifications')
-        .on('broadcast', { event: 'push_notification' }, (data) => {
-          const payload = data.payload || {};
-          console.log('[Supabase Realtime Push] Recebido no Desktop:', payload);
-
-          // Apenas dispara a notificação nativa se a aba estiver ABERTA E VISÍVEL em primeiro plano
-          // Se estiver minimizada/segundo plano, o Service Worker do Chrome gerencia em segundo plano!
-          if (document.visibilityState === 'visible' && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification(payload.title || 'Forte Engenharia', {
-              body: payload.body || 'Nova notificação do sistema',
-              icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
-              tag: payload.tag || ('rt-' + Date.now() + '-' + Math.random()),
-              renotify: true
-            });
-          }
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [currentUser?.id]);
 
   // Garante que qualquer scroll residual do teclado virtual do Android seja redefinido ao logar,
   // trazendo a barra superior (Header e Hamburguer) de volta à área visível da WebView do APK.
