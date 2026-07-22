@@ -202,6 +202,17 @@ const DesktopPushSection: React.FC = () => {
         }
     };
 
+    const handleTestNotification = () => {
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification("Forte Engenharia - Teste Direct", {
+                body: "Se esta mensagem apareceu no seu Windows 11, as Notificações Desktop estão 100% ativas!",
+                icon: "https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png"
+            });
+        } else {
+            alert("As notificações precisam estar ativadas no seu navegador para realizar este teste.");
+        }
+    };
+
     return (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 space-y-4">
             <div className="flex items-center justify-between">
@@ -214,22 +225,32 @@ const DesktopPushSection: React.FC = () => {
                         <p className="font-body text-xs text-slate-400 font-medium">Recepção de avisos do sistema em segundo plano no Windows</p>
                     </div>
                 </div>
-                {perm === 'granted' ? (
-                    <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-3 py-1 rounded-full font-headline font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Ativas no Browser
-                    </span>
-                ) : perm === 'denied' ? (
-                    <span className="bg-red-50 text-red-500 border border-red-100 px-3 py-1 rounded-full font-headline font-bold text-[10px] uppercase tracking-wider">
-                        Bloqueadas no Navegador
-                    </span>
-                ) : (
-                    <button
-                        onClick={handleEnablePush}
-                        className="px-4 py-2 bg-[#004a88] text-white rounded-full font-headline font-bold text-[10px] uppercase tracking-wider shadow-sm hover:bg-primary transition-all"
-                    >
-                        Ativar Notificações
-                    </button>
-                )}
+                <div className="flex items-center gap-2">
+                    {perm === 'granted' && (
+                        <button
+                            onClick={handleTestNotification}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-headline font-bold text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow-sm"
+                        >
+                            <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '14px' }}>notifications</span> Testar Notificação
+                        </button>
+                    )}
+                    {perm === 'granted' ? (
+                        <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-3 py-1 rounded-full font-headline font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Ativas no Browser
+                        </span>
+                    ) : perm === 'denied' ? (
+                        <span className="bg-red-50 text-red-500 border border-red-100 px-3 py-1 rounded-full font-headline font-bold text-[10px] uppercase tracking-wider">
+                            Bloqueadas no Navegador
+                        </span>
+                    ) : (
+                        <button
+                            onClick={handleEnablePush}
+                            className="px-4 py-2 bg-[#004a88] text-white rounded-full font-headline font-bold text-[10px] uppercase tracking-wider shadow-sm hover:bg-primary transition-all"
+                        >
+                            Ativar Notificações
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="pt-3 border-t border-slate-50 text-xs text-slate-500 space-y-2">
