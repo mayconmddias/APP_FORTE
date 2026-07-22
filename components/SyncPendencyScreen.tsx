@@ -204,10 +204,22 @@ const DesktopPushSection: React.FC = () => {
 
     const handleTestNotification = () => {
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification("Forte Engenharia - Teste Direct", {
+            const title = "Forte Engenharia - Teste Direct";
+            const options = {
                 body: "Se esta mensagem apareceu no seu Windows 11, as Notificações Desktop estão 100% ativas!",
-                icon: "https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png"
-            });
+                icon: "https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png",
+                badge: "https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png"
+            };
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification(title, options);
+                }).catch(() => {
+                    new Notification(title, options);
+                });
+            } else {
+                new Notification(title, options);
+            }
         } else {
             alert("As notificações precisam estar ativadas no seu navegador para realizar este teste.");
         }

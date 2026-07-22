@@ -275,12 +275,22 @@ const App: React.FC = () => {
                 const body = payload.notification?.body || payload.data?.body || payload.data?.message || 'Novo alerta de vencimento';
                 const tag = payload.notification?.tag || payload.data?.tag || ('push-' + Date.now() + '-' + Math.random());
                 if ('Notification' in window && Notification.permission === 'granted') {
-                  new Notification(title, {
+                  const options = {
                     body,
                     icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
+                    badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
                     tag,
                     renotify: true
-                  });
+                  };
+                  if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then((reg) => {
+                      reg.showNotification(title, options);
+                    }).catch(() => {
+                      new Notification(title, options);
+                    });
+                  } else {
+                    new Notification(title, options);
+                  }
                 }
               });
             }
