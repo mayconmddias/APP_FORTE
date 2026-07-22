@@ -105,7 +105,18 @@ serve(async (req) => {
     const sendPush = async (title: string, body: string, customTag?: string) => {
       const tag = customTag || `push-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
-      // Transmitir via FCM API (Android Push & FCM Web Push)
+      // 1. Transmitir via Supabase Realtime Broadcast (Tempo real para abas abertas no Desktop em primeiro plano)
+      try {
+        await supabase.channel('desktop-push-notifications').send({
+          type: 'broadcast',
+          event: 'push_notification',
+          payload: { title, body, tag }
+        });
+      } catch (e) {
+        console.warn('Erro ao transmitir via Supabase Realtime:', e);
+      }
+
+      // 2. Transmitir via FCM API (Android Push & FCM Web Push)
       for (const t of tokens) {
         const res = await fetch(`https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`, {
           method: 'POST',
