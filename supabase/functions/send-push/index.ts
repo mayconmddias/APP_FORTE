@@ -206,29 +206,23 @@ serve(async (req) => {
 
     const funcionarioMap = new Map(profiles?.map(p => [p.id, p.name]) || []);
 
-    // 6. Alertas de documentos (VENCIDOS vs A VENCER)
+    // 6. Alertas de documentos
     if (documentos) {
       for (const doc of documentos) {
         const nomeFuncionario = funcionarioMap.get(doc.funcionario_id) || 'Funcionário';
         const formattedDate = formatDate(doc.data_vencimento);
-        const isExpired = doc.data_vencimento < todayStr;
-        const title = isExpired ? '🚨 Documento VENCIDO!' : '⚠️ Documento a Vencer em Breve';
-        const statusLabel = isExpired ? 'Venceu em' : 'Vence em';
-        const bodyText = `${doc.tipo_documento} - ${nomeFuncionario} - ${statusLabel} ${formattedDate}`;
-        await sendPush(title, bodyText);
+        const bodyText = `${doc.tipo_documento} - ${nomeFuncionario} - ${formattedDate}`;
+        await sendPush('🚨 Documento!', bodyText);
       }
     }
 
-    // 7. Alertas de integrações (VENCIDAS vs A VENCER)
+    // 7. Alertas de integrações
     if (integracoes) {
       for (const int of integracoes) {
         const nomeFuncionario = funcionarioMap.get(int.funcionario_id) || 'Funcionário';
         const formattedDate = formatDate(int.data_vencimento);
-        const isExpired = int.data_vencimento < todayStr;
-        const title = isExpired ? '🚨 Integração VENCIDA!' : '⚠️ Integração a Vencer em Breve';
-        const statusLabel = isExpired ? 'Venceu em' : 'Vence em';
-        const bodyText = `Integração ${int.empresa_nome || 'Cliente'} - ${nomeFuncionario} - ${statusLabel} ${formattedDate}`;
-        await sendPush(title, bodyText);
+        const bodyText = `${int.empresa_nome || 'Cliente'} - ${nomeFuncionario} - ${formattedDate}`;
+        await sendPush('🚨 Integração!', bodyText);
       }
     }
 

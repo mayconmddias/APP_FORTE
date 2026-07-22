@@ -252,14 +252,6 @@ const DesktopPushSection: React.FC = () => {
                     )}
                 </div>
             </div>
-
-            <div className="pt-3 border-t border-slate-50 text-xs text-slate-500 space-y-2">
-                <p className="font-semibold text-slate-700">💡 Como receber avisos assim que o computador ligar:</p>
-                <ol className="list-decimal list-inside space-y-1 pl-1 text-[11px] font-medium text-slate-600">
-                    <li>Instale este app no Windows clicando no ícone <strong>Instalar Aplicativo</strong> na barra de endereço do Chrome/Edge.</li>
-                    <li>Para receber avisos sem abrir o navegador manualmente, digite <code className="bg-slate-100 px-1.5 py-0.5 rounded text-blue-950">shell:startup</code> no menu Executar (Win + R) do Windows e cole o atalho do aplicativo Forte.</li>
-                </ol>
-            </div>
         </div>
     );
 };
