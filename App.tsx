@@ -246,6 +246,7 @@ const App: React.FC = () => {
               const messaging = getMessaging(app);
 
               const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(() => null);
+              await navigator.serviceWorker.ready.catch(() => null);
 
               const token = await getToken(messaging, {
                 serviceWorkerRegistration: swRegistration || undefined
