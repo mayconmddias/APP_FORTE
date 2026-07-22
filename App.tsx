@@ -221,8 +221,36 @@ const App: React.FC = () => {
       PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
         console.log('Ação no push realizada:', notification);
       });
+    } else {
+      // Suporte a Web Push no Desktop / Web (PWA)
+      if (typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator) {
+        const initWebPush = async () => {
+          try {
+            let perm = Notification.permission;
+            if (perm === 'default') {
+              perm = await Notification.requestPermission();
+            }
+            if (perm === 'granted') {
+              const reg = await navigator.serviceWorker.ready;
+              let sub = await reg.pushManager.getSubscription();
+              if (!sub) {
+                sub = await reg.pushManager.subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey: undefined
+                }).catch(() => null);
+              }
+              const webToken = sub ? JSON.stringify(sub) : `web-push-${currentUser?.id || 'browser'}`;
+              console.log('[WebPush] Token Web Desktop gerado:', webToken);
+              setDevicePushToken(webToken);
+            }
+          } catch (e) {
+            console.warn('[WebPush] Falha ao obter permissão ou token no browser:', e);
+          }
+        };
+        initWebPush();
+      }
     }
-  }, []);
+  }, [currentUser?.id]);
 
   useEffect(() => {
     if (devicePushToken && currentUser?.id) {

@@ -126,6 +126,9 @@ const SyncPendencyScreen: React.FC<SyncPendencyScreenProps> = ({ onTitleChange, 
                 </div>
             </div>
 
+            {/* Notificações Desktop */}
+            <DesktopPushSection />
+
             {/* Log de Atividades */}
             <SyncLogSection />
 
@@ -181,6 +184,60 @@ const SyncLogSection: React.FC = () => {
                 {(!logs || logs.length === 0) && (
                     <p className="font-body text-[10px] font-bold text-slate-400 uppercase tracking-widest py-4 text-center">Nenhuma atividade registrada ainda.</p>
                 )}
+            </div>
+        </div>
+    );
+};
+
+const DesktopPushSection: React.FC = () => {
+    const [perm, setPerm] = useState<string>(() => typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported');
+
+    const handleEnablePush = async () => {
+        if ('Notification' in window) {
+            const result = await Notification.requestPermission();
+            setPerm(result);
+            if (result === 'granted') {
+                window.location.reload();
+            }
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 space-y-4">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#004a88] flex items-center justify-center flex-shrink-0">
+                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>notifications_active</span>
+                    </div>
+                    <div>
+                        <h3 className="font-headline font-bold text-base text-blue-950 uppercase">Notificações no Desktop</h3>
+                        <p className="font-body text-xs text-slate-400 font-medium">Recepção de avisos do sistema em segundo plano no Windows</p>
+                    </div>
+                </div>
+                {perm === 'granted' ? (
+                    <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-3 py-1 rounded-full font-headline font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Ativas no Browser
+                    </span>
+                ) : perm === 'denied' ? (
+                    <span className="bg-red-50 text-red-500 border border-red-100 px-3 py-1 rounded-full font-headline font-bold text-[10px] uppercase tracking-wider">
+                        Bloqueadas no Navegador
+                    </span>
+                ) : (
+                    <button
+                        onClick={handleEnablePush}
+                        className="px-4 py-2 bg-[#004a88] text-white rounded-full font-headline font-bold text-[10px] uppercase tracking-wider shadow-sm hover:bg-primary transition-all"
+                    >
+                        Ativar Notificações
+                    </button>
+                )}
+            </div>
+
+            <div className="pt-3 border-t border-slate-50 text-xs text-slate-500 space-y-2">
+                <p className="font-semibold text-slate-700">💡 Como receber avisos assim que o computador ligar:</p>
+                <ol className="list-decimal list-inside space-y-1 pl-1 text-[11px] font-medium text-slate-600">
+                    <li>Instale este app no Windows clicando no ícone <strong>Instalar Aplicativo</strong> na barra de endereço do Chrome/Edge.</li>
+                    <li>Para receber avisos sem abrir o navegador manualmente, digite <code className="bg-slate-100 px-1.5 py-0.5 rounded text-blue-950">shell:startup</code> no menu Executar (Win + R) do Windows e cole o atalho do aplicativo Forte.</li>
+                </ol>
             </div>
         </div>
     );
