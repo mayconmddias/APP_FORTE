@@ -47,6 +47,26 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     return false;
   };
 
+  const canDeleteRecord = (record: MaintenanceRecord) => {
+    if (userRole === 'ADMIN') return true;
+    if (userRole === 'TECNICO_EQUIPAMENTO') {
+      if (!record.date) return false;
+      try {
+        const recordDate = new Date(record.date + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const diffInTime = today.getTime() - recordDate.getTime();
+        const diffInDays = diffInTime / (1000 * 3600 * 24);
+        
+        return diffInDays <= 3;
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  };
+
   useEffect(() => {
     if (selectedAssetId) {
       onTitleChange?.('HISTÓRICO DO ATIVO');
@@ -752,11 +772,23 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
                     <button onClick={() => handleGeneratePdf(record)} className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
                       <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>description</span>
                     </button>
-                    {isAdmin && (
-                      <button onClick={() => setRecordToDelete(record)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all">
-                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>delete</span>
-                      </button>
-                    )}
+                    {onDelete && (() => {
+                      const isAllowed = canDeleteRecord(record);
+                      return (
+                        <button 
+                          disabled={!isAllowed}
+                          onClick={() => isAllowed && setRecordToDelete(record)} 
+                          className={`p-2 rounded-full transition-all ${
+                            isAllowed 
+                              ? 'text-slate-300 hover:text-red-500 hover:bg-red-50 cursor-pointer' 
+                              : 'text-slate-200 opacity-30 cursor-not-allowed'
+                          }`}
+                          title={isAllowed ? "Excluir inspeção" : "Exclusão permitida apenas até 3 dias após a data da inspeção"}
+                        >
+                          <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>delete</span>
+                        </button>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-50 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
