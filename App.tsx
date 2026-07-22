@@ -296,30 +296,6 @@ const App: React.FC = () => {
     }
   }, [currentUser, devicePushToken]);
 
-  // Escuta no canal Supabase Realtime para exibir notificação nativa quando o app estiver aberto no Desktop
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform() && currentUser?.id) {
-      const channel = supabase.channel('desktop-push-notifications')
-        .on('broadcast', { event: 'push_notification' }, (data) => {
-          const payload = data.payload || {};
-          console.log('[Supabase Realtime Push] Recebido no Desktop:', payload);
-          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification(payload.title || 'Forte Engenharia', {
-              body: payload.body || 'Nova notificação do sistema',
-              icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
-              tag: payload.tag || ('rt-' + Date.now() + '-' + Math.random()),
-              renotify: true
-            });
-          }
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [currentUser?.id]);
-
   // Garante que qualquer scroll residual do teclado virtual do Android seja redefinido ao logar,
   // trazendo a barra superior (Header e Hamburguer) de volta à área visível da WebView do APK.
   useEffect(() => {

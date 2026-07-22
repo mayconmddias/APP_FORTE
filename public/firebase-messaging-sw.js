@@ -21,8 +21,8 @@ messaging.onBackgroundMessage((payload) => {
 
   const options = {
     body,
-    icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
-    badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
+    icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
+    badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
     tag: tag,
     renotify: true,
     data: payload.data?.url || '/'

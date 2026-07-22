@@ -11,8 +11,8 @@ self.addEventListener('push', function (event) {
   const body = data.body || data.notification?.body || data.message || 'Novo alerta de vencimento';
   const options = {
     body: body,
-    icon: data.icon || 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
-    badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
+    icon: data.icon || 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
+    badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
     tag: data.tag || ('push-' + Date.now() + '-' + Math.random()),
     renotify: true,
     data: data.url || '/'
