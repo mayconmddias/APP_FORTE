@@ -735,69 +735,71 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
           </div>
 
           {/* Lista de registros */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-8">
-            {selectedRecords.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-slate-300 select-none notranslate" style={{ fontSize: '32px' }}>description</span>
-                </div>
-                <p className="font-headline font-bold text-sm text-slate-400 uppercase">Nenhum registro encontrado</p>
-              </div>
-            ) : selectedRecords.map((record) => (
-              <div key={record.local_id || record.id} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-[0_4px_16px_rgb(0,0,0,0.04)]">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      record.type === MaintenanceType.CORRETIVA ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-[#004a88]'
-                    }`}>
-                      <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>
-                        {record.type === MaintenanceType.CORRETIVA ? 'build' : 'task_alt'}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                        {record.type === MaintenanceType.CORRETIVA ? 'CORRETIVA' : 'PREVENTIVA'}
-                      </p>
-                      <p className="font-headline font-bold text-sm text-blue-950">
-                        #{String(record.inspectionNumber || 0).padStart(4, '0')}
-                      </p>
-                    </div>
+          <div className="flex-1 overflow-y-auto p-4 pb-8">
+            <div className="max-w-4xl mx-auto space-y-3">
+              {selectedRecords.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4">
+                    <span className="material-symbols-outlined text-slate-300 select-none notranslate" style={{ fontSize: '32px' }}>description</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    {onEdit && canEditRecord(record) && (
-                      <button onClick={() => onEdit(record)} className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
-                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>edit</span>
-                      </button>
-                    )}
-                    <button onClick={() => handleGeneratePdf(record)} className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
-                      <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>description</span>
-                    </button>
-                    {onDelete && (() => {
-                      const isAllowed = canDeleteRecord(record);
-                      return (
-                        <button 
-                          disabled={!isAllowed}
-                          onClick={() => isAllowed && setRecordToDelete(record)} 
-                          className={`p-2 rounded-full transition-all ${
-                            isAllowed 
-                              ? 'text-slate-300 hover:text-red-500 hover:bg-red-50 cursor-pointer' 
-                              : 'text-slate-200 opacity-30 cursor-not-allowed'
-                          }`}
-                          title={isAllowed ? "Excluir inspeção" : "Exclusão permitida apenas até 3 dias após a data da inspeção"}
-                        >
-                          <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>delete</span>
+                  <p className="font-headline font-bold text-sm text-slate-400 uppercase">Nenhum registro encontrado</p>
+                </div>
+              ) : selectedRecords.map((record) => (
+                <div key={record.local_id || record.id} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-[0_4px_16px_rgb(0,0,0,0.04)]">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        record.type === MaintenanceType.CORRETIVA ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-[#004a88]'
+                      }`}>
+                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>
+                          {record.type === MaintenanceType.CORRETIVA ? 'build' : 'task_alt'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                          {record.type === MaintenanceType.CORRETIVA ? 'CORRETIVA' : 'PREVENTIVA'}
+                        </p>
+                        <p className="font-headline font-bold text-sm text-blue-950">
+                          #{String(record.inspectionNumber || 0).padStart(4, '0')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {onEdit && canEditRecord(record) && (
+                        <button onClick={() => onEdit(record)} className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
+                          <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>edit</span>
                         </button>
-                      );
-                    })()}
+                      )}
+                      <button onClick={() => handleGeneratePdf(record)} className="p-2 text-slate-300 hover:text-[#004a88] hover:bg-blue-50 rounded-full transition-all">
+                        <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>description</span>
+                      </button>
+                      {onDelete && (() => {
+                        const isAllowed = canDeleteRecord(record);
+                        return (
+                          <button 
+                            disabled={!isAllowed}
+                            onClick={() => isAllowed && setRecordToDelete(record)} 
+                            className={`p-2 rounded-full transition-all ${
+                              isAllowed 
+                                ? 'text-slate-300 hover:text-red-500 hover:bg-red-50 cursor-pointer' 
+                                : 'text-slate-200 opacity-30 cursor-not-allowed'
+                            }`}
+                            title={isAllowed ? "Excluir inspeção" : "Exclusão permitida apenas até 3 dias após a data da inspeção"}
+                          >
+                            <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px' }}>delete</span>
+                          </button>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-50 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                    <span>{formatDate(record.date)}</span>
+                    <span>·</span>
+                    <span>{record.technician}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-50 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                  <span>{formatDate(record.date)}</span>
-                  <span>·</span>
-                  <span>{record.technician}</span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>,
         document.body

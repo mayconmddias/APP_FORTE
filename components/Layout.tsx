@@ -75,12 +75,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
   const menuItems = [
     ...((currentUser.role === 'ADMIN' || currentUser.role === 'TECNICO_EQUIPAMENTO') ? [
       { id: 'assets', label: 'CLIENTES', icon: 'group' },
-      { id: 'history', label: 'HISTÓRICO', icon: 'history' },
+      { id: 'history', label: 'RELATÓRIOS', icon: 'history' },
       { id: 'open-orders', label: 'ORDENS EM ABERTO', icon: 'engineering', badge: openDraftsCount > 0 ? (
         <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold ml-auto">{openDraftsCount}</span>
       ) : undefined }
     ] : []),
-    { id: 'rdo', label: 'RELATÓRIOS DIÁRIOS', icon: 'event_note' },
+    { id: 'rdo', label: 'DIÁRIO', icon: 'event_note' },
     { id: 'sync-pendencies', label: 'SINCRONIZAÇÃO', icon: 'sync', badge: pendingSyncCount > 0 ? (
       <div className="w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-white shadow-sm animate-pulse ml-auto" />
     ) : undefined },
