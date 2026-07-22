@@ -7,12 +7,14 @@ self.addEventListener('push', function (event) {
     data = { body: event.data ? event.data.text() : '' };
   }
 
-  const title = data.title || 'Forte Engenharia';
+  const title = data.title || data.notification?.title || '🚨 Notificação Forte';
+  const body = data.body || data.notification?.body || data.message || 'Novo alerta de vencimento';
   const options = {
-    body: data.body || 'Nova notificação do sistema',
+    body: body,
     icon: data.icon || 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
     badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png',
-    tag: data.tag || 'forte-notification',
+    tag: data.tag || ('push-' + Date.now() + '-' + Math.random()),
+    renotify: true,
     data: data.url || '/'
   };
 

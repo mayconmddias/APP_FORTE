@@ -15,8 +15,8 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Notificação recebida em segundo plano:', payload);
-  const title = payload.notification?.title || payload.data?.title || 'Forte Engenharia';
-  const body = payload.notification?.body || payload.data?.body || 'Nova notificação do sistema';
+  const title = payload.notification?.title || payload.data?.title || '🚨 Notificação Forte';
+  const body = payload.notification?.body || payload.data?.body || payload.data?.message || 'Novo alerta de vencimento';
   const tag = payload.notification?.tag || payload.data?.tag || ('push-' + Date.now() + '-' + Math.random());
 
   const options = {

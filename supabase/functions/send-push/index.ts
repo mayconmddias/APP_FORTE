@@ -184,23 +184,36 @@ serve(async (req) => {
     limitDate.setDate(limitDate.getDate() + 30);
     const limitDateStr = limitDate.toISOString().split('T')[0];
 
-    // 4. Buscar documentos (Vencidos e A Vencer em 30 dias)
-    const { data: documentos } = await supabase
+    // 4. Buscar documentos e integrações
+    const { data: allDocs, error: docErr } = await supabase
       .from('documentos')
-      .select('tipo_documento, data_vencimento, funcionario_id')
-      .lte('data_vencimento', limitDateStr);
+      .select('tipo_documento, data_vencimento, funcionario_id');
 
-    // 5. Buscar integrações (Vencidas e A Vencer em 30 dias)
-    const { data: integracoes } = await supabase
+    if (docErr) console.error('Erro ao consultar documentos:', docErr);
+
+    const { data: allInts, error: intErr } = await supabase
       .from('funcionario_integracoes')
-      .select('empresa_nome, data_vencimento, funcionario_id')
-      .lte('data_vencimento', limitDateStr);
+      .select('empresa_nome, data_vencimento, funcionario_id');
 
-    const hasDocs = documentos && documentos.length > 0;
-    const hasInts = integracoes && integracoes.length > 0;
+    if (intErr) console.error('Erro ao consultar integrações:', intErr);
+
+    const documentos = (allDocs || []).filter(d => {
+      if (!d.data_vencimento) return false;
+      const vDate = String(d.data_vencimento).split('T')[0];
+      return vDate <= limitDateStr;
+    });
+
+    const integracoes = (allInts || []).filter(i => {
+      if (!i.data_vencimento) return false;
+      const vDate = String(i.data_vencimento).split('T')[0];
+      return vDate <= limitDateStr;
+    });
+
+    const hasDocs = documentos.length > 0;
+    const hasInts = integracoes.length > 0;
 
     if (!hasDocs && !hasInts) {
-      await sendPush('🔔 Teste de Notificação Push', 'Sistema verificado: Nenhum documento ou integração vencida/pendente.');
+      await sendPush('🔔 Teste de Notificação Push', 'Sistema verificado: Nenhum documento ou integração vencida/pendente no banco.');
       return new Response(JSON.stringify({ success: true, message: "Disparo de teste realizado (sem pendências no banco).", results }), { status: 200 });
     }
 
