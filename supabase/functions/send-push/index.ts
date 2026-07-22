@@ -216,23 +216,33 @@ serve(async (req) => {
 
     const funcionarioMap = new Map(profiles?.map(p => [p.id, p.name]) || []);
 
+    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
     // 6. Alertas de documentos
     if (documentos) {
+      let docIdx = 0;
       for (const doc of documentos) {
+        docIdx++;
         const nomeFuncionario = funcionarioMap.get(doc.funcionario_id) || 'Funcionário';
         const formattedDate = formatDate(doc.data_vencimento);
         const bodyText = `${doc.tipo_documento} - ${nomeFuncionario} - ${formattedDate}`;
-        await sendPush('🚨 Documento!', bodyText);
+        const tag = `doc-${doc.funcionario_id}-${docIdx}-${Date.now()}`;
+        await sendPush('🚨 Documento!', bodyText, tag);
+        await sleep(600);
       }
     }
 
     // 7. Alertas de integrações
     if (integracoes) {
+      let intIdx = 0;
       for (const int of integracoes) {
+        intIdx++;
         const nomeFuncionario = funcionarioMap.get(int.funcionario_id) || 'Funcionário';
         const formattedDate = formatDate(int.data_vencimento);
         const bodyText = `${int.empresa_nome || 'Cliente'} - ${nomeFuncionario} - ${formattedDate}`;
-        await sendPush('🚨 Integração!', bodyText);
+        const tag = `int-${int.funcionario_id}-${intIdx}-${Date.now()}`;
+        await sendPush('🚨 Integração!', bodyText, tag);
+        await sleep(600);
       }
     }
 
