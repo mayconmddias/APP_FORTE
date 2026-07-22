@@ -258,6 +258,15 @@ const App: React.FC = () => {
               if (token) {
                 console.log('[FCM Web] FCM Registration Token obtido para Desktop:', token);
                 setDevicePushToken(token);
+                if (currentUser?.id) {
+                  supabase
+                    .from('push_tokens')
+                    .upsert({ token: token, user_id: currentUser.id }, { onConflict: 'token' })
+                    .then(({ error }) => {
+                      if (error) console.error('[FCM Web] Erro ao salvar token no Supabase:', error);
+                      else console.log('[FCM Web] Token do Desktop registrado no Supabase com SUCESSO!');
+                    });
+                }
               }
 
               onMessage(messaging, (payload) => {

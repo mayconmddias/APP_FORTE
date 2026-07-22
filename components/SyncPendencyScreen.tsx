@@ -206,7 +206,7 @@ const DesktopPushSection: React.FC = () => {
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
             new Notification("Forte Engenharia - Teste Direct", {
                 body: "Se esta mensagem apareceu no seu Windows 11, as Notificações Desktop estão 100% ativas!",
-                icon: "https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_forte.png"
+                icon: "https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png"
             });
         } else {
             alert("As notificações precisam estar ativadas no seu navegador para realizar este teste.");
