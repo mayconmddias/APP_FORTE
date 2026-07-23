@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { initializeApp, getApps } from 'firebase/app';
@@ -95,6 +95,10 @@ const App: React.FC = () => {
 
   const [pdfPreview, setPdfPreview] = useState<{ html: string; title: string } | null>(null);
   const [devicePushToken, setDevicePushToken] = useState<string | null>(null);
+
+  // Refs para controle de inicialização única do FCM Web Push
+  const webPushInitRef = useRef(false);
+  const messagingRef = useRef<any>(null);
 
   // Effects to synchronize state changes to localStorage
   useEffect(() => {
@@ -224,7 +228,7 @@ const App: React.FC = () => {
         console.log('Ação no push realizada:', notification);
       });
     } else {
-      // Suporte a FCM Web Push no Desktop / Web (PWA)
+      // FCM Web Push para Desktop / PWA
       if (typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator) {
         const initWebPush = async () => {
           try {
@@ -232,7 +236,10 @@ const App: React.FC = () => {
             if (perm === 'default') {
               perm = await Notification.requestPermission();
             }
-            if (perm === 'granted') {
+            if (perm !== 'granted') return;
+
+            // Inicializar Firebase apenas uma vez (ref guard)
+            if (!webPushInitRef.current) {
               const firebaseConfig = {
                 apiKey: "AIzaSyBFgUpjKe8XzR6J1JTK7hjyuHx4LZFIWkc",
                 authDomain: "app-forte-6f756.firebaseapp.com",
@@ -243,13 +250,39 @@ const App: React.FC = () => {
               };
 
               const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-              const messaging = getMessaging(app);
+              messagingRef.current = getMessaging(app);
 
-              const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(() => null);
-              await navigator.serviceWorker.ready.catch(() => null);
+              // Handler de foreground: registrar apenas uma vez para evitar empilhamento
+              onMessage(messagingRef.current, (payload) => {
+                console.log('[FCM Web] Mensagem recebida em primeiro plano:', payload);
+                const title = payload.notification?.title || payload.data?.title || '🚨 Notificação Forte';
+                const body = payload.notification?.body || payload.data?.body || payload.data?.message || 'Novo alerta de vencimento';
+                const tag = payload.data?.tag || ('push-' + Date.now() + '-' + Math.random());
+                if (Notification.permission === 'granted') {
+                  navigator.serviceWorker.ready.then((reg) => {
+                    reg.showNotification(title, {
+                      body,
+                      icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
+                      badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
+                      tag,
+                      renotify: true
+                    });
+                  }).catch(() => {
+                    new Notification(title, { body });
+                  });
+                }
+              });
 
-              const token = await getToken(messaging, {
-                serviceWorkerRegistration: swRegistration || undefined
+              webPushInitRef.current = true;
+            }
+
+            // Obter token FCM Web (re-executa quando currentUser muda para associar ao usuário)
+            if (messagingRef.current) {
+              const swRegistration = await navigator.serviceWorker.ready;
+
+              const token = await getToken(messagingRef.current, {
+                vapidKey: 'BJ1fht-B4_C_tpeMxrrv_m7wrjR63nh3wBnw37PuwKtgiSAGmSUaKAj-7CtgS3QkzdI9kT23mWCaMc5cvHBk90M',
+                serviceWorkerRegistration: swRegistration
               }).catch(err => {
                 console.warn('[FCM Web] Erro ao obter FCM Web token:', err);
                 return null;
@@ -258,41 +291,8 @@ const App: React.FC = () => {
               if (token) {
                 console.log('[FCM Web] FCM Registration Token obtido para Desktop:', token);
                 setDevicePushToken(token);
-                if (currentUser?.id) {
-                  supabase
-                    .from('push_tokens')
-                    .upsert({ token: token, user_id: currentUser.id }, { onConflict: 'token' })
-                    .then(({ error }) => {
-                      if (error) console.error('[FCM Web] Erro ao salvar token no Supabase:', error);
-                      else console.log('[FCM Web] Token do Desktop registrado no Supabase com SUCESSO!');
-                    });
-                }
+                // Token será salvo no Supabase pelo useEffect [currentUser, devicePushToken]
               }
-
-              onMessage(messaging, (payload) => {
-                console.log('[FCM Web] Mensagem recebida em primeiro plano:', payload);
-                const title = payload.notification?.title || payload.data?.title || '🚨 Notificação Forte';
-                const body = payload.notification?.body || payload.data?.body || payload.data?.message || 'Novo alerta de vencimento';
-                const tag = payload.notification?.tag || payload.data?.tag || ('push-' + Date.now() + '-' + Math.random());
-                if ('Notification' in window && Notification.permission === 'granted') {
-                  const options = {
-                    body,
-                    icon: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
-                    badge: 'https://tnwbnjksbhskgyqdibsu.supabase.co/storage/v1/object/public/assets/logo_desenho_forte.png',
-                    tag,
-                    renotify: true
-                  };
-                  if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.ready.then((reg) => {
-                      reg.showNotification(title, options);
-                    }).catch(() => {
-                      new Notification(title, options);
-                    });
-                  } else {
-                    new Notification(title, options);
-                  }
-                }
-              });
             }
           } catch (e) {
             console.warn('[FCM Web] Falha ao obter permissão ou token no browser:', e);
