@@ -234,6 +234,21 @@ const UserManagement: React.FC<UserManagementProps> = ({
     setShowModal(true);
   };
 
+  const getNextUserId = (userList: UserProfile[]): string => {
+    let maxId = 0;
+    (userList || []).forEach(u => {
+      if (!u || !u.id) return;
+      const match = u.id.match(/FE-(\d+)/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxId) {
+          maxId = num;
+        }
+      }
+    });
+    return `FE-${String(maxId + 1).padStart(3, '0')}`;
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSaving) return;
@@ -242,7 +257,7 @@ const UserManagement: React.FC<UserManagementProps> = ({
     try {
       const serverId = editingUser?.server_id || editingUser?.id;
       const userId = isNewUser 
-        ? (form.id || `FE-${String(users.length + 1).padStart(3, '0')}`) 
+        ? (form.id || getNextUserId(users)) 
         : (editingUser?.id);
          
       if (!userId) throw new Error("ID do usuário não definido");
