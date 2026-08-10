@@ -140,6 +140,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     const reportNum = record.inspectionNumber || '0';
     const formattedOs = String(reportNum).padStart(4, '0');
     let items = [...(record.checklists || [])];
+    const type = record.type;
 
     let rowsTableHtml = '';
     items.forEach((i, index) => {
