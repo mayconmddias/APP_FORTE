@@ -7,6 +7,7 @@ interface ChecklistItemCardProps {
     onUpdate: (id: string, updates: Partial<ChecklistItem>) => void;
     onShowInfo: (text: string) => void;
     onTakeRef: (id: string) => void;
+    onRemove?: (id: string) => void;
 }
 
 const ChecklistItemCard: React.FC<ChecklistItemCardProps> = ({
@@ -14,7 +15,8 @@ const ChecklistItemCard: React.FC<ChecklistItemCardProps> = ({
     index,
     onUpdate,
     onShowInfo,
-    onTakeRef
+    onTakeRef,
+    onRemove
 }) => {
     return (
         <div className={`bg-white rounded-2xl border transition-all ${
@@ -37,6 +39,17 @@ const ChecklistItemCard: React.FC<ChecklistItemCardProps> = ({
 
                     {/* Botões de ação */}
                     <div className="flex items-center gap-1 flex-shrink-0">
+                        {/* Remover (-) */}
+                        {onRemove && (
+                            <button
+                                onClick={() => onRemove(item.id)}
+                                title="Remover item"
+                                className="w-8 h-8 rounded-full bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition-colors"
+                            >
+                                <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '16px' }}>remove</span>
+                            </button>
+                        )}
+
                         {/* Info */}
                         <button
                             onClick={() => onShowInfo(item.instruction || 'Inspeção padrão conforme norma NR-11.')}

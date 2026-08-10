@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { Loader2 } from 'lucide-react';
 import { getChecklistTemplate } from '../constants';
 import { ChecklistItem, CraneAsset, MaintenanceRecord, MaintenanceType, UserProfile, Frequency, ChecklistType } from '../types';
+import { db } from '../services/offlineDb';
 import ChecklistItemCard from './ChecklistItemCard';
 import ChecklistReview from './ChecklistReview';
 
@@ -151,15 +152,60 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
     if (editingRecord) {
       pageTitle = editingRecord.type === MaintenanceType.CORRETIVA ? 'EDIÇÃO DE CORRETIVA' : 'EDIÇÃO DE PREVENTIVA';
     }
-    if (selectedAsset && checklistType && !items.length) {
+    onTitleChange?.(pageTitle);
+
+    if (selectedAsset && checklistType && !items.length && !editingRecord) {
+      const loadTemplateWithHistory = async () => {
+        const template = getChecklistTemplate(selectedAsset.equipmentType);
+        
+        let previousRecord: MaintenanceRecord | undefined;
+        try {
+          const records = await db.ordens_servico
+            .where('assetId')
+            .equals(selectedAsset.id)
+            .toArray();
+          if (records.length > 0) {
+            records.sort((a, b) => (b.inspectionNumber || 0) - (a.inspectionNumber || 0));
+            previousRecord = records[0];
+          }
+        } catch (err) {
+          console.warn('[ChecklistForm] Erro ao carregar histórico anterior:', err);
+        }
+
+        const prevItemsMap = new Map<string, ChecklistItem>();
+        if (previousRecord?.checklists) {
+          previousRecord.checklists.forEach(pi => {
+            if (pi.label) prevItemsMap.set(pi.label.trim().toLowerCase(), pi);
+          });
+        }
+
+        const initialItems = template.map((t, idx) => {
+          const prevItem = prevItemsMap.get(t.label.trim().toLowerCase());
+          return {
+            ...t,
+            id: `item-${idx}`,
+            isOk: null, // Obrigatoriamente em branco!
+            observation: prevItem?.observation || '',
+            photos: prevItem?.photos ? [...prevItem.photos] : []
+          };
+        });
+
+        setItems(initialItems);
+      };
+
+      loadTemplateWithHistory();
+    } else if (selectedAsset && checklistType && !items.length && editingRecord) {
       const template = getChecklistTemplate(selectedAsset.equipmentType);
       setItems(template.map((t, idx) => ({ ...t, id: `item-${idx}`, isOk: null, observation: '', photos: [] })));
     }
-    onTitleChange?.(pageTitle);
   }, [selectedAsset, checklistType, editingRecord, onTitleChange, items.length]);
 
   const updateItem = (id: string, updates: Partial<ChecklistItem>) => {
     setItems(items.map(item => item.id === id ? { ...item, ...updates } : item));
+  };
+
+  const handleRemoveItem = (id: string) => {
+    setItems(prevItems => prevItems.filter(item => item.id !== id));
   };
 
   const availableItems = useMemo(() => {
@@ -392,6 +438,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
             onUpdate={updateItem}
             onShowInfo={setInfoModalText}
             onTakeRef={(id) => { setActivePhotoItemId(id); setShowPhotoModal(true); }}
+            onRemove={handleRemoveItem}
           />
         ))}
       </div>

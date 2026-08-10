@@ -206,7 +206,8 @@ const UserManagement: React.FC<UserManagementProps> = ({
   }, [isAdmin, empresasMaster]);
 
   useEffect(() => {
-    onTitleChange?.('USUÁRIOS');
+    const userCount = users ? users.length : 0;
+    onTitleChange?.(`USUÁRIOS (${userCount})`);
     if (isAdmin) {
       onHeaderActionChange?.(
         <button
@@ -220,7 +221,7 @@ const UserManagement: React.FC<UserManagementProps> = ({
       onHeaderActionChange?.(null);
     }
     return () => onHeaderActionChange?.(null);
-  }, [isAdmin, onTitleChange, onHeaderActionChange, handleOpenAdd]);
+  }, [users, isAdmin, onTitleChange, onHeaderActionChange, handleOpenAdd]);
 
   const handleOpenEdit = (user: UserProfile) => {
     setEditingUser(user);

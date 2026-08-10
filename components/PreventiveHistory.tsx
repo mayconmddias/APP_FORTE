@@ -140,13 +140,6 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     const reportNum = record.inspectionNumber || '0';
     const formattedOs = String(reportNum).padStart(4, '0');
     let items = [...(record.checklists || [])];
-    const type = String(record.type || '').toUpperCase();
-    const freq = String(record.frequency || '').toUpperCase();
-    
-    if (type === 'PREVENTIVA') {
-      if (freq === 'MENSAL') items = items.slice(0, 69);
-      else if (freq === 'SEMESTRAL') items = items.slice(0, 76);
-    }
 
     let rowsTableHtml = '';
     items.forEach((i, index) => {
