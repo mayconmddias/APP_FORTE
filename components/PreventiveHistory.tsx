@@ -628,11 +628,23 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
           doc.write(reportHtml);
           doc.close();
 
-          setTimeout(() => {
+          const imgs = Array.from(doc.querySelectorAll('img'));
+          const waitForImgs = Promise.all(imgs.map(img => {
+            if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+            return new Promise(res => {
+              img.onload = res;
+              img.onerror = res;
+            });
+          }));
+
+          const timeout = new Promise(res => setTimeout(res, 4000));
+          Promise.race([waitForImgs, timeout]).then(() => {
             iframe.contentWindow?.focus();
             iframe.contentWindow?.print();
-            setTimeout(() => document.body.removeChild(iframe), 1000);
-          }, 1000);
+            setTimeout(() => {
+              if (document.body.contains(iframe)) document.body.removeChild(iframe);
+            }, 2000);
+          });
         }
       }
     }

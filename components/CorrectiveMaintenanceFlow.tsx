@@ -407,13 +407,15 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
 
         {/* Rodapé fixo (Build Checklist) */}
         {step === FlowStep.BUILD_CHECKLIST && selectedItemsTemplate.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 px-6 pb-8 pt-4 bg-background border-t border-slate-100 flex gap-3">
-            <button onClick={() => handleFinalSave(true)} className="flex-1 h-14 bg-white border-2 border-[#004a88] text-[#004a88] rounded-full font-headline font-bold text-sm uppercase tracking-widest active:scale-95 transition-all">
-              SALVAR
-            </button>
-            <button onClick={() => setStep(FlowStep.FILL_CHECKLIST)} className="flex-1 h-14 bg-[#004a88] text-white rounded-full font-headline font-bold text-sm uppercase tracking-widest shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 active:scale-95 transition-all">
-              <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>play_arrow</span> INICIAR
-            </button>
+          <div className="fixed bottom-0 left-0 right-0 py-4 pb-8 bg-background border-t border-slate-100 z-[100]">
+            <div className="max-w-4xl mx-auto px-4 flex gap-3">
+              <button onClick={() => handleFinalSave(true)} className="flex-1 h-14 bg-white border-2 border-[#004a88] text-[#004a88] rounded-full font-headline font-bold text-sm uppercase tracking-widest active:scale-95 transition-all">
+                SALVAR
+              </button>
+              <button onClick={() => setStep(FlowStep.FILL_CHECKLIST)} className="flex-1 h-14 bg-[#004a88] text-white rounded-full font-headline font-bold text-sm uppercase tracking-widest shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 active:scale-95 transition-all">
+                <span className="material-symbols-outlined select-none notranslate" style={{ fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>play_arrow</span> INICIAR
+              </button>
+            </div>
           </div>
         )}
 
@@ -636,17 +638,19 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
         </div>
 
         {/* Rodapé */}
-        <div className="fixed bottom-0 left-0 right-0 px-6 pb-8 pt-4 bg-background border-t border-slate-100 flex gap-3 z-[100]">
-          <button onClick={() => handleFinalSave(true)} className="h-14 flex-1 bg-white border-2 border-[#004a88] text-[#004a88] rounded-full font-headline font-bold text-sm uppercase tracking-widest active:scale-95 transition-all">
-            SALVAR
-          </button>
-          <button
-            disabled={!isReadyToFinish || isSubmitting}
-            onClick={() => handleFinalSave(false)}
-            className={`h-14 flex-1 rounded-full font-headline font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${isReadyToFinish && !isSubmitting ? 'bg-[#004a88] text-white shadow-lg shadow-blue-900/20 active:scale-95' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
-          >
-            {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'GERAR CORRETIVA'}
-          </button>
+        <div className="fixed bottom-0 left-0 right-0 py-4 pb-8 bg-background border-t border-slate-100 z-[100]">
+          <div className="max-w-4xl mx-auto px-4 flex gap-3">
+            <button onClick={() => handleFinalSave(true)} className="h-14 flex-1 bg-white border-2 border-[#004a88] text-[#004a88] rounded-full font-headline font-bold text-sm uppercase tracking-widest active:scale-95 transition-all">
+              SALVAR
+            </button>
+            <button
+              disabled={!isReadyToFinish || isSubmitting}
+              onClick={() => handleFinalSave(false)}
+              className={`h-14 flex-1 rounded-full font-headline font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${isReadyToFinish && !isSubmitting ? 'bg-[#004a88] text-white shadow-lg shadow-blue-900/20 active:scale-95' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
+            >
+              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'GERAR CORRETIVA'}
+            </button>
+          </div>
         </div>
 
         {/* Modal de foto */}

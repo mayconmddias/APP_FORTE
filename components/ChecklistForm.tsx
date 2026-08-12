@@ -444,12 +444,12 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       </div>
 
       {/* Rodapé fixo */}
-      <div className="fixed bottom-0 left-0 right-0 px-6 pb-8 pt-4 bg-background border-t border-slate-100 z-[100] flex gap-3">
+      <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-8 pt-4 bg-background border-t border-slate-100 z-[100] flex gap-3">
         {(!editingRecord || editingRecord.status === 'OPEN') && (
           <button
             onClick={handleSaveProgress}
             disabled={isSavingProgress}
-            className="h-14 flex-1 rounded-full border-2 border-[#004a88] bg-white font-headline font-bold text-[11px] uppercase tracking-widest text-[#004a88] flex items-center justify-center gap-2 active:scale-95 transition-all"
+            className="h-14 flex-1 rounded-full border-2 border-[#004a88] bg-[#ffffff] font-headline font-bold text-[11px] uppercase tracking-widest text-[#004a88] flex items-center justify-center gap-2 active:scale-95 transition-all"
           >
             {isSavingProgress ? <Loader2 size={18} className="animate-spin" /> : 'SALVAR'}
           </button>

@@ -26,7 +26,38 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
+/**
+ * Espera que todas as imagens <img> dentro do documento do iframe terminem de baixar
+ * da internet antes de disparar o gerador de PDF. Evita imagens em branco no 1º acesso.
+ */
+const ensureImagesLoaded = (iframeDoc: Document): Promise<void> => {
+  return new Promise((resolve) => {
+    const images = Array.from(iframeDoc.querySelectorAll('img'));
+    if (images.length === 0) {
+      resolve();
+      return;
+    }
 
+    let loadedCount = 0;
+    const checkDone = () => {
+      loadedCount++;
+      if (loadedCount >= images.length) {
+        resolve();
+      }
+    };
+
+    images.forEach((img) => {
+      if (img.complete && img.naturalWidth > 0) {
+        checkDone();
+      } else {
+        img.addEventListener('load', checkDone, { once: true });
+        img.addEventListener('error', checkDone, { once: true });
+      }
+    });
+
+    setTimeout(resolve, 4000); // Trava máxima de segurança de 4s
+  });
+};
 
 const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
   isOpen,
@@ -59,6 +90,13 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
     };
   }, [isOpen, html]);
 
+  const handleIframeLoad = async () => {
+    const iframeDoc = iframeRef.current?.contentDocument || iframeRef.current?.contentWindow?.document;
+    if (iframeDoc) {
+      await ensureImagesLoaded(iframeDoc);
+    }
+  };
+
   if (!isOpen) return null;
 
   const handleShare = async () => {
@@ -74,6 +112,9 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
       if (!iframeDoc || !iframeDoc.body) {
         throw new Error('Não foi possível acessar o conteúdo do relatório.');
       }
+
+      // Aguarda o pré-carregamento de 100% das imagens antes de gerar o PDF
+      await ensureImagesLoaded(iframeDoc);
 
       // ─── CAMADA NATIVA (Capacitor): WebView Print Engine ───
       if (Capacitor.isNativePlatform()) {
@@ -375,6 +416,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
             ref={iframeRef}
             srcDoc={html}
             title={title}
+            onLoad={handleIframeLoad}
             className="w-full h-full border-0"
           />
         </div>

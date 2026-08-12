@@ -1235,7 +1235,7 @@ const App: React.FC = () => {
             userRole={role}
             onTitleChange={setDynamicTitle}
             initialAssetId={preselectedAssetId}
-            onPreviewPdf={Capacitor.isNativePlatform() ? (html, title) => setPdfPreview({ html, title }) : undefined}
+            onPreviewPdf={(html, title) => setPdfPreview({ html, title })}
           />
         );
       case 'users':
@@ -1272,7 +1272,7 @@ const App: React.FC = () => {
             onDelete={handleDeleteRdo}
             onGeneratePdf={(rec) => { /* handleGeneratePdf is inside RdoHistory */ }}
             onTitleChange={setDynamicTitle}
-            onPreviewPdf={Capacitor.isNativePlatform() ? (html, title) => setPdfPreview({ html, title }) : undefined}
+            onPreviewPdf={(html, title) => setPdfPreview({ html, title })}
           />
         );
       case 'rdo-form':

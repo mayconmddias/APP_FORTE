@@ -88,7 +88,7 @@ const AssetList: React.FC<AssetListProps> = ({
             })}
 
             {/* Rodapé fixo com ações */}
-            <div className="fixed bottom-0 left-0 right-0 px-6 pb-8 pt-4 bg-background border-t border-slate-100 z-[100] animate-in slide-in-from-bottom-5">
+            <div className="fixed bottom-0 left-0 lg:left-72 right-0 px-4 md:px-8 pb-8 pt-4 bg-background border-t border-slate-100 z-[100] animate-in slide-in-from-bottom-5">
                 <div className="max-w-4xl mx-auto flex gap-3">
                     <button
                         disabled={!selectedId}

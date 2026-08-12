@@ -1,6 +1,7 @@
 import { supabase } from '../supabaseClient';
 import { db, SyncStatus } from './offlineDb';
 import { networkManager } from './networkManager';
+import { uploadPhotoToStorage, processPhotosArray } from './storageService';
 
 class SyncEngine {
     private isSyncing = false;
@@ -183,6 +184,43 @@ class SyncEngine {
                         db.ativos.get(data.assetId),
                         db.usuarios.get(data.technicianId)
                     ]);
+
+                    // Upload de fotos dos itens de checklist para o Storage
+                    let updatedChecklists = data.checklists;
+                    if (Array.isArray(updatedChecklists)) {
+                        let hasChanges = false;
+                        const processedItems = [];
+                        for (const item of updatedChecklists) {
+                            if (item && Array.isArray(item.photos) && item.photos.length > 0) {
+                                const uploadedPhotos = await processPhotosArray(item.photos, 'inspection-photos', mapped.id);
+                                if (JSON.stringify(uploadedPhotos) !== JSON.stringify(item.photos)) {
+                                    hasChanges = true;
+                                }
+                                processedItems.push({ ...item, photos: uploadedPhotos });
+                            } else {
+                                processedItems.push(item);
+                            }
+                        }
+                        if (hasChanges) {
+                            updatedChecklists = processedItems;
+                            await db.ordens_servico.update(local_id, { checklists: updatedChecklists });
+                        }
+                    }
+
+                    // Upload da assinatura técnica
+                    let updatedSignature = data.signature;
+                    if (updatedSignature && updatedSignature.startsWith('data:')) {
+                        updatedSignature = await uploadPhotoToStorage(updatedSignature, 'signatures', `${mapped.id}_tech`, 0);
+                        await db.ordens_servico.update(local_id, { signature: updatedSignature });
+                    }
+
+                    // Upload da assinatura do cliente
+                    let updatedClientSig = data.clientSignature;
+                    if (updatedClientSig && updatedClientSig.startsWith('data:')) {
+                        updatedClientSig = await uploadPhotoToStorage(updatedClientSig, 'signatures', `${mapped.id}_client`, 0);
+                        await db.ordens_servico.update(local_id, { clientSignature: updatedClientSig });
+                    }
+
                     Object.assign(mapped, {
                         inspection_number: data.inspectionNumber,
                         asset_id: asset?.server_id || data.assetId,
@@ -192,13 +230,30 @@ class SyncEngine {
                         date: data.date,
                         technician: data.technician,
                         technician_id: technician?.server_id || data.technicianId,
-                        checklists: data.checklists,
+                        checklists: updatedChecklists,
                         client_representative: data.clientRepresentative,
-                        client_signature: data.clientSignature,
-                        signature: data.signature,
+                        client_signature: updatedClientSig,
+                        signature: updatedSignature,
                         status: data.status
                     });
                 } else if (localTable === 'rdo') {
+                    // Upload das fotos do RDO para o Storage
+                    let updatedPhotos = data.photos;
+                    if (Array.isArray(updatedPhotos) && updatedPhotos.length > 0) {
+                        const uploadedPhotos = await processPhotosArray(updatedPhotos, 'rdo-photos', mapped.id);
+                        if (JSON.stringify(uploadedPhotos) !== JSON.stringify(updatedPhotos)) {
+                            updatedPhotos = uploadedPhotos;
+                            await db.rdo.update(local_id, { photos: updatedPhotos });
+                        }
+                    }
+
+                    // Upload da assinatura do RDO
+                    let updatedRdoSig = data.signature;
+                    if (updatedRdoSig && updatedRdoSig.startsWith('data:')) {
+                        updatedRdoSig = await uploadPhotoToStorage(updatedRdoSig, 'signatures', `rdo_${mapped.id}`, 0);
+                        await db.rdo.update(local_id, { signature: updatedRdoSig });
+                    }
+
                     Object.assign(mapped, {
                         rdo_number: data.rdoNumber,
                         date: data.date,
@@ -212,10 +267,10 @@ class SyncEngine {
                         materials: data.materials,
                         equipment: data.equipment,
                         occurrences: data.occurrences,
-                        photos: data.photos,
+                        photos: updatedPhotos,
                         technician_id: data.technicianId,
                         technician_name: data.technicianName,
-                        signature: data.signature,
+                        signature: updatedRdoSig,
                         status: data.status,
                         end_time: data.endTime,
                     });
