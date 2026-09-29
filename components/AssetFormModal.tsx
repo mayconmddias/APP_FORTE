@@ -88,12 +88,13 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                                 value={assetForm.equipmentType || 'Ponte'}
                                 onChange={e => onFormChange({ ...assetForm, equipmentType: e.target.value })}
                             >
-                                <option value="Ponte">PONTE</option>
-                                <option value="Talha">TALHA</option>
+                                <option value="Desencaixotadora">DESENCAIXOTADORA</option>
                                 <option value="Elevador de Carga">ELEVADOR DE CARGA</option>
                                 <option value="Encaixotadora">ENCAIXOTADORA</option>
-                                <option value="Desencaixotadora">DESENCAIXOTADORA</option>
+                                <option value="Ponte">PONTE</option>
+                                <option value="Ponte Elevação Principal e Auxiliar">PONTE ELEVAÇÃO PRINCIPAL E AUXILIAR</option>
                                 <option value="Pórtico">PÓRTICO</option>
+                                <option value="Talha">TALHA</option>
                             </select>
                             <span
                                 className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none select-none notranslate"
