@@ -74,8 +74,7 @@ export default defineConfig(({ mode }) => {
           ]
         },
         devOptions: {
-          enabled: true,
-          type: 'module'
+          enabled: false
         }
       })
     ],
@@ -86,6 +85,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        'html2canvas': path.resolve(__dirname, 'node_modules/html2pdf.js/node_modules/html2canvas/dist/html2canvas-pro.esm.js'),
       }
     }
   };

@@ -217,6 +217,8 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       padding-bottom: 24px;
       margin-bottom: 32px;
       width: 100%;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
     .header-logo-wrap { flex: 1; display: flex; align-items: center; gap: 12px; }
     .header-logo-box { width: 130px; height: 65px; display: flex; align-items: center; justify-content: center; }
@@ -265,6 +267,8 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       border-bottom: 1px solid #f1f5f9;
       padding-bottom: 32px;
       width: 100%;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
     .info-item {
       display: flex;
@@ -320,6 +324,10 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
 
     .inspection-row td { border: 1px solid #e2e8f0; }
     .inspection-row:nth-child(even) { background-color: #f8fafc; }
+    .inspection-row, tr {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
 
     .td-item { padding: 12px 4px 12px 16px; }
     .item-wrap { display: flex; align-items: flex-start; gap: 12px; }
@@ -373,7 +381,11 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     .anexo-empty { color: #64748b; font-size: 10px; }
 
     /* ===== SIGNATURES ===== */
-    .signatures-section { margin-top: 48px; break-inside: avoid; }
+    .signatures-section {
+      margin-top: 48px;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
     .signatures-grid {
       display: flex;
       justify-content: space-between;
@@ -410,7 +422,13 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
     .signature-img { height: 100%; object-fit: contain; }
 
     /* ===== FOOTER ===== */
-    .report-footer { margin-top: 48px; padding-top: 32px; border-top: 1px solid #f1f5f9; }
+    .report-footer {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid #f1f5f9;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
     .footer-sections { display: flex; flex-direction: column; gap: 24px; }
     .footer-block { break-inside: avoid; }
     .footer-block-bg {
@@ -439,6 +457,11 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       font-family: 'Manrope', sans-serif;
     }
 
+    .html2pdf__page-break {
+      page-break-before: always !important;
+      break-before: page !important;
+    }
+
     /* ===== PAGE SETUP ===== */
     @page {
       size: A4;
@@ -457,6 +480,7 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
       }
       .no-print { display: none !important; }
       .page-break { page-break-after: always; }
+      .html2pdf__page-break { page-break-before: always !important; break-before: page !important; }
       .content-container {
         width: 100% !important;
         max-width: 100% !important;
@@ -466,14 +490,27 @@ const PreventiveHistory: React.FC<PreventiveHistoryProps> = ({ currentUser, hist
         padding-top: 0 !important;
         box-shadow: none !important;
         min-height: auto !important;
+        overflow: visible !important;
+      }
+      .table-header {
+        background-color: #004a88 !important;
+        color: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .table-header th {
+        background-color: #004a88 !important;
+        color: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
       thead { display: table-header-group !important; }
       tfoot { display: table-footer-group !important; }
-      tr { page-break-inside: avoid !important; }
-      .signatures-section { page-break-inside: avoid !important; }
-      .report-footer { page-break-inside: avoid !important; }
-      .footer-block { page-break-inside: avoid !important; }
-      .footer-block-bg { page-break-inside: avoid !important; }
+      tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+      .signatures-section { page-break-inside: avoid !important; break-inside: avoid !important; }
+      .report-footer { page-break-inside: avoid !important; break-inside: avoid !important; }
+      .footer-block { page-break-inside: avoid !important; break-inside: avoid !important; }
+      .footer-block-bg { page-break-inside: avoid !important; break-inside: avoid !important; }
     }
   </style>
 </head>

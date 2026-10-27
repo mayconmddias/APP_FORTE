@@ -91,6 +91,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                                 <option value="Desencaixotadora">DESENCAIXOTADORA</option>
                                 <option value="Elevador de Carga">ELEVADOR DE CARGA</option>
                                 <option value="Encaixotadora">ENCAIXOTADORA</option>
+                                <option value="Linha de Vida">LINHA DE VIDA</option>
                                 <option value="Ponte">PONTE</option>
                                 <option value="Ponte Elevação Principal e Auxiliar">PONTE ELEVAÇÃO PRINCIPAL E AUXILIAR</option>
                                 <option value="Pórtico">PÓRTICO</option>

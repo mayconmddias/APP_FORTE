@@ -227,7 +227,7 @@ const CorrectiveMaintenanceFlow: React.FC<CorrectiveMaintenanceFlowProps> = ({
     setLastOsNumber(nextOsNumber);
     const finalTechnician = currentUser.name;
     const finalTechnicianId = currentUser.id;
-    const isTalhaType = ['Talha', 'Elevador de Carga', 'Encaixotadora', 'Desencaixotadora'].includes(selectedAsset.equipmentType || '');
+    const isTalhaType = ['Talha', 'Elevador de Carga', 'Encaixotadora', 'Desencaixotadora', 'Linha de Vida'].includes(selectedAsset.equipmentType || '');
     const newRecord: MaintenanceRecord = {
       id: recordId, local_id: localId,
       inspectionNumber: editingRecord?.inspectionNumber || nextOsNumber,

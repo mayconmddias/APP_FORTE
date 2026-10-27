@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-import html2pdf from 'html2pdf.js/dist/html2pdf.min.js';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import HtmlPdf from '../services/HtmlPdf';
 
 interface PdfPreviewModalProps {
@@ -59,6 +60,177 @@ const ensureImagesLoaded = (iframeDoc: Document): Promise<void> => {
   });
 };
 
+/**
+ * Motor Dinâmico de Paginação Universal:
+ * - Página 1 (Tratamento Único): Inicia com Logo, dados da OS e Informações do Ativo.
+ *   Em seguida entra o cabeçalho com fundo azul e preenche com itens até o fim útil da folha (~15 a 17 itens).
+ * - Páginas 2 em diante: O cabeçalho com fundo azul é SEMPRE o primeiro item no início da folha (Y=15mm).
+ *   Preenche com itens até o fim útil da folha (~18 a 22 itens), sem desperdício de espaço.
+ * - Assinaturas e Rodapé: Anexados na folha final se houver espaço; caso contrário, ganham folha dedicada.
+ */
+const paginateDocument = (iframeDoc: Document) => {
+  const body = iframeDoc.body;
+  if (body) {
+    body.style.width = '1024px';
+    body.style.backgroundColor = 'white';
+    body.style.margin = '0';
+    body.style.padding = '0';
+  }
+
+  const container = iframeDoc.querySelector('.content-container') as HTMLElement;
+  const table = iframeDoc.querySelector('table');
+  const reportHeader = iframeDoc.querySelector('.report-header') as HTMLElement;
+  const infoGrid = iframeDoc.querySelector('.info-grid') as HTMLElement;
+  const signatures = (iframeDoc.querySelector('.signatures-section') || iframeDoc.querySelector('.report-footer')) as HTMLElement;
+  const footer = iframeDoc.querySelector('.report-footer') as HTMLElement;
+
+  const alreadyPaginated = container ? container.classList.contains('pdf-paginated-done') : false;
+  if (alreadyPaginated || !table || !container) return;
+
+  const rows = Array.from(table.querySelectorAll('tbody tr')) as HTMLElement[];
+  const thead = table.querySelector('thead');
+  const tableSection = table.closest('section');
+
+  if (!thead || rows.length === 0 || !tableSection) return;
+
+  // Medição da altura real de cada elemento antes de alterar o DOM
+  const getElHeight = (el: HTMLElement | null, fallback: number) => {
+    if (!el) return fallback;
+    return el.offsetHeight || fallback;
+  };
+
+  const getRowHeight = (row: HTMLElement) => {
+    const h = row.offsetHeight;
+    if (h && h > 30) return h;
+    const hasImg = !!row.querySelector('img');
+    const obsText = row.querySelector('.td-obs')?.textContent || '';
+    if (hasImg) return 76;
+    if (obsText.length > 80) return 68;
+    return 48;
+  };
+
+  // Altura útil de uma folha A4 em pixels (largura 1024px)
+  // 1024 * (267mm útil / 180mm útil) = 1518px físicos.
+  // 1360px é o teto seguro de conteúdo, garantindo 158px de margem contra estouros.
+  const A4_MAX_CONTENT_H = 1360;
+
+  // Página 1: Particularidade única (Logo + Título + Nº OS + Grid de Informações do Ativo)
+  const p1HeaderH = getElHeight(reportHeader, 135);
+  const p1InfoGridH = getElHeight(infoGrid, 185);
+  const theadH = getElHeight(thead, 44);
+
+  // Orçamento para linhas na Página 1 (descontando os dados do ativo e o cabeçalho azul)
+  const p1RowsBudget = A4_MAX_CONTENT_H - p1HeaderH - p1InfoGridH - theadH; // ~996px
+
+  // Páginas 2 em diante: O cabeçalho com fundo azul é o PRIMEIRO item no início da folha
+  // Não há logo nem dados do ativo, liberando quase toda a folha
+  const pnRowsBudget = A4_MAX_CONTENT_H - theadH; // ~1316px
+
+  // Altura de assinaturas e rodapé
+  const sigH = getElHeight(signatures, 160);
+  const footH = footer && footer !== signatures ? getElHeight(footer, 180) : 0;
+  const totalSigH = sigH + footH;
+
+  const totalRows = rows.length;
+  const rowHeights = rows.map(r => getRowHeight(r));
+
+  // Agrupamento dinâmico baseado em preenchimento contínuo da folha
+  const pageGroups: HTMLElement[][] = [[]];
+  let currentGroupIdx = 0;
+  let currentHeight = 0;
+
+  for (let i = 0; i < totalRows; i++) {
+    const row = rows[i];
+    const rh = rowHeights[i];
+    const budget = currentGroupIdx === 0 ? p1RowsBudget : pnRowsBudget;
+
+    // Se a próxima linha ultrapassar a capacidade da folha atual e já temos ao menos 1 linha
+    if (currentHeight + rh > budget && pageGroups[currentGroupIdx].length > 0) {
+      currentGroupIdx++;
+      pageGroups[currentGroupIdx] = [row];
+      currentHeight = rh;
+    } else {
+      pageGroups[currentGroupIdx].push(row);
+      currentHeight += rh;
+    }
+  }
+
+  // Verifica se na última folha de tabela sobra espaço para as assinaturas e o rodapé
+  const lastBudget = currentGroupIdx === 0 ? p1RowsBudget : pnRowsBudget;
+  const canFitSignaturesOnLastPage = (currentHeight + totalSigH <= lastBudget);
+
+  // Limpa o container original para reconstruir em páginas discretas (.pdf-page)
+  container.innerHTML = '';
+  container.style.padding = '0';
+  container.style.margin = '0';
+  container.style.width = '1024px';
+  container.style.maxWidth = '1024px';
+  container.style.boxShadow = 'none';
+  container.style.backgroundColor = '#ffffff';
+
+  const createPdfPage = (isFirst: boolean) => {
+    const pageDiv = iframeDoc.createElement('div');
+    pageDiv.className = 'pdf-page';
+    pageDiv.style.cssText = `
+      width: 1024px;
+      box-sizing: border-box;
+      background-color: #ffffff;
+      padding: 40px;
+      margin: 0 auto ${isFirst ? '0' : '20px'};
+      ${!isFirst ? 'page-break-before: always; break-before: page;' : ''}
+    `;
+    return pageDiv;
+  };
+
+  // Cria cada folha
+  pageGroups.forEach((groupRows, gIdx) => {
+    const pageDiv = createPdfPage(gIdx === 0);
+
+    if (gIdx === 0) {
+      // Página 1: Particularidade ÚNICA
+      // 1. Dados institucionais e informações do ativo
+      if (reportHeader) pageDiv.appendChild(reportHeader);
+      if (infoGrid) pageDiv.appendChild(infoGrid);
+    }
+
+    const tblSection = iframeDoc.createElement('section');
+    tblSection.style.cssText = 'margin: 0; padding: 0; width: 100%;';
+
+    const tbl = iframeDoc.createElement('table');
+    tbl.style.cssText = 'width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0;';
+
+    // 2. Cabeçalho com fundo azul no topo da tabela
+    // Na Página 1 vem após os dados do ativo; nas demais páginas é o PRIMEIRO item no início da folha
+    tbl.appendChild(thead.cloneNode(true));
+
+    const tbody = iframeDoc.createElement('tbody');
+    tbody.className = 'table-body';
+    groupRows.forEach(r => tbody.appendChild(r));
+    tbl.appendChild(tbody);
+
+    tblSection.appendChild(tbl);
+    pageDiv.appendChild(tblSection);
+
+    // Se couber as assinaturas nesta folha final
+    if (gIdx === pageGroups.length - 1 && canFitSignaturesOnLastPage) {
+      if (signatures) pageDiv.appendChild(signatures);
+      if (footer && footer !== signatures) pageDiv.appendChild(footer);
+    }
+
+    container.appendChild(pageDiv);
+  });
+
+  // Se as assinaturas não couberam na última folha de tabela, recebem folha final dedicada
+  if (!canFitSignaturesOnLastPage && (signatures || footer)) {
+    const sigPageDiv = createPdfPage(false);
+    if (signatures) sigPageDiv.appendChild(signatures);
+    if (footer && footer !== signatures) sigPageDiv.appendChild(footer);
+    container.appendChild(sigPageDiv);
+  }
+
+  container.classList.add('pdf-paginated-done');
+};
+
 const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
   isOpen,
   onClose,
@@ -94,6 +266,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
     const iframeDoc = iframeRef.current?.contentDocument || iframeRef.current?.contentWindow?.document;
     if (iframeDoc) {
       await ensureImagesLoaded(iframeDoc);
+      paginateDocument(iframeDoc);
     }
   };
 
@@ -116,209 +289,72 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
       // Aguarda o pré-carregamento de 100% das imagens antes de gerar o PDF
       await ensureImagesLoaded(iframeDoc);
 
-      // ─── CAMADA NATIVA (Capacitor): WebView Print Engine ───
-      if (Capacitor.isNativePlatform()) {
-        // Captura o HTML completo e original do iframe (sem nenhuma alteração de DOM do jsPDF)
-        const htmlContent = iframeDoc.documentElement.outerHTML;
+      // Garante a paginação das folhas antes de gerar o PDF
+      paginateDocument(iframeDoc);
 
-        // O plugin nativo gera o PDF direto no cache do Android usando o motor de impressão Chrome da WebView
-        const result = await HtmlPdf.generatePdf({
-          html: htmlContent,
-          fileName: cleanFileName
-        });
-
-        // Compartilha o arquivo utilizando a URI nativa do arquivo salvo
-        await Share.share({
-          title: title,
-          text: `Segue o relatório PDF: ${title}`,
-          url: result.uri,
-          dialogTitle: 'Compartilhar Relatório',
-        });
-        return;
-      }
-
-      // Modificar o DOM do iframe original diretamente para que a biblioteca html2pdf processe as quebras antes de renderizar
       const body = iframeDoc.body;
-      if (body) {
-        body.style.width = '1024px';
-        body.style.backgroundColor = 'white';
-        body.style.margin = '0';
-        body.style.padding = '0';
-      }
-
       const container = iframeDoc.querySelector('.content-container') as HTMLElement;
-      if (container) {
-        container.style.width = '1024px';
-        container.style.maxWidth = '1024px';
-        container.style.margin = '0';
-        container.style.padding = '40px';
-        container.style.boxShadow = 'none';
-        container.style.backgroundColor = 'white';
-      }
 
-      // ─── Particionamento de tabela: espaçador com altura matemática determinística ───
-      //
-      // O PAGE_HEIGHT_PX é calculado APENAS por aritmética das configurações do jsPDF.
-      // Não depende de DPI, zoom, viewport ou WebView — é IDÊNTICO em qualquer ambiente:
-      //
-      //   px_por_mm = windowWidth(1024px) / largura_útil_A4(190mm) = 5.389 px/mm
-      //   PAGE_HEIGHT_PX = altura_útil_A4(277mm) × 5.389 = 1492px
-      //
-      // O jsPDF (com mode:[]) fatia o canvas automaticamente a cada PAGE_HEIGHT_PX pixels.
-      // O espaçador garante que cada grupo de tabela começa EXATAMENTE num múltiplo
-      // de PAGE_HEIGHT_PX, alinhado com o início de uma nova página no jsPDF.
-
-      // ─── Geometria determinística da página ───
-      const PDF_MARGIN_TOP_BOTTOM_MM = 20;
-      const PDF_MARGIN_LEFT_RIGHT_MM = 15;
-      const PAGE_H_MM      = 297 - 2 * PDF_MARGIN_TOP_BOTTOM_MM; // 257mm usable
-      const PAGE_W_MM      = 210 - 2 * PDF_MARGIN_LEFT_RIGHT_MM; // 180mm usable
-      const DOM_WIDTH_PX   = 1024;                               // html2canvas.windowWidth
-      const PX_PER_MM      = DOM_WIDTH_PX / PAGE_W_MM;           // 5.6888 px/mm
-      const PAGE_HEIGHT_PX = Math.floor(PAGE_H_MM * PX_PER_MM);  // 1462px
-
-      // ─── Alturas fixas dos elementos CSS do relatório (px a 1x) ───
-      // Derivadas das propriedades CSS do relatório — não variam entre ambientes.
-      const CONTAINER_PAD = 40;  // container.style.padding = '40px'
-      const HEADER_H      = 135; // .report-header: logo(65) + pb(24) + mb(32) + ~border/text
-      const INFO_GRID_H   = 200; // .info-grid: 2 rows flex×~58px + pb(32) + mb(40) + buffer
-      const THEAD_H       = 44;  // thead row: 2×padding(12) + text(20)
-      const ROW_H         = 62;  // linha normal: 2×padding(12) + texto(38)
-      const ROW_H_IMG     = 120; // linha com imagem: img(56) + 2×padding(12) + texto
-
-      // Pixels acumulados no canvas ANTES do tbody da tabela na página 1
-      // (container topo → fim do thead do grupo 1)
-      const PRE_TABLE_H = CONTAINER_PAD + HEADER_H + INFO_GRID_H; // 375px (sem thead)
-
-      // Orçamento de linhas (tbody) por página — quanto espaço há para rows
-      const BUDGET_P1 = PAGE_HEIGHT_PX - PRE_TABLE_H - THEAD_H; // ≈1073px (pág. 1)
-      const BUDGET_PN = PAGE_HEIGHT_PX - THEAD_H;               // ≈1448px (pág. 2+)
-
-      const table = iframeDoc.querySelector('table');
-      const signatures = (iframeDoc.querySelector('.signatures-section') || iframeDoc.querySelector('.report-footer')) as HTMLElement;
-
-      const alreadySplit = container ? container.classList.contains('pdf-table-split-done') : false;
-
-      if (!alreadySplit && table && container && signatures) {
-        const rows = Array.from(table.querySelectorAll('tbody tr')) as HTMLElement[];
-        const thead = table.querySelector('thead');
-        const tableSection = table.closest('section');
-
-        if (thead && rows.length > 0 && tableSection) {
-
-          // Estima altura de cada linha pela presença de imagem
-          const rowHeights = rows.map(row => row.querySelector('img') ? ROW_H_IMG : ROW_H);
-
-          // ─── Distribuição de linhas em grupos (1 grupo = 1 página) ───
-          const rowGroups: HTMLElement[][] = [[]];
-          let gi = 0; // índice do grupo atual
-          let gh = 0; // altura acumulada de linhas no grupo atual
-
-          rows.forEach((row, idx) => {
-            const rh = rowHeights[idx];
-            const budget = gi === 0 ? BUDGET_P1 : BUDGET_PN;
-            if (gh + rh > budget) {
-              gi++;
-              rowGroups[gi] = [row];
-              gh = rh;
-            } else {
-              rowGroups[gi].push(row);
-              gh += rh;
-            }
+      // ─── CAMADA NATIVA (Capacitor Android APK) ───
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const htmlContent = iframeDoc.documentElement.outerHTML;
+          const result = await HtmlPdf.generatePdf({
+            html: htmlContent,
+            fileName: cleanFileName
           });
 
-          // Remove a tabela única original
-          tableSection.remove();
-
-          // cumH rastreia a altura total do canvas consumida até agora
-          // Começa em PRE_TABLE_H (posição onde o thead do grupo 1 começa)
-          let cumH = PRE_TABLE_H;
-
-          rowGroups.forEach((pageRows, idx) => {
-            if (idx > 0) {
-              // O thead deste grupo deve começar EXATAMENTE no início da página idx.
-              // Inserimos um espaçador com a altura exata que preenche o gap.
-              const targetStart = PAGE_HEIGHT_PX * idx; // ex: 1492, 2984, 4476...
-              const spacerH = targetStart - cumH;
-
-              if (spacerH > 0) {
-                const spacer = iframeDoc.createElement('div');
-                // cssText garante que nenhuma outra regra CSS afete este elemento
-                spacer.style.cssText =
-                  `height:${spacerH}px;display:block;` +
-                  `margin:0;padding:0;line-height:0;font-size:0;border:none;` +
-                  `background:transparent;overflow:hidden;`;
-                container.insertBefore(spacer, signatures);
-              }
-              // Após o espaçador, estamos exatamente no limite da página
-              cumH = targetStart;
-            }
-
-            // ─── Seção: thead clonado + linhas deste grupo ───
-            const section = iframeDoc.createElement('section');
-            section.style.cssText = 'margin:0;padding:0;';
-            const tbl = iframeDoc.createElement('table');
-            tbl.style.cssText = 'width:100%;table-layout:fixed;border-collapse:collapse;margin:0;';
-            tbl.appendChild(thead.cloneNode(true));
-            const tbody = iframeDoc.createElement('tbody');
-            tbody.className = 'table-body';
-            pageRows.forEach(r => tbody.appendChild(r));
-            tbl.appendChild(tbody);
-            section.appendChild(tbl);
-            container.insertBefore(section, signatures);
-
-            // Atualiza cumH: adiciona thead + linhas deste grupo
-            const groupRowsH = pageRows.reduce((s, _, i) => s + rowHeights[rows.indexOf(pageRows[i])], 0);
-            cumH += THEAD_H + groupRowsH;
+          await Share.share({
+            title: title,
+            text: `Segue o relatório PDF: ${title}`,
+            url: result.uri,
+            dialogTitle: 'Compartilhar Relatório',
           });
-
-          container.classList.add('pdf-table-split-done');
+          return;
+        } catch (nativeErr) {
+          console.warn('Geração nativa falhou, caindo para motor jsPDF:', nativeErr);
         }
       }
 
-      const opt = {
-        margin: [20, 15, 20, 15],
-        filename: cleanFileName,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
+      // ─── MOTOR DE RENDERIZAÇÃO DIRETO: jsPDF + html2canvas (Zero Drift) ───
+      const pdfPages = Array.from(iframeDoc.querySelectorAll('.pdf-page')) as HTMLElement[];
+      const pagesToRender = pdfPages.length > 0 ? pdfPages : [container || body];
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true,
+      });
+
+      const A4_WIDTH_MM = 210;
+      const MARGIN_MM = 15;
+      const PRINT_WIDTH_MM = A4_WIDTH_MM - (MARGIN_MM * 2); // 180mm
+
+      for (let i = 0; i < pagesToRender.length; i++) {
+        const pageEl = pagesToRender[i];
+
+        const canvas = await html2canvas(pageEl, {
           scale: 2,
           useCORS: true,
           logging: false,
-          width: DOM_WIDTH_PX,
-          windowWidth: DOM_WIDTH_PX,
-          delay: 500,
-          letterRendering: true,
+          width: 1024,
+          windowWidth: 1024,
           backgroundColor: '#ffffff',
-          onclone: (clonedDoc: Document) => {
-            // Copia todos os blocos de estilos do iframe original para o head do documento clonado
-            const iframe = iframeRef.current;
-            if (iframe) {
-              const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-              if (iframeDoc) {
-                const styles = iframeDoc.querySelectorAll('style');
-                styles.forEach(style => clonedDoc.head.appendChild(style.cloneNode(true)));
-              }
-            }
-          }
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        // mode:[] → jsPDF fatia o canvas automaticamente a cada PAGE_HEIGHT_PX pixels.
-        // Os espaçadores matemáticos garantem que cada grupo inicia num múltiplo exato
-        // de PAGE_HEIGHT_PX, alinhado com o corte automático do jsPDF.
-        pagebreak: { mode: [] as string[] }
-      };
+        });
 
-      // Captura o elemento CONTENT-CONTAINER para ser renderizado diretamente
-      const elementToRender = container || body;
+        if (i > 0) {
+          pdf.addPage('a4', 'portrait');
+        }
 
-      // Resolve a referência do html2pdf.js com suporte a ESM/UMD e fallbacks
-      const html2pdfFunc = (html2pdf as any).default || html2pdf || (window as any).html2pdf;
-      if (typeof html2pdfFunc !== 'function') {
-        throw new Error('Biblioteca html2pdf não foi carregada como função válida.');
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        const imgHeightMm = (canvas.height * PRINT_WIDTH_MM) / canvas.width;
+
+        // Cada página é impressa SEMPRE em X = 15mm, Y = 15mm (Topo Exato da folha)
+        pdf.addImage(imgData, 'JPEG', MARGIN_MM, MARGIN_MM, PRINT_WIDTH_MM, imgHeightMm);
       }
 
-      // Converte o elemento DOM do iframe diretamente para um arquivo PDF Blob usando html2pdf.js
-      const pdfBlob = await html2pdfFunc().from(elementToRender).set(opt).output('blob');
+      const pdfBlob = pdf.output('blob');
 
       // ─── CAMADA 1: Web Share API com arquivo (funciona em WebViews Android modernas) ───
       const pdfFile = new File([pdfBlob], cleanFileName, { type: 'application/pdf' });
@@ -339,14 +375,12 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
       if (Capacitor.isNativePlatform()) {
         const base64Data = await blobToBase64(pdfBlob);
 
-        // Grava o arquivo PDF temporariamente no cache nativo do celular
         const writeResult = await Filesystem.writeFile({
           path: cleanFileName,
           data: base64Data,
           directory: Directory.Cache,
         });
 
-        // Compartilha o arquivo utilizando a URI nativa
         await Share.share({
           title: title,
           text: `Segue o relatório PDF: ${title}`,
@@ -386,15 +420,15 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           {title}
         </h2>
 
-        {(Capacitor.isNativePlatform() || typeof navigator.share === 'function') && (
-          <button
-            onClick={handleShare}
-            className="flex items-center justify-center w-10 h-10 bg-white text-[#004a88] hover:bg-slate-100 rounded-full shadow-sm transition-all active:scale-95"
-            title="Compartilhar"
-          >
-            <span className="material-symbols-outlined select-none notranslate">share</span>
-          </button>
-        )}
+        <button
+          onClick={handleShare}
+          className="flex items-center justify-center w-10 h-10 bg-white text-[#004a88] hover:bg-slate-100 rounded-full shadow-sm transition-all active:scale-95"
+          title={Capacitor.isNativePlatform() || typeof navigator.share === 'function' ? 'Compartilhar' : 'Baixar PDF'}
+        >
+          <span className="material-symbols-outlined select-none notranslate">
+            {Capacitor.isNativePlatform() || typeof navigator.share === 'function' ? 'share' : 'download'}
+          </span>
+        </button>
       </div>
 
       {/* PDF Content Area */}

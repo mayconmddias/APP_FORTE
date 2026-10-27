@@ -478,6 +478,84 @@ export const CHECKLIST_PONTE_PRINCIPAL_AUXILIAR: Omit<ChecklistItem, 'id' | 'isO
   { category: 'MECÂNICO', label: 'CAIXA DE GANCHO', instruction: 'REALIZAR TESTE COM LIQUIDO PENETRANTE.' }
 ];
 
+export const CHECKLIST_LINHA_DE_VIDA: Omit<ChecklistItem, 'id' | 'isOk' | 'observation'>[] = [
+  {
+    category: 'SEGURANÇA',
+    label: 'Pontos de ancoragem fixados em estrutura resistente (verificar projeto/calculo estrutural).',
+    instruction: 'Inspeção visual e verificação'
+  },
+  {
+    category: 'MECÂNICO',
+    label: 'Ausência de corrosão, trincas ou deformações nos pontos de fixação.',
+    instruction: 'Inspeção visual'
+  },
+  {
+    category: 'MECÂNICO',
+    label: 'Fixação com chumbadores/parafusos adequados e apertados.',
+    instruction: 'Inspeção visual e reaperto se necessário'
+  },
+  {
+    category: 'MECÂNICO',
+    label: 'Cabo de aço íntegro, sem fios rompidos, deformações, corrosão ou desgaste excessivo.',
+    instruction: 'Inspeção visual e tátil'
+  },
+  {
+    category: 'MECÂNICO',
+    label: 'BITOLA DO CABO DE AÇO CONFORME ESPECIFICADO EM PROJETO. MEDIR COM PAQUIMETRO.',
+    instruction: 'Inspeção visual'
+  },
+  {
+    category: 'MECÂNICO',
+    label: 'TENSÃO ADEQUADA DO CABO DE AÇO (NÃO MUITO FROUXO OU EXCESSIVAMENTE TENSIONADO)',
+    instruction: 'Inspeção visual'
+  },
+  {
+    category: 'MECÂNICO',
+    label: 'Esticadores funcionando corretamente, sem empenos ou corrosão.',
+    instruction: 'Inspeção visual e funcional'
+  },
+  {
+    category: 'MECÂNICO',
+    label: 'Presilhas (grampos) montados na quantidade e posição corretas (lado correto do cabo)',
+    instruction: 'Inspeção visual'
+  },
+  {
+    category: 'MECÂNICO',
+    label: 'Porcas das presilhas (grampos) bem apertadas e com contraporca ou travamento.',
+    instruction: 'Inspeção e reaperto'
+  },
+  {
+    category: 'SEGURANÇA',
+    label: 'Carro ou trava-queda compatível com o cabo de aço e em bom funcionamento',
+    instruction: 'Teste funcional: verificar o deslizamento/travamento do mecanismo de trava-queda.'
+  },
+  {
+    category: 'SEGURANÇA',
+    label: 'Mosquetões com trava automática e sem folgas ou deformações.',
+    instruction: 'Inspeção visual e funcional'
+  },
+  {
+    category: 'SEGURANÇA',
+    label: 'Placa de identificação da linha de vida (capacidade máxima, nº de usuários, fabricante/instalador).',
+    instruction: 'Inspeção visual'
+  },
+  {
+    category: 'SEGURANÇA',
+    label: 'Projeto ou ART disponível e assinado por engenheiro responsável.',
+    instruction: 'Verificação documental'
+  },
+  {
+    category: 'SEGURANÇA',
+    label: 'Caminhar por toda extensão do cabo de aço verificando alinhamento e integridade',
+    instruction: 'Inspeção visual'
+  },
+  {
+    category: 'SEGURANÇA',
+    label: 'Teste de funcionamento com EPI apropriado antes do uso.',
+    instruction: 'Teste prático'
+  }
+];
+
 export const getChecklistTemplate = (equipmentType?: string) => {
   switch (equipmentType?.trim().toUpperCase()) {
     case 'TALHA':
@@ -491,6 +569,8 @@ export const getChecklistTemplate = (equipmentType?: string) => {
       return CHECKLIST_ENCAIXOTADORA;
     case 'DESENCAIXOTADORA':
       return CHECKLIST_DESENCAIXOTADORA;
+    case 'LINHA DE VIDA':
+      return CHECKLIST_LINHA_DE_VIDA;
     case 'PONTE ELEVAÇÃO PRINCIPAL E AUXILIAR':
     case 'PONTE ELEVACAO PRINCIPAL E AUXILIAR':
     case 'PONTE DUAS TALHAS':

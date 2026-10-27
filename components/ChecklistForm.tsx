@@ -89,7 +89,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
 
   const [checklistType] = useState<ChecklistType | null>(() => {
     if (editingRecord) return editingRecord.checklistType;
-    const talhaTypes = ['Talha', 'Elevador de Carga', 'Encaixotadora', 'Desencaixotadora'];
+    const talhaTypes = ['Talha', 'Elevador de Carga', 'Encaixotadora', 'Desencaixotadora', 'Linha de Vida'];
     if (talhaTypes.includes(selectedAsset?.equipmentType || '')) return 'TALHA_PRINCIPAL';
     return 'PONTE_PRINCIPAL';
   });
@@ -400,7 +400,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ onSave, onCancel, current
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-3 pb-32">
 
         {/* Seleção de periodicidade */}
-        {editingRecord?.type !== MaintenanceType.CORRETIVA && !['Talha', 'Elevador de Carga', 'Encaixotadora', 'Desencaixotadora'].includes(selectedAsset?.equipmentType || '') && (
+        {editingRecord?.type !== MaintenanceType.CORRETIVA && !['Talha', 'Elevador de Carga', 'Encaixotadora', 'Desencaixotadora', 'Linha de Vida'].includes(selectedAsset?.equipmentType || '') && (
           <div className="bg-[#eef2f7] p-1 rounded-full flex items-center gap-1 mb-2">
             {Object.values(Frequency).map((freq) => (
               <button
