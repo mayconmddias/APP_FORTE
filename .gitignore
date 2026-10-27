@@ -27,3 +27,4 @@ app-forte-6f756-firebase-adminsdk-fbsvc-33ff7d9107.json
 *.json.local
 execute_backup.mjs
 run_backup.ps1
+*.apk
